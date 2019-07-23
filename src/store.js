@@ -4,6 +4,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     menusdata: {}, //用来存放菜单 
+
   },
   getters: {
     getmenudata: state => state.menusdata
