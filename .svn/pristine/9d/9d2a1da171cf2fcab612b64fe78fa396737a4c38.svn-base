@@ -1,0 +1,110 @@
+<template>
+  <el-container>
+    <el-header>
+      <el-dropdown style="float:right" @command="handleCommand">
+        <!-- <i class="el-icon-setting" style="margin-right: 15px"></i> -->
+        <el-button icon="el-icon-user-solid" size="small">潘高敬</el-button>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="退出">退出</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <el-menu
+        :default-active="$route.path"
+        class="el-menu-demo"
+        mode="horizontal"
+        @select="handleSelect"
+        background-color="#545c64"
+        text-color="#fff"
+        :unique-opened="true"
+        active-text-color="#ffd04b"
+      >
+        <template v-for=" (item,index) in menudata">
+          <el-menu-item :key="item.menudata" :index="item.path" v-if="item.subNodes.length==0">
+            <template slot="title">
+              <!-- <i  :class="item[0].permissionIcon" class="fa  menuicon"></i> -->
+              <span>{{item.name}}</span>
+            </template>
+          </el-menu-item>
+          <el-submenu :key="item.index" :index="String(index)" v-if="item.subNodes.length !==0">
+            <template slot="title">
+              <!-- <i  :class="item[0].permissionIcon" class="fa  menuicon"></i>   -->
+              <span>{{item.name}}</span>
+            </template>
+            <el-menu-item :key="item.index" :index="item.path" v-for="item in item.subNodes">
+              <!-- <i  :class="item.permissionIcon" class="fa  menuicon"></i> -->
+              {{item.name}}
+            </el-menu-item>
+          </el-submenu>
+        </template>
+      </el-menu>
+    </el-header>
+    <el-container>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
+    </el-container>
+    <!-- <el-footer>Footer</el-footer> -->
+  </el-container>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import { getstationsidNameType } from "@/api/api";
+export default {
+  computed: {
+    ...mapGetters(["getmenudata"])
+  },
+  data() {
+    return {
+      menudata: [],
+      activeIndex2: "1"
+    };
+  },
+  methods: {
+    handleSelect(index) {
+      //跳转路由
+      this.$router.push(index);
+    },
+    handleCommand(command) {
+      //退出
+      console.log(command);
+      if (command == "退出") {
+        window.sessionStorage.removeItem("menudata"); //退出时候就清空
+        this.$router.push("/login");
+      }
+    }
+  },
+  mounted() {
+    console.log("菜单");
+    this.menudata = JSON.parse(sessionStorage.getItem("menudata"));
+    console.log(this.menudata);
+  }
+};
+</script>
+<style lang="scss" scoped>
+.el-main {
+  background: #fff;
+  padding: 0px;
+  margin: 20px;
+}
+.el-container {
+  height: 100%;
+  .el-header,
+  .el-footer {
+    background-color: #545c64;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+  }
+  .el-aside {
+    height: 100%;
+    .el-menu {
+      height: 100%;
+    }
+  }
+}
+.el-menu-demo {
+  width: 80%;
+}
+</style>
+
+
