@@ -81,27 +81,3 @@ export const getsolaryearmonth = (subStationId, year, month) => {
   return axios
     .get(`stations/solar/${subStationId}/energys/${year}/${month}`)
 }
-//查询子站的设备列表
-export const getdevice = (stationId, subStationId, parms) => {
-  return axios
-    .get(`stations/${stationId}/subNodes/${subStationId}/devices`, {
-      params: parms
-    })
-}
-//获取子站的设备类型列表
-export const getdeviceTypes = (stationId, subStationId, ) => {
-  return axios
-    .get(`stations/${stationId}/subNodes/${subStationId}/deviceTypes`)
-}
-//查询单个设备的实时数据列表
-export const getdevicesrealtime = (deviceId) => {
-  return axios
-    .get(`stations/devices/${deviceId}/realtime`)
-}
-//查询单个测点的历史记录
-export const getdeviceIddataId = (deviceId, dataId, parms) => {
-  return axios
-    .get(`stations/devices/${deviceId}/history/dataIds/${dataId}`, {
-      params: parms
-    })
-}

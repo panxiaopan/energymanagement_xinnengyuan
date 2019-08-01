@@ -1,0 +1,86 @@
+   ////默认当前 
+
+   export const timeFormastart = (value) => {
+     let date = new Date(value)
+     var y = date.getFullYear();
+     var MM = date.getMonth() + 1;
+     MM = MM < 10 ? ('0' + MM) : MM
+     var d = date.getDate();
+     d = d < 10 ? ('0' + d) : d
+     var h = date.getHours();
+     h = h < 10 ? ('0' + h) : h
+     var m = date.getMinutes()
+     m = m > 9 ? m : ('0' + m)
+     var ss = date.getSeconds()
+     ss = ss > 9 ? ss : ('0' + ss)
+
+
+     return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + "00" + ":" + "00" + ":" + "00";
+   }
+
+
+
+
+
+   //当天时间段
+   export const timeFormanow = (value) => {
+     let date = new Date(value)
+     var y = date.getFullYear();
+     var MM = date.getMonth() + 1;
+     MM = MM < 10 ? ('0' + MM) : MM
+     var d = date.getDate();
+     d = d < 10 ? ('0' + d) : d
+     var h = date.getHours();
+     h = h < 10 ? ('0' + h) : h
+     var m = date.getMinutes()
+     m = m > 9 ? m : ('0' + m)
+     var ss = date.getSeconds()
+     ss = ss > 9 ? ss : ('0' + ss)
+
+
+     return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+   }
+
+
+
+
+   //当前时间传年月日
+   export const timeFormatdata = (value) => {
+     let date = new Date(value)
+     var y = date.getFullYear();
+     var MM = date.getMonth() + 1;
+     MM = MM < 10 ? ('0' + MM) : MM
+     var d = date.getDate();
+     d = d < 10 ? ('0' + d) : d
+     var h = date.getHours();
+     h = h < 10 ? ('0' + h) : h
+     var m = date.getMinutes()
+     m = m > 9 ? m : ('0' + m)
+     var ss = date.getSeconds()
+     ss = ss > 9 ? ss : ('0' + ss)
+     return y + '-' + MM + '-' + d
+
+     // return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() +':'+date.getSeconds();
+   }
+   //获取年月
+   export const timeFormatmonth = (value) => {
+     let date = new Date(value)
+     var y = date.getFullYear();
+     var MM = date.getMonth() + 1;
+     MM = MM < 10 ? ('0' + MM) : MM
+     var d = date.getDate();
+     d = d < 10 ? ('0' + d) : d
+     var h = date.getHours();
+     h = h < 10 ? ('0' + h) : h
+     var m = date.getMinutes()
+     m = m > 9 ? m : ('0' + m)
+     var ss = date.getSeconds()
+     ss = ss > 9 ? ss : ('0' + ss)
+     return y + '-' + MM
+   }
+   //获取年
+   export const timeFormatyear = (value) => {
+     let date = new Date(value)
+     var y = date.getFullYear();
+     return y + '-'
+   }
