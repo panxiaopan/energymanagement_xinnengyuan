@@ -1,0 +1,29 @@
+<template>
+  <div class="hj-vue-timeline">
+    <ul>
+      <slot></slot>
+    </ul>
+  </div>
+</template>
+
+<script>
+// import  './index.less'
+export default {
+  name: "timeline",
+
+  data() {
+    return {};
+  },
+  methods: {
+    setChildProps() {
+      if (!this.$children) return;
+      const len = this.$children.length;
+      this.$children.forEach((child, index) => {
+        child.isLast = index === len - 1;
+        child.isFirst = index === 0;
+      });
+    }
+  }
+};
+</script>
+

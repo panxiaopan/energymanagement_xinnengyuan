@@ -1,0 +1,140 @@
+@charset "utf-8";
+.hj-vue-timeline > ul > li {
+  list-style: none;
+}
+
+@timeline-item-bg-color: #97a8be;
+@timeline-item-first-bg-color: #20a0ff;
+
+@hj-vue-timeline: ~"hj-vue-timeline";
+@hj-vue-timeline-item: ~"hj-vue-timeline-item";
+.@{hj-vue-timeline} {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  ul,
+  li {
+    width: 100%;
+  }
+  &-item {
+    display: flex;
+  }
+  &-item-time,
+  &-item-time-first {
+    // display: flex;
+    // align-items: center;
+    // min-width: 10vh; // 宽度不设定的话，会出现有些time占位宽度有1px左右误差，未知原因！
+    width: 50%;
+    padding: 0 2vh 0 1vh;
+    text-align: right;
+    line-height: 1.2em;
+  }
+
+  &-item-time {
+    color: @timeline-item-bg-color;
+  }
+
+  &-item-time-first {
+    color: @timeline-item-first-bg-color;
+  }
+
+  &-item-flow {
+    position: relative;
+  }
+
+  &-item-content,
+  &-item-content-first {
+    // max-width: 50vh; //最大宽度 自动换行
+    width: 50%;
+    padding: 0 0 5vh 5vh;
+    // line-height: 1.2em;
+    min-height: 10vh; //设定一个最低间距 每个流程间的
+  }
+
+  &-item-content {
+    color: @timeline-item-bg-color;
+  }
+
+  &-item-content-first {
+    color: @timeline-item-first-bg-color;
+  }
+
+  &-item-head,
+  &-item-head-first {
+    position: absolute;
+    content: "";
+    z-index: 99;
+    border-radius: 99px;
+    width: 22px;
+    height: 22px;
+    left: -5px;
+    top: 0;
+  }
+
+  &-item-head {
+    // background-color: #e2e2e2;
+    background-color: @timeline-item-bg-color;
+  }
+
+  &-item-head-first {
+    background-color: @timeline-item-first-bg-color;
+    // background-color: #F06A16;
+  }
+
+  &-item-tail {
+    position: absolute;
+    content: "";
+    height: 100%;
+    width: 2px;
+    left: 5px;
+    top: 5px;
+    background-color: @timeline-item-bg-color;
+    // color: #1f2d3d;
+  }
+  &-item-checked {
+    width: 100%;
+    position: absolute;
+    left: 5px;
+    top: 6px;
+    width: 15px;
+    height: 15px;
+    font-size: 10px;
+  }
+  .el-icon-check {
+    // left: 3px;
+    left: 5px;
+  }
+  [class*=" el-icon-"],
+  [class^="el-icon-"] {
+    color: #1f2d3d !important;
+  }
+}
+.@{hj-vue-timeline-item} {
+  &-list {
+    display: flex;
+  }
+
+  &-list-head,
+  &-list-head-first {
+    position: absolute;
+    content: "";
+    z-index: 99;
+    border-radius: 99px;
+    width: 10px;
+    height: 10px;
+    left: 1px;
+    top: 2px;
+  }
+
+  &-list-head {
+    background-color: @timeline-item-bg-color;
+  }
+
+  &-list-head-first {
+    background-color: @timeline-item-first-bg-color;
+  }
+  [class*=" el-icon-"],
+  [class^="el-icon-"] {
+    color: #1f2d3d !important;
+  }
+}

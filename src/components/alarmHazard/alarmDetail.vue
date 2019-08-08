@@ -1,0 +1,680 @@
+<template>
+  <div class="hj-hazard-details-wrapper" v-loading="pageLoading">
+    <el-row type="flex" class="hj-hazard-details__dataView">
+      <el-col :span="10" class="basic-info">
+        <div class="basic-info__title">{{title.basicInfo}}</div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.socialUnit}}:&nbsp;</span>
+          <!-- <el-tooltip placement="top" :content="computedSocialUnitName"> -->
+          <span
+            class="basic-info__content__value"
+            :title="computedSocialUnitName"
+          >{{computedSocialUnitName}}</span>
+          <!-- </el-tooltip> -->
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.address}}:&nbsp;</span>
+          <!-- <el-tooltip placement="top" :content="computedSocialUnitAddr"> -->
+          <span
+            class="basic-info__content__value"
+            :title="computedSocialUnitAddr"
+          >{{computedSocialUnitAddr}}</span>
+          <!-- </el-tooltip> -->
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.deviceName}}:&nbsp;</span>
+          <!-- <el-tooltip placement="top" :content="computedDeviceName"> -->
+          <span
+            class="basic-info__content__value"
+            :title="computedDeviceName"
+          >{{computedDeviceName}}</span>
+          <!-- </el-tooltip> -->
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.devicePos}}:&nbsp;</span>
+          <!-- <el-tooltip placement="top" :content="computedDevicePos"> -->
+          <span class="basic-info__content__value">{{computedDevicePos}}</span>
+          <!-- </el-tooltip> -->
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.deviceStatus}}:&nbsp;</span>
+          <span class="basic-info__content__value">{{computedDeviceStatus}}</span>
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.personResponsible}}:&nbsp;</span>
+          <span class="basic-info__content__value">{{computedPersonResponsible}}</span>
+        </div>
+        <div class="basic-info__content">
+          <span class="basic-info__content__name">{{labelTextObj.contactDetails}}:&nbsp;</span>
+          <span class="basic-info__content__value">{{computedContactDetails}}</span>
+        </div>
+      </el-col>
+      <el-col :span="14" class="real-time-data">
+        <div class="real-time-data__title">{{title.realTimeData}}</div>
+        <div v-if="!realTimeData">{{labelTextObj.emptyData}}</div>
+        <div class="real-time-data__content">
+          <div class="real-time-data__content--first">
+            <div
+              v-for="(item,key) in realTimeDataFirst"
+              :key="key"
+              class="real-time-data__content__item"
+            >
+              <span
+                class="real-time-data__content__item__name"
+                :class="{'last-item': key===realTimeDataFirst.length-1 }"
+              >{{item.measureName}}</span>
+              <span
+                class="real-time-data__content__item__value"
+                :class="{'last-item': key===realTimeDataFirst.length-1 }"
+              >{{item.value}}&nbsp;{{item.unit}}</span>
+            </div>
+          </div>
+          <div class="real-time-data__content--second">
+            <div
+              v-for="(item,key) in realTimeDataSecond"
+              :key="key"
+              class="real-time-data__content__item"
+            >
+              <span
+                class="real-time-data__content__item__name"
+                :class="{'last-item': key===realTimeDataSecond.length-1 }"
+              >{{item.measureName}}</span>
+              <span
+                class="real-time-data__content__item__value"
+                :class="{'last-item': key===realTimeDataSecond.length-1 }"
+              >{{item.value}}&nbsp;{{item.unit}}</span>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row class="hj-hazard-details__dataChart">
+      <el-col :span="5" class="trend-chart__desc">
+        <div class="trend-chart__desc__title">{{title.hazardHistoryChart}}</div>
+        <div class="trend-chart__desc__content">
+          <div class="trend-chart__desc__content__item">
+            <span>{{labelTextObj.hazardLevel}}</span>:&nbsp;
+            <span>{{hazardData.level || '--'}}</span>
+          </div>
+          <div class="trend-chart__desc__content__item">
+            <span>{{labelTextObj.hazardDesc}}</span>:&nbsp;
+            <el-tooltip
+              v-if="showClickShortcut"
+              :content="showHazardDescTip"
+              placement="bottom"
+              :open-delay="200"
+            >
+              <span
+                class="item__value--desc"
+                @mouseout="cancelHighlight"
+                @mouseover="highlightAlarmPoint"
+                @click="click2ShowDetails"
+              >{{hazardData.desc || '--'}}</span>
+            </el-tooltip>
+            <span
+              v-else
+              class="item__value--desc"
+              @mouseout="cancelHighlight"
+              @mouseover="highlightAlarmPoint"
+            >{{hazardData.desc || '--'}}</span>
+          </div>
+          <div class="trend-chart__desc__content__item">
+            <span>{{labelTextObj.foundTime}}</span>:&nbsp;
+            <span>{{hazardFoundTime}}</span>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="19" class="trend-chart__wrapper">
+        <vue-chart
+          v-if="!fromManualReport"
+          ref="hazardTrend"
+          :options="hazardTrendOptions"
+          not-merge
+          auto-resize
+          class="trend-chart"
+        ></vue-chart>
+        <div v-else class="trend-chart__wrapper__imgBox">
+          <h2 v-if="hazardImgDataList.length<1">{{ labelTextObj.emptyImgData }}</h2>
+          <el-carousel v-else :interval="4000" type="card" height="200px">
+            <el-carousel-item v-for="item in hazardImgDataList" :key="item">
+              <img :src="computedUrl(item)" alt title />
+            </el-carousel-item>
+          </el-carousel>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+
+<script>
+import { getalarmsDeil } from "@/api/api";
+// import GetFormattedValueAndUnit from "@/utils/getFormattedValueAndUnit";
+import GetLineOptions from "@/mixins/getLineOptions.js";
+import GetMultiLineOptions from "@/mixins/getMultiLineOptions.js";
+// import { mapActions } from "vuex";
+export default {
+  name: "HazardDetails",
+  mixins: [GetLineOptions, GetMultiLineOptions],
+  props: {
+    queryUrl: {
+      type: Number,
+      default: ""
+    },
+    eventTime: {
+      type: String,
+      default: ""
+    },
+    dataType: {
+      type: String,
+      default: "total"
+    },
+    fromManualReport: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    var title = {
+      basicInfo: this.$t("hazardManagement.basicInfo"),
+      realTimeData: this.$t("hazardManagement.realTimeData"),
+      hazardHistoryChart: this.fromManualReport
+        ? this.$t("hazardManagement.hazardRecord")
+        : this.$t("hazardManagement.hazardHistoryChart")
+    };
+    var labelTextObj = {
+      socialUnit: this.$t("hazardManagement.socialUnit"),
+      address: this.$t("hazardManagement.address"),
+      deviceName: this.$t("hazardManagement.deviceName"),
+      devicePos: this.$t("hazardManagement.devicePos"),
+      deviceStatus: this.$t("hazardManagement.deviceStatus"),
+      personResponsible: this.$t("hazardManagement.personResponsible"),
+      contactDetails: this.$t("hazardManagement.contactDetails"),
+      emptyData: this.$t("common.emptyData"),
+      hazardType: this.$t("hazardManagement.hazardType"),
+      hazardLevel: this.$t("hazardManagement.hazardLevel"),
+      hazardDesc: this.$t("hazardManagement.hazardDesc"),
+      emptyImgData: this.$t("hazardManagement.emptyImgData"),
+      foundTime: this.$t("hazardManagement.foundTime")
+    };
+
+    var defaultChartOption = {
+      tooltip: {
+        trigger: "axis"
+      },
+      title: {
+        left: "center",
+        top: "middle",
+        text: this.$t("common.emptyData"),
+        textStyle: {
+          color: "#000000"
+        }
+      },
+      xAxis: {
+        type: "time",
+        axisLine: {
+          lineStyle: {
+            color: "#000000"
+          }
+        }
+      },
+      yAxis: {
+        type: "value",
+        boundaryGap: [0, "100%"],
+        axisLine: {
+          lineStyle: {
+            color: "#000000"
+          }
+        }
+      },
+      dataZoom: [],
+      series: []
+    };
+    return {
+      title,
+      labelTextObj,
+      basicInfo: { socialUnit: "" },
+      defaultChartOption,
+      realTimeData: null,
+      hazardData: {},
+      hazardHistoryList: [],
+      maxValueObj: null,
+      showHazardDescTip: this.$t("hazardManagement.click2ShowHazardDetails"),
+      pageLoading: false,
+      realTimeDataFirst: [],
+      realTimeDataSecond: [],
+      hazardImgDataList: [
+        // require("@/assets/images/unvalidImage.png"),
+        // require("@/assets/images/socialUnitSampleImg.png"),
+        // require("@/assets/images/stationSampleImg.png")
+      ],
+      defaultPicUrl: ""
+    };
+  },
+  watch: {
+    queryUrl(newVal, oldVal) {
+      this.queryData();
+
+      // console.log("api接口");
+      // console.log(this.queryUrl);
+    }
+  },
+  computed: {
+    hazardFoundTime() {
+      if (this.fromManualReport) {
+        return (this.hazardData && this.hazardData.foundTime) || "";
+      } else {
+        return (this.hazardData && this.hazardData.alarmTime) || "";
+      }
+    },
+    showClickShortcut() {
+      return this.dataType !== "device";
+    },
+    computedSocialUnitName() {
+      let socialUnit = this.basicInfo && this.basicInfo.station;
+      console.log("数据结构");
+      console.log(this.basicInfo);
+      console.log(socialUnit);
+
+      let socialUnitName = (socialUnit && socialUnit.name) || "--";
+      return socialUnitName;
+    },
+    computedSocialUnitAddr() {
+      let socialUnit = this.basicInfo && this.basicInfo.station;
+      let socialUnitAddr = (socialUnit && socialUnit.address) || "--";
+      return socialUnitAddr;
+    },
+    computedDeviceName() {
+      let device = this.basicInfo && this.basicInfo.device;
+      let deviceName = (device && device.name) || "--";
+      return deviceName;
+    },
+    computedDevicePos() {
+      let device = this.basicInfo && this.basicInfo.device;
+      let devicePos = (device && device.address) || "--";
+      return devicePos;
+    },
+    computedDeviceStatus() {
+      let deviceStatus = this.basicInfo && this.basicInfo.deviceStatus;
+      let desc = (deviceStatus && deviceStatus.desc) || "--";
+      return desc;
+    },
+    computedPersonResponsible() {
+      let manResponsibleForFireSecurity =
+        this.basicInfo &&
+        this.basicInfo.socialUnit &&
+        this.basicInfo.socialUnit.manResponsibleForFireSecurity;
+      let name =
+        (manResponsibleForFireSecurity && manResponsibleForFireSecurity.name) ||
+        "--";
+      return name;
+    },
+    computedContactDetails() {
+      let manResponsibleForFireSecurity =
+        this.basicInfo &&
+        this.basicInfo.socialUnit &&
+        this.basicInfo.socialUnit.manResponsibleForFireSecurity;
+      let contact =
+        (manResponsibleForFireSecurity && manResponsibleForFireSecurity.tel) ||
+        "--";
+      return contact;
+    },
+    hazardTrendOptions() {
+      let dataList = this.hazardHistoryList;
+      if (dataList.length > 0) {
+        let alarmValueUnit = this.hazardData.alarmValueUnit;
+        let measureNames = this.hazardData.alarmDataMeasureNames || "--";
+        let alarmTime = this.hazardData.alarmTime;
+        let desc = this.hazardData.description || "--";
+        let yAxisName = "--";
+        let { unit, exponent } = this.maxValueObj;
+        if (measureNames.length > 0 && measureNames !== "--") {
+          yAxisName = measureNames.join(",") + "/" + unit;
+        }
+        let markTimeValue = {
+          name: this.$t("hazardManagement.alarmValue"),
+          time: alarmTime,
+          value: [
+            [
+              alarmTime,
+              (alarmValueUnit.value / Math.pow(10, exponent)).toFixed(2),
+              unit,
+              desc
+            ]
+          ]
+        };
+        dataList.forEach(item => {
+          item.forEach(subItem => {
+            let value = subItem.value;
+            value = (value / Math.pow(10, exponent)).toFixed(2);
+            subItem.value = [subItem.time, value, unit];
+          });
+        });
+
+        let options = this.getMultiLineOptions({
+          dataList,
+          seriesName: measureNames,
+          yAxisName,
+          hasMark: true,
+          markTimeValue
+        });
+        // console.log("options++++++++++________", options);
+        return options;
+      }
+      return this.defaultChartOption;
+    }
+  },
+  methods: {
+    // ...mapActions("realTimeMonitoring", ["setSocialUnit", "setDevice"]),
+    computedUrl(url) {
+      // var url = this.data && this.data.picUrl;
+      var preUrl =
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        "/" +
+        window.location.pathname.split("/")[1];
+      if (url) {
+        if (process.env.NODE_ENV === "production") {
+          url = preUrl + url;
+        } else {
+          url = "." + url;
+        }
+      } else {
+        url = this.defaultPicUrl;
+      }
+      return url;
+    },
+    cancelHighlight() {
+      let instance = this.$refs.hazardTrend;
+      instance.dispatchAction({
+        type: "downplay",
+        // 可选，系列 index，可以是一个数组指定多个系列
+        seriesIndex: 1,
+        // 可选，系列名称，可以是一个数组指定多个系列
+        seriesName: this.$t("hazardManagement.alarmValue")
+        // 可选，数据的 index
+        // dataIndex?: number,
+        // 可选，数据的 名称
+        // name?: string
+      });
+      instance.dispatchAction({
+        type: "hideTip",
+        // 可选，系列 index，可以是一个数组指定多个系列
+        seriesIndex: 1
+        // 可选，系列名称，可以是一个数组指定多个系列
+        // seriesName: this.$t("hazardManagement.alarmValue")
+      });
+    },
+    highlightAlarmPoint() {
+      let instance = this.$refs.hazardTrend;
+      // console.log("instance++++++++", instance);
+      instance.dispatchAction({
+        type: "highlight",
+        // 可选，系列 index，可以是一个数组指定多个系列
+        seriesIndex: 1,
+        // 可选，系列名称，可以是一个数组指定多个系列
+        seriesName: this.$t("hazardManagement.alarmValue")
+        // 可选，数据的 index
+        // dataIndex?: number,
+        // 可选，数据的 名称
+        // name?: string
+      });
+      instance.dispatchAction({
+        type: "showTip",
+        // 可选，系列 index，可以是一个数组指定多个系列
+        seriesIndex: 1,
+        // 可选，系列名称，可以是一个数组指定多个系列
+        dataIndex: 0
+        // seriesName: this.$t("hazardManagement.alarmValue")
+      });
+    },
+    click2ShowDetails() {
+      this.$emit("click-device-details", this.basicInfo);
+    },
+    queryData() {
+      var parms = {
+        eventTime: this.eventTime
+      };
+      getalarmsDeil(this.queryUrl, parms)
+        .then(response => {
+          console.log(response);
+
+          let code =
+            response.data && response.data.head && response.data.head.code;
+          let data = response.data && response.data.data;
+          if (code === 0 && typeof data !== "undefined") {
+            console.log("response hazard details", data);
+            // 基本信息
+            let basicInfo = data.basicInfo;
+            let realtimeData = data.realtimeData;
+            this.basicInfo = data.basicInfo;
+            let realTimeDataArr = [];
+
+            // 实时数据 格式化单位
+            Object.keys(realtimeData).forEach((key, index) => {
+              // console.log("key, index, arr", key, index);
+              if (Array.isArray(realtimeData[key])) {
+                // console.log("--是数组--");
+                // console.log(realtimeData[key]);
+                realtimeData[key].forEach(item => {
+                  // console.log(item.value)
+                  let numbe = Number(item.value);
+                  if (!isNaN(numbe)) {
+                    console.log(numbe);
+                    item.value = (+item.value).toFixed(2);
+                  } else {
+                    item.value = item.value;
+                  }
+
+                  return item;
+                });
+                realTimeDataArr.push(...realtimeData[key]);
+              } else {
+                if (realtimeData[key]) {
+                  let value = realtimeData[key].value;
+                  realtimeData[key].value = (+value).toFixed(2);
+                  realTimeDataArr.push(realtimeData[key]);
+                }
+              }
+            });
+
+            // console.log("realTimeDataArr数据", realTimeDataArr);
+            this.realTimeData = realtimeData;
+            this.realTimeDataFirst = realTimeDataArr.slice(
+              0,
+              Math.ceil(realTimeDataArr.length / 2)
+            );
+            this.realTimeDataSecond = realTimeDataArr.slice(
+              Math.ceil(realTimeDataArr.length / 2)
+            );
+
+            // 历史曲线数据--基本描述
+            let hazardLevel = data.riskGrade && data.riskGrade.desc;
+            let hazardDesc = data.riskDesc && data.riskDesc.description;
+            let alarmValueUnit = data.riskDesc && data.riskDesc.alarmValueUnit;
+            this.hazardImgDataList =
+              (data.riskDesc && data.riskDesc.attachmentUrls) || [];
+            // let alarmDataMeasureNames = data.riskDesc && data.riskDesc.alarmValueUnit;
+            this.hazardData = {
+              level: hazardLevel,
+              desc: hazardDesc,
+              // dataObj
+              ...data.riskDesc
+            };
+            // 历史曲线数据--曲线数据
+            // 后台返回数据可能直接返回一个空的字符串alarmDataTimeValues
+            // 因此默认值要手动赋值空数组 否则解析报错
+            let alarmDataTimeValues = data.alarmDataTimeValues || {};
+            console.log("zexiantu");
+            console.log(alarmDataTimeValues);
+            let dataList = alarmDataTimeValues.logsList || []; //空数据
+            // 数据点间隔
+            let period =
+              (alarmDataTimeValues.interval &&
+                alarmDataTimeValues.interval.value) ||
+              15;
+            period = period * 60 * 1000;
+            let unit = alarmValueUnit.unit;
+            let alarmTime = data.riskDesc && data.riskDesc.alarmTime;
+
+            let maxValue = 0; //计算序列值的最大值 数据单位根据最大值做转换
+            console.log("zexiantu");
+            console.log(dataList);
+            dataList.forEach(item => {
+              let result = this.$getCompletedTimeValueList({
+                dataList: item,
+                dateType: "day",
+                period,
+                beginTime: moment(alarmTime)
+                  .add(-1, "days")
+                  .format("YYYY-MM-DD 00:00:00"),
+                endTime: moment(alarmTime)
+                  .add(1, "days")
+                  .format("YYYY-MM-DD 23:59:59")
+              });
+              if (result.maxValue > maxValue) {
+                maxValue = result.maxValue;
+              }
+            });
+            this.maxValueObj = this.$getFormattedValueAndUnit({
+              data: maxValue,
+              baseUnit: unit
+            });
+
+            this.hazardHistoryList = dataList;
+          }
+          console.log("---dwdwdwd-");
+          console.log(this.hazardHistoryList);
+          this.pageLoading = false;
+        })
+        .catch(err => {
+          this.pageLoading = false;
+        });
+    }
+  },
+  mounted() {
+    this.queryData(); //初始挂载时候请求
+  }
+};
+</script >
+<style scoped  lang='less'>
+.hj-hazard-details-wrapper {
+  background-color: #e3e5e8;
+}
+
+.hj-hazard-details__dataView {
+  // padding: 1vh;
+  // border-bottom: 1px solid #646464;
+  .basic-info {
+    margin-right: 0.5vw;
+    line-height: 2;
+    border-radius: 5px;
+    background-color: #ffffff;
+    padding: 1vh 0.5vw;
+  }
+
+  .basic-info__title {
+    font-size: 1.67vh;
+    font-weight: bold;
+    color: #0b61aa;
+  }
+
+  .basic-info__content {
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .real-time-data {
+    margin-left: 0.5vw;
+    line-height: 2;
+    border-radius: 5px;
+    background-color: #ffffff;
+    padding: 1vh 0.5vw;
+  }
+
+  .real-time-data__title {
+    font-size: 1.67vh;
+    font-weight: bold;
+    color: #0b61aa;
+  }
+
+  .real-time-data__content {
+    display: flex;
+
+    .last-item {
+      border-bottom: 1px solid #e2e2e2;
+    }
+  }
+
+  .real-time-data__content--first,
+  .real-time-data__content--second {
+    width: 50%;
+  }
+
+  .real-time-data__content__item__name,
+  .real-time-data__content__item__value {
+    display: inline-block;
+    width: 48%;
+    border: 1px solid #e2e2e2;
+    text-align: center;
+  }
+
+  .real-time-data__content__item__name {
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .real-time-data__content__item__value {
+    border-bottom: 0;
+  }
+}
+
+.hj-hazard-details__dataChart {
+  margin-top: 1.5vh;
+  border-radius: 5px;
+  background-color: #ffffff;
+  padding: 1vh;
+
+  .trend-chart__desc {
+    line-height: 2;
+  }
+
+  .trend-chart__desc__title {
+    font-size: 1.67vh;
+    font-weight: bold;
+    color: #0b61aa;
+  }
+
+  .trend-chart__desc__content__item {
+    .item__value--desc {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
+
+  .trend-chart__wrapper {
+    height: 28vh;
+  }
+
+  .trend-chart {
+    height: 100%;
+    width: 100%;
+  }
+
+  .trend-chart__wrapper__imgBox {
+    height: 100%;
+    text-align: center;
+
+    // display: flex;
+    // justify-content: center;
+    // align-items: center;
+    img {
+      height: 18.5vh;
+      max-width: 20vw;
+    }
+  }
+}
+</style>
