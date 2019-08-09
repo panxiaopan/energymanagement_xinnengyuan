@@ -76,7 +76,6 @@
       <el-col :span="24" class="mainfoot">
         <div class="mainbox">
           <div class="boxName tendency">发电趋势图</div>
-
           <div class="timeselect">
             <div class="timetab">
               <span class="timebox">
@@ -101,7 +100,6 @@
               </span>
             </div>
           </div>
-
           <div style="height:240px;">
             <ve-line
               v-if="datatime=='日'"
@@ -942,7 +940,7 @@ export default {
         var year = data[0];
         var month = data[1];
       }
-      getsolaryearmonth(this.$route.params.subid, year, month).then(res => {
+      getsolaryearmonth(this.$route.params.id, year, month).then(res => {
         console.log("年月");
         console.log(res);
         if (res.data.head.code == 0) {

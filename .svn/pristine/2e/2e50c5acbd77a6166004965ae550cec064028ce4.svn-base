@@ -97,10 +97,9 @@
               placeholder="选择日期"
               value-format="yyyy-MM-dd"
               :picker-options=" powerpickerOptions"
-              @change="changepower"
             ></el-date-picker>
           </div>
-          <div style="height:350px;margin-top: 60px;padding:0px 20px;">
+          <div style="height:300px;margin-top: 60px;">
             <ve-line
               :data="powerchartData"
               height="100%"
@@ -113,94 +112,18 @@
         </div>
       </el-col>
       <el-col :span="12" class="padding20">
-        <div class="Statmessage mainbox day_charge">
+        <div class="Statmessage mainbox">
           <div class="padding20">
             <span class="boxName">充电放电趋势图</span>
           </div>
-          <div class="timetab">
-            <span class="timebox">
-              <el-radio-group v-model="datatime" size="medium" @change="changetypadata">
-                <el-radio-button label="月"></el-radio-button>
-                <el-radio-button label="年"></el-radio-button>
-                <el-radio-button label="总"></el-radio-button>
-              </el-radio-group>
-            </span>
-            <span class="timebox">
-              <el-date-picker
-                v-model="timevalue"
-                :type="typedate"
-                placeholder="选择日期"
-                value-format="yyyy-MM-dd"
-                @change="batterychangetime"
-                :picker-options="batterypickerOptions"
-                :clearable="false"
-                :disabled="datatime=='总'"
-              ></el-date-picker>
-            </span>
-          </div>
-          <div style="height:350px;margin-top:60px;padding:0px 20px">
-            <ve-histogram
-              :data="batterychartData"
-              height="100%"
-              :settings="batterSetting"
-              :colors="powercolor"
-              :extend="batterextend"
-              :yAxis="batteryAxis"
-            ></ve-histogram>
-          </div>
         </div>
       </el-col>
-    </el-col>
-    <el-col :span="24" class="padding20">
-      <div class="Statmessage mainbox gross_earnings">
-        <div class="padding20">
-          <span class="boxName">收益趋势图</span>
-        </div>
-        <div class="timeselect">
-          <div class="timetab">
-            <span class="timebox">
-              <el-radio-group v-model="revenuedatatime" size="medium" @change="revenuechange">
-                <el-radio-button label="日"></el-radio-button>
-                <el-radio-button label="月"></el-radio-button>
-                <el-radio-button label="年"></el-radio-button>
-                <el-radio-button label="总"></el-radio-button>
-              </el-radio-group>
-            </span>
-            <span class="timebox">
-              <el-date-picker
-                v-model="revenuetimevalue"
-                :type="reventypedate"
-                placeholder="选择日期"
-                value-format="yyyy-MM-dd"
-                :picker-options="batterypickerOptions"
-                :clearable="false"
-                :disabled="revenuedatatime=='总'"
-                @change="reventime"
-              ></el-date-picker>
-            </span>
-          </div>
-        </div>
-        <div style="height:350px;margin-top:60px;padding:0px 20px">
-          <ve-histogram
-            :data="revenchartData"
-            :settings="revenchartSettings"
-            :colors="revencolor"
-            :extend="batterextend"
-            :yAxis="revenyAxis"
-          ></ve-histogram>
-        </div>
-      </div>
     </el-col>
   </el-row>
 </template>
 
 <script>
-import {
-  getsubstation,
-  energyStoragepowers,
-  getenergyStorageenergys,
-  getearnings
-} from "@/api/api";
+import { getsubstation, energyStoragepowers } from "@/api/api";
 import {
   timeFormastart,
   timeFormanow,
@@ -275,8 +198,8 @@ export default {
         // }
       },
       devicegrid: {
-        right: 20,
-        left: 20,
+        right: 50,
+        left: 50,
         bottom: 20,
         // top: -20
         top: 120
@@ -318,12 +241,12 @@ export default {
       },
       powerchartSettings: {
         legendName: {
-          有功功率: "",
-          无功功率: ""
+          activePower: "",
+          reactivePower: ""
         },
         labelMap: {
-          activePower: "有功功率",
-          reactivePower: "无功功率"
+          activePower: "",
+          reactivePower: ""
         }
       },
       xAxisOption: {
@@ -347,62 +270,7 @@ export default {
         },
         name: ""
       },
-      powerunits: [], //功率单
-      datatime: "月",
-      timevalue: timeFormatmonth(new Date()),
-      typedate: "month",
-      batterypickerOptions: {
-        disabledDate(time) {
-          return time.getTime() > Date.now();
-        }
-      },
-      batterychartData: {
-        columns: ["time", "chargeKwh", "dischargeKwh"],
-        rows: []
-      },
-      batterSetting: {
-        labelMap: {
-          chargeKwh: "充电",
-          dischargeKwh: "放电"
-        }
-      },
-      batterextend: {
-        barWidth: "30px",
-        top: "-20px",
-        barCategoryGap: "10%",
-        barGap: "10%"
-      },
-      batteryAxis: {
-        axisLine: {
-          show: true,
-          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
-        },
-        name: ""
-      },
-      revenuedatatime: "日",
-      revenuetimevalue: timeFormatdata(new Date()),
-      reventypedate: "date",
-      revenchartData: {
-        columns: ["time", "chargeIncome", "dischargeIncome", "totalIncome"],
-        rows: []
-      },
-      revenchartSettings: {
-        showLine: ["totalIncome"],
-        stack: { 电量: ["chargeIncome", "dischargeIncome"] },
-        labelMap: {
-          chargeIncome: "充电收益",
-          dischargeIncome: "放电收益",
-          totalIncome: "总收益"
-        }
-      },
-      revencolor: ["#1B77FC", "#FB5A6E", "#56D07E"],
-      revenyAxis: {
-        axisLine: {
-          show: true,
-          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
-        },
-        name: ""
-      }
+      powerunits: [] //功率单
     };
   },
   methods: {
@@ -452,132 +320,22 @@ export default {
         if (res.data.head.code == 0) {
           this.powerchartData.rows = res.data.data.logs;
           let powerunits = res.data.data.units;
-          this.powerchartSettings.legendName.有功功率 =
-            "有功功率" + "(" + res.data.data.units[0] + ")";
-          this.powerchartSettings.legendName.无功功率 =
-            "无功功率" + "(" + res.data.data.units[1] + ")";
+          // this.powerchartSettings.legendName.activePower =
+          //   "有功功率" + res.data.data.units[0];
+          // this.powerchartSettings.reactivePower =
+          //   "无功功率" + res.data.data.units[1];
+
+          this.powerchartSettings.labelMap.activePower =
+            "有功功率" + res.data.data.units[0];
+          this.powerchartSettings.labelMap.reactivePower =
+            "无功功率" + res.data.data.units[1];
         }
       });
-    },
-    changepower() {
-      //改变时间
-      this.getenergyStoragepowers();
-    },
-    batterychangetime() {
-      //充电放电趋势图
-      this.getenergycharts();
-    },
-    changetypadata() {
-      //放电
-      this.timevalue = timeFormatdata(new Date());
-      console.log(this.datatime);
-      switch (this.datatime) {
-        case "月":
-          this.typedate = "month";
-          // this.getyeardata();
-          break;
-        case "年":
-          this.typedate = "year";
-          // this.getyeardata();
-          break;
-        default:
-          this.timevalue = "";
-          // this.getyeardata();
-          break;
-      }
-      this.getenergycharts();
-    },
-    getenergycharts() {
-      let data = this.timevalue.split("-");
-      if (this.timevalue == "") {
-        //总
-        var year = "";
-        var month = "";
-      } else if (this.datatime == "年") {
-        var year = data[0];
-        var month = "";
-      } else {
-        var year = data[0];
-        var month = data[1];
-      }
-      // var parms={}
-      getenergyStorageenergys(this.$route.params.subid, year, month).then(
-        res => {
-          console.log("能源");
-          console.log(res);
-          if (res.data.head.code == 0) {
-            this.batterychartData.rows = res.data.data.logs;
-            this.batteryAxis.name = "单位/" + res.data.data.units[0];
-          }
-        }
-      );
-    },
-    revenuechange() {
-      //充电放电切换
-      this.revenuetimevalue = timeFormatdata(new Date());
-      switch (this.revenuedatatime) {
-        case "日":
-          this.reventypedate = "date";
-        case "月":
-          this.reventypedate = "month";
-          // this.getyeardata();
-          break;
-        case "年":
-          this.reventypedate = "year";
-          // this.getyeardata();
-          break;
-        default:
-          // this.revenuetimevalue = "";
-          // this.revenuedatatime = "";
-          // this.getyeardata();
-          console.log(this.revenuetimevalue);
-          break;
-      }
-      this.getgetearningschart();
-      //console.log(this.revenuetimevalue);
-    },
-    getgetearningschart() {
-      //获取收益趋势图
-
-      let data = this.revenuetimevalue.split("-");
-      if (this.revenuedatatime == "日") {
-        //总
-        var year = data[0];
-        var month = data[1];
-        var date = data[2];
-      } else if (this.revenuedatatime == "年") {
-        var year = data[0];
-        var month = "";
-        var date = "";
-      } else if (this.revenuedatatime == "月") {
-        var year = data[0];
-        var month = data[1];
-        var date = "";
-      } else {
-        var year = "";
-        var month = "";
-        var date = "";
-      }
-      getearnings(this.$route.params.subid, year, month, date).then(res => {
-        console.log("收益趋势图---------");
-        console.log(res);
-        if (res.data.head.code == 0) {
-          this.revenchartData.rows = res.data.data.logs;
-          this.revenyAxis.name = "收益/" + res.data.data.units[0];
-        }
-      });
-
-      console.log(this.revenuetimevalue);
-    },
-    reventime() {
-      this.getgetearningschart();
     }
   },
   mounted() {
     this.getsubtationlist();
     this.getenergyStoragepowers();
-    this.getenergycharts();
-    this.getgetearningschart();
   }
 };
 </script>
@@ -651,23 +409,6 @@ export default {
 }
 .operationmessage:last-of-type {
   border: none;
-}
-.day_charge {
-  .timetab {
-    float: right;
-    .timebox {
-      padding-right: 40px;
-    }
-  }
-}
-.gross_earnings {
-  .timetab {
-    // margin-top: 20px;
-    float: right;
-    .timebox {
-      padding-right: 100px;
-    }
-  }
 }
 </style>
 <style >

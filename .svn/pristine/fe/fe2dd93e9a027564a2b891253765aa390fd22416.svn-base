@@ -154,11 +154,3 @@ export const energyStoragepowers = (subStationId, parms) => {
     params: parms
   });
 };
-//获取储能子站的充放电量列表
-export const getenergyStorageenergys = (subStationId, year, month) => {
-  return axios.get(`/stations/energyStorage/${subStationId}/energys/${year}/${month}`);
-};
-//获取储能子站的收益信息
-export const getearnings = (subStationId, year, month, day) => {
-  return axios.get(`/stations/energyStorage/${subStationId}/incomes/${year}/${month}/${day}`);
-};
