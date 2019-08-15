@@ -129,11 +129,11 @@
         </div>
       </el-col>
     </el-row>
-
     <el-row v-if="activecurrent=='second'" class="Devicemain">
       <device-page></device-page>
     </el-row>
     <el-row v-if="activecurrent=='third'" class="Devicemain">
+      <!-- <div>dedede</div> -->
       <alarm-list></alarm-list>
     </el-row>
     <el-row v-if="activecurrent=='fourth'" class="Devicemain">
@@ -537,6 +537,16 @@ export default {
 .grid-content {
   border-radius: 4px;
   height: 100%;
+}
+
+.typeradiousbad {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #ff8a8a;
+  vertical-align: middle;
+  margin-left: 20px;
 }
 
 .phomessage {

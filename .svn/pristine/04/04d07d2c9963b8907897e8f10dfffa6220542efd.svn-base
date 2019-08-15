@@ -164,9 +164,3 @@ export const getenergyStorageenergys = (subStationId, year, month) => {
 export const getearnings = (subStationId, year, month, day) => {
   return axios.get(`/stations/energyStorage/${subStationId}/incomes/${year}/${month}/${day}`);
 };
-//获取安防子站的摄像头列表
-export const getcamera = (subStationId, parms) => {
-  return axios.get(`/stations/securitySystem/${subStationId}/cameras`, {
-    params: parms
-  });
-};

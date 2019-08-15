@@ -69,16 +69,6 @@
     margin-left: 20px;
   }
 
-  .typeradiousbad {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border-radius: 7px;
-    background: #ff8a8a;
-    vertical-align: middle;
-    margin-left: 20px;
-  }
-
   .typeradiousgood {
     display: inline-block;
     width: 14px;

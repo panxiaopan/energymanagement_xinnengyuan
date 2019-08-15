@@ -71,8 +71,7 @@
                   v-if="item.submenuDatachirden.length !==0"
                 >
                   <template slot="title">
-                    <!-- <i  :class="item[0].permissionIcon" class="fa"></i>   -->
-
+                    <!-- <i  :class="item[0].permissionIcon" class="fa  menuicon"></i>   -->
                     <span>{{item.name}}</span>
                   </template>
                   <el-menu-item
@@ -81,7 +80,6 @@
                     v-for="item in item.submenuDatachirden"
                   >
                     <!-- <i  :class="item.permissionIcon" class="fa  menuicon"></i> -->
-                    <img :src="item.img" alt class="subimgs" />
                     {{item.name}}
                   </el-menu-item>
                 </el-submenu>
@@ -143,26 +141,22 @@ export default {
             if (menu[i].type.value === 10) {
               this.submenuData[1].submenuDatachirden.push({
                 name: "光伏",
-                path: `/Photovoltaic/${this.$route.params.id}/${menu[i].id}`,
-                img: "../../static/imgs/chridenphoto.png"
+                path: `/Photovoltaic/${this.$route.params.id}/${menu[i].id}`
               });
             } else if (menu[i].type.value === 40) {
               this.submenuData[1].submenuDatachirden.push({
                 name: "消防",
-                path: `/firecontrol/${this.$route.params.id}/${menu[i].id}`,
-                img: "../../static/imgs/chirdenfire.png"
+                path: `/firecontrol/${this.$route.params.id}/${menu[i].id}`
               });
             } else if (menu[i].type.value === 20) {
               this.submenuData[1].submenuDatachirden.push({
                 name: "储能",
-                path: `/storedenery/${this.$route.params.id}/${menu[i].id}`,
-                img: "../../static/imgs/chirdenstored.png"
+                path: `/storedenery/${this.$route.params.id}/${menu[i].id}`
               });
             } else if (menu[i].type.value === 50) {
               this.submenuData[1].submenuDatachirden.push({
                 name: "安防",
-                path: `/safeprotection/${this.$route.params.id}/${menu[i].id}`,
-                img: "../../static/imgs/chiderncamera.png"
+                path: `/safeprotection/${this.$route.params.id}/${menu[i].id}`
               });
             }
           }
@@ -249,11 +243,6 @@ export default {
 }
 .el-menu-demo {
   width: 80%;
-}
-.subimgs {
-  // width: 40px;
-  // height: 40px;
-  margin-right: 5px;
 }
 </style>
 <style>
