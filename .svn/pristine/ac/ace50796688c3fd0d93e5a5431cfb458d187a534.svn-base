@@ -1,0 +1,677 @@
+<template>
+  <el-row style="height:100%;min-width:1460px">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-row v-if="activecurrent=='first'">
+      <el-col :span="24">
+        <el-col :span="16" class="padding20">
+          <div class="Statmessage mainbox">
+            <div class="padding20">
+              <span class="boxName">基本情况</span>
+              <div class="typeradiousgood" v-if="status.value===10"></div>
+              <div class="typeradiousgeneral" v-if="status.value===20"></div>
+              <div class="typeradiousbad" v-if="status.value===30"></div>
+              <span class="typedesc">{{status.desc}}</span>
+            </div>
+            <div class="middlemessage">
+              <div class="middeboxmes">
+                <div class="unitName nametop">额定功率 ({{messageobj_all.ratedPower.unit}})</div>
+                <div class="unitName namebottom">{{messageobj_all.ratedPower.value}}</div>
+              </div>
+              <div class="middeboxmes">
+                <div class="unitName nametop">电池容量 ({{messageobj_all.batteryCapacity.unit}})</div>
+                <div class="unitName namebottom">{{messageobj_all.batteryCapacity.value}}</div>
+              </div>
+              <div class="middeboxmes">
+                <div class="unitName nametop">有功功率 ({{messageobj_all.activePower.unit}})</div>
+                <div class="unitName namebottom">{{messageobj_all.activePower.value}}</div>
+              </div>
+              <div class="middeboxmes">
+                <div class="unitName nametop">无功功率 ({{messageobj_all.reactivePower.unit}})</div>
+                <div class="unitName namebottom">{{messageobj_all.reactivePower.value}}</div>
+              </div>
+            </div>
+            <div class="padding20">
+              <span class="boxName">收益&电量</span>
+            </div>
+            <div class="earnmiddle">
+              <div class="earningstoday" v-for="(item,index) in EarningsData" :key="index">
+                <div class="earningsimgtop">
+                  <img :src="Earningsdataimg[index]" alt class="boximg" />
+                </div>
+                <div class="unitName nametop left20">{{item.name+'('+item.unit+')'}}</div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+            <div class="padding20">
+              <span class="boxName">运行信息</span>
+            </div>
+            <div class="earnbottom">
+              <div class="operationmessage" v-for="(item,index) in operationdata" :key="index">
+                <div class="unitName nametop left20">{{item.name+'('+item.unit+')'}}</div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8" class="padding20">
+          <div class="Statmessage mainbox">
+            <div style="padding:20px;position:relative">
+              <div class="boxName">设备状态统计</div>
+              <div class="Devicetotal">
+                <div class="DeviceNumber">{{totalDevice}}</div>
+                <div class="Devicepcs">设备总数(个)</div>
+              </div>
+              <div style="height:420px">
+                <ve-histogram
+                  :data="devicechartData"
+                  :settings="devicechartSettings"
+                  :extend="devicechartExtend"
+                  :yAxis="deviceyAxisOption"
+                  :legend="devicelegend_top"
+                  height="100%"
+                  :grid="devicegrid"
+                  :colors="deviceColor"
+                ></ve-histogram>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-col>
+      <el-col :span="24">
+        <el-col :span="12" class="padding20">
+          <div class="Statmessage mainbox">
+            <div class="padding20">
+              <span class="boxName">功率趋势图</span>
+            </div>
+            <div style="float: right; margin-right: 30px;">
+              <el-date-picker
+                v-model="powertime"
+                align="right"
+                type="date"
+                placeholder="选择日期"
+                value-format="yyyy-MM-dd"
+                :picker-options=" powerpickerOptions"
+                @change="changepower"
+              ></el-date-picker>
+            </div>
+            <div style="height:350px;margin-top: 60px;padding:0px 20px;">
+              <ve-line
+                :data="powerchartData"
+                height="100%"
+                :settings="powerchartSettings"
+                :xAxis="xAxisOption"
+                :colors="powercolor"
+                :yAxis="poweryAxis"
+              ></ve-line>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="12" class="padding20">
+          <div class="Statmessage mainbox day_charge">
+            <div class="padding20">
+              <span class="boxName">充电放电趋势图</span>
+            </div>
+            <div class="timetab">
+              <span class="timebox">
+                <el-radio-group v-model="datatime" size="medium" @change="changetypadata">
+                  <el-radio-button label="月"></el-radio-button>
+                  <el-radio-button label="年"></el-radio-button>
+                  <el-radio-button label="总"></el-radio-button>
+                </el-radio-group>
+              </span>
+              <span class="timebox">
+                <el-date-picker
+                  v-model="timevalue"
+                  :type="typedate"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  @change="batterychangetime"
+                  :picker-options="batterypickerOptions"
+                  :clearable="false"
+                  :disabled="datatime=='总'"
+                ></el-date-picker>
+              </span>
+            </div>
+            <div style="height:350px;margin-top:60px;padding:0px 20px">
+              <ve-histogram
+                :data="batterychartData"
+                height="100%"
+                :settings="batterSetting"
+                :colors="powercolor"
+                :yAxis="batteryAxis"
+              ></ve-histogram>
+            </div>
+          </div>
+        </el-col>
+      </el-col>
+      <el-col :span="24" class="padding20">
+        <div class="Statmessage mainbox gross_earnings">
+          <div class="padding20">
+            <span class="boxName">收益趋势图</span>
+          </div>
+          <div class="timeselect">
+            <div class="timetab">
+              <span class="timebox">
+                <el-radio-group v-model="revenuedatatime" size="medium" @change="revenuechange">
+                  <el-radio-button label="日"></el-radio-button>
+                  <el-radio-button label="月"></el-radio-button>
+                  <el-radio-button label="年"></el-radio-button>
+                  <el-radio-button label="总"></el-radio-button>
+                </el-radio-group>
+              </span>
+              <span class="timebox">
+                <el-date-picker
+                  v-model="revenuetimevalue"
+                  :type="reventypedate"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  :picker-options="batterypickerOptions"
+                  :clearable="false"
+                  :disabled="revenuedatatime=='总'"
+                  @change="reventime"
+                ></el-date-picker>
+              </span>
+            </div>
+          </div>
+          <div style="height:350px;margin-top:60px;padding:0px 20px">
+            <ve-histogram
+              :data="revenchartData"
+              :settings="revenchartSettings"
+              :colors="revencolor"
+              :extend="batterextend"
+              :yAxis="revenyAxis"
+            ></ve-histogram>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row v-if="activecurrent=='second'" class="Devicemain">
+      <device-page></device-page>
+    </el-row>
+    <el-row v-if="activecurrent=='third'" class="Devicemain">
+      <alarm-list></alarm-list>
+    </el-row>
+    <el-row v-if="activecurrent=='fourth'" class="Devicemain">
+      <el-col :span="24" class="mainboxfour">
+        <task-list
+          list-type="workOrder"
+          ref="workOrder"
+          style="margin: 20px 40px"
+          :subid="this.$route.params.subid"
+        ></task-list>
+      </el-col>
+    </el-row>
+  </el-row>
+</template>
+<script>
+import devicePage from "@/components/syllogeDevice/equipment"; //工单
+import alarmList from "@/components/syllogeAlarm/alarmlist"; //报警列表
+import TaskList from "@/components/task-list"; //工单
+import {
+  getsubstation,
+  energyStoragepowers,
+  getenergyStorageenergys,
+  getearnings
+} from "@/api/api";
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+export default {
+  components: {
+    devicePage,
+    alarmList,
+    TaskList
+  },
+  data() {
+    return {
+      activecurrent: "first",
+      status: {},
+      messageobj_all: {
+        ratedPower: {},
+        batteryCapacity: {},
+        activePower: {},
+        reactivePower: {}
+      }, //所有信息,
+      Earningsdataimg: [
+        "../../../static/imgs/storedred.png",
+        "../../../static/imgs/storedred.png",
+        "../../../static/imgs/storedgreen.png",
+        "../../../static/imgs/storedgreen.png",
+        "../../../static/imgs/storedblue.png",
+        "../../../static/imgs/storedblue.png"
+      ],
+      EarningsData: [], //收益数组前六个
+      operationdata: [],
+      totalDevice: 0, //设备总数
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台"
+        // splitLine: {
+        //   show: false
+        // }
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 20,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      powertime: timeFormatdata(new Date()), //功率时间
+      powerpickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "今天",
+            onClick(picker) {
+              picker.$emit("pick", new Date());
+            }
+          },
+          {
+            text: "昨天",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24);
+              picker.$emit("pick", date);
+            }
+          },
+          {
+            text: "一周前",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", date);
+            }
+          }
+        ]
+      },
+      powerchartData: {
+        columns: ["time", "activePower", "reactivePower"],
+        rows: []
+      },
+      powerchartSettings: {
+        legendName: {
+          有功功率: "",
+          无功功率: ""
+        },
+        labelMap: {
+          activePower: "有功功率",
+          reactivePower: "无功功率"
+        }
+      },
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 20);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      powercolor: ["#1B77FC", "#FB5A6E"],
+      poweryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      powerunits: [], //功率单
+      datatime: "月",
+      timevalue: timeFormatmonth(new Date()),
+      typedate: "month",
+      batterypickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      batterychartData: {
+        columns: ["time", "chargeKwh", "dischargeKwh"],
+        rows: []
+      },
+      batterSetting: {
+        labelMap: {
+          chargeKwh: "充电",
+          dischargeKwh: "放电"
+        }
+      },
+      batterextend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%"
+      },
+      batteryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      revenuedatatime: "日",
+      revenuetimevalue: timeFormatdata(new Date()),
+      reventypedate: "date",
+      revenchartData: {
+        columns: ["time", "chargeIncome", "dischargeIncome", "totalIncome"],
+        rows: []
+      },
+      revenchartSettings: {
+        showLine: ["totalIncome"],
+        stack: { 电量: ["chargeIncome", "dischargeIncome"] },
+        labelMap: {
+          chargeIncome: "充电收益",
+          dischargeIncome: "放电收益",
+          totalIncome: "总收益"
+        }
+      },
+      revencolor: ["#1B77FC", "#FB5A6E", "#56D07E"],
+      revenyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      }
+    };
+  },
+  methods: {
+    handleClick() {},
+    getsubtationlist() {
+      //获取子站的信息
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("子站信息");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.status = res.data.data.status;
+            this.messageobj_all = res.data.data;
+            this.EarningsData = res.data.data.statistics.slice(0, 6);
+            this.operationdata = res.data.data.statistics.slice(-6);
+            console.log(this.operationdata);
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+          }
+        }
+      );
+    },
+    getenergyStoragepowers() {
+      //获取功率
+      var parms = {
+        date: this.powertime
+      };
+      energyStoragepowers(this.$route.params.subid, parms).then(res => {
+        console.log("功率");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.powerchartData.rows = res.data.data.logs;
+          let powerunits = res.data.data.units;
+          this.powerchartSettings.legendName.有功功率 =
+            "有功功率" + "(" + res.data.data.units[0] + ")";
+          this.powerchartSettings.legendName.无功功率 =
+            "无功功率" + "(" + res.data.data.units[1] + ")";
+        }
+      });
+    },
+    changepower() {
+      //改变时间
+      this.getenergyStoragepowers();
+    },
+    batterychangetime() {
+      //充电放电趋势图
+      this.getenergycharts();
+    },
+    changetypadata() {
+      //放电
+      this.timevalue = timeFormatdata(new Date());
+      console.log(this.datatime);
+      switch (this.datatime) {
+        case "月":
+          this.typedate = "month";
+          // this.getyeardata();
+          break;
+        case "年":
+          this.typedate = "year";
+          // this.getyeardata();
+          break;
+        default:
+          this.timevalue = "";
+          // this.getyeardata();
+          break;
+      }
+      this.getenergycharts();
+    },
+    getenergycharts() {
+      let data = this.timevalue.split("-");
+      if (this.timevalue == "") {
+        //总
+        var year = "";
+        var month = "";
+      } else if (this.datatime == "年") {
+        var year = data[0];
+        var month = "";
+      } else {
+        var year = data[0];
+        var month = data[1];
+      }
+      // var parms={}
+      getenergyStorageenergys(this.$route.params.subid, year, month).then(
+        res => {
+          console.log("能源");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.batterychartData.rows = res.data.data.logs;
+            this.batteryAxis.name = "单位/" + res.data.data.units[0];
+          }
+        }
+      );
+    },
+    revenuechange() {
+      //充电放电切换
+      this.revenuetimevalue = timeFormatdata(new Date());
+      switch (this.revenuedatatime) {
+        case "日":
+          console.log("ririrrir");
+          this.reventypedate = "date";
+        case "月":
+          this.reventypedate = "month";
+          // this.getyeardata();
+          break;
+        case "年":
+          this.reventypedate = "year";
+          // this.getyeardata();
+          break;
+        default:
+          // this.revenuetimevalue = "";
+          // this.revenuedatatime = "";
+          // this.getyeardata();
+          console.log(this.revenuetimevalue);
+          break;
+      }
+      this.getgetearningschart();
+      //console.log(this.revenuetimevalue);
+    },
+    getgetearningschart() {
+      //获取收益趋势图
+
+      let data = this.revenuetimevalue.split("-");
+      if (this.revenuedatatime == "日") {
+        //总
+        var year = data[0];
+        var month = data[1];
+        var date = data[2];
+      } else if (this.revenuedatatime == "年") {
+        var year = data[0];
+        var month = "";
+        var date = "";
+      } else if (this.revenuedatatime == "月") {
+        var year = data[0];
+        var month = data[1];
+        var date = "";
+      } else {
+        var year = "";
+        var month = "";
+        var date = "";
+      }
+      getearnings(this.$route.params.subid, year, month, date).then(res => {
+        console.log("收益趋势图---------");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.revenchartData.rows = res.data.data.logs;
+          this.revenyAxis.name = "收益/" + res.data.data.units[0];
+        }
+      });
+
+      console.log(this.revenuetimevalue);
+    },
+    reventime() {
+      this.getgetearningschart();
+    }
+  },
+  mounted() {
+    this.getsubtationlist();
+    this.getenergyStoragepowers();
+    this.getenergycharts();
+    this.getgetearningschart();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.Devicemain {
+  height: 100%;
+  // border: 1px solid blue;
+  padding: 80px 20px 0px 20px;
+}
+.Statmessage {
+  height: 490px;
+  // border: 1px solid red;
+}
+.unitName {
+  height: 30px;
+  line-height: 30px;
+}
+.middlemessage {
+  height: 60px;
+  // border: 1px solid red;
+  display: flex;
+  justify-content: space-evenly;
+}
+.middeboxmes {
+  height: 60px;
+  width: 200px;
+  // border: 1px solid;
+  // text-align: center;
+}
+.nametop {
+  color: #636f8a;
+  font-family: "微软雅黑";
+}
+.namebottom {
+  color: #181343;
+  font-family: "微软雅黑";
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.operationmessage {
+  width: 159px;
+  height: 60px;
+  border-right: 1px solid #b6bbc6;
+}
+.operationmessage:last-of-type {
+  border: none;
+}
+.day_charge {
+  .timetab {
+    float: right;
+    .timebox {
+      padding-right: 40px;
+    }
+  }
+}
+.gross_earnings {
+  .timetab {
+    // margin-top: 20px;
+    float: right;
+    .timebox {
+      padding-right: 100px;
+    }
+  }
+}
+</style>
+<style >
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+</style>

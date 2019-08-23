@@ -1,0 +1,601 @@
+<template>
+  <!-- <div>充电站</div> -->
+  <el-row style="height:100%;min-width:1460px;">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-row>
+      <el-row v-if="activecurrent=='first'" style="height:100%">
+        <el-col :span="24" style="height:380px;">
+          <el-col :span="14" class="padding20">
+            <div class="padding20 mainbox">
+              <span class="boxName">充电站信息</span>
+              <div class="typeradiousgood" v-if="status.value===10"></div>
+              <div class="typeradiousgeneral" v-if="status.value===20"></div>
+              <div class="typeradiousbad" v-if="status.value===30"></div>
+              <span class="typedesc">{{status.desc}}</span>
+              <span class="typedesc">{{status.updateTime}}</span>
+
+              <div class="charstationdata">
+                <div
+                  class="earningstoday right20"
+                  v-for="(item,index) in EarningsData"
+                  :key="index"
+                >
+                  <div class="earningsimgtop">
+                    <img :src="Earningsdataimg[index]" alt class="boximg" />
+                  </div>
+                  <div class="unitName nametop left20">{{item.name+'('+item.unit+')'}}</div>
+                  <div class="unitName namebottom left20">{{item.value}}</div>
+                </div>
+              </div>
+            </div>
+          </el-col>
+          <el-col :span="10" class="padding20">
+            <div class="Statmessage mainbox">
+              <div style="padding:20px;position:relative">
+                <div class="boxName">设备状态统计</div>
+                <div class="Devicetotal">
+                  <div class="DeviceNumber">{{totalDevice}}</div>
+                  <div class="Devicepcs">设备总数(个)</div>
+                </div>
+                <div style="height:280px">
+                  <ve-histogram
+                    :data="devicechartData"
+                    :settings="devicechartSettings"
+                    :extend="devicechartExtend"
+                    :yAxis="deviceyAxisOption"
+                    :legend="devicelegend_top"
+                    height="100%"
+                    :grid="devicegrid"
+                    :colors="deviceColor"
+                  ></ve-histogram>
+                </div>
+              </div>
+            </div>
+          </el-col>
+        </el-col>
+        <el-col :span="24">
+          <el-col :span="12" class="padding20 shCollagen">
+            <div class="padding20 mainbox">
+              <span class="boxName">使用率、功率趋势图</span>
+              <div style="float: right; margin-right: 30px;">
+                <el-date-picker
+                  v-model="powertime"
+                  align="right"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  :picker-options=" powerpickerOptions"
+                  @change="changepower"
+                ></el-date-picker>
+              </div>
+              <div style="height:280px">
+                <ve-line
+                  :data="powerchartData"
+                  height="100%"
+                  :yAxis="poweryAxis"
+                  :colors="powercolor"
+                  :xAxis="xAxisOption"
+                  :settings="powerSettings"
+                  :grid="powergrid"
+                ></ve-line>
+              </div>
+            </div>
+          </el-col>
+          <el-col
+            :span="12"
+            class="padding20 shCollagen"
+            v-for="(item,index) in gardendata"
+            :key="index"
+          >
+            <div class="padding20 mainbox">
+              <span class="boxName">{{item.name}}</span>
+              <div style="height:280px;position:relative">
+                <div class="sumtotal">
+                  {{item.name}}总数
+                  <span style="font-size:16px">{{item.taotal}}个</span>
+                </div>
+
+                <div class="Nouse">
+                  <div class="Nousemessage nousetotal">充电个数{{'('+item.use+'个)'}}</div>
+                  <div
+                    class="Nousemessage nousescale"
+                  >{{(item.use/item.taotal*100).toFixed(2) +'%'}}</div>
+                  <!-- <span>{{item.}}</span> -->
+                </div>
+                <ve-ring
+                  :data="item.datavalue"
+                  height="100%"
+                  :settings="ringSettings"
+                  :legend="ringlegend"
+                  :colors="ringscolor"
+                ></ve-ring>
+              </div>
+            </div>
+          </el-col>
+        </el-col>
+        <el-col :span="24" style="height:340px;">
+          <el-col :span="24" class="padding20 shCollagen">
+            <div class="padding20 mainbox day_charge">
+              <span class="boxName">充电量、等效小时统计</span>
+              <div class="timetab">
+                <span class="timebox">
+                  <el-radio-group v-model="datatime" size="medium" @change="changetypadata">
+                    <el-radio-button label="月"></el-radio-button>
+                    <el-radio-button label="年"></el-radio-button>
+                    <el-radio-button label="总"></el-radio-button>
+                  </el-radio-group>
+                </span>
+                <span class="timebox">
+                  <el-date-picker
+                    v-model="timevalue"
+                    :type="typedate"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                    @change="batterychangetime"
+                    :picker-options="batterypickerOptions"
+                    :clearable="false"
+                    :disabled="datatime=='总'"
+                  ></el-date-picker>
+                </span>
+              </div>
+              <div style="height:240px;padding:0px 20px;margin-top:20px">
+                <ve-histogram
+                  :data="batterychartData"
+                  height="100%"
+                  :settings="batterSetting"
+                  :colors="powercolor"
+                  :yAxis="batteryAxis"
+                ></ve-histogram>
+              </div>
+            </div>
+          </el-col>
+        </el-col>
+      </el-row>
+      <el-row v-if="activecurrent=='second'" class="Devicemain">
+        <device-page :ischaring="true"></device-page>
+      </el-row>
+      <el-row v-if="activecurrent=='third'" class="Devicemain">
+        <alarm-list></alarm-list>
+      </el-row>
+      <el-row v-if="activecurrent=='fourth'" class="Devicemain">
+        <el-col :span="24" class="mainboxfour">
+          <task-list
+            list-type="workOrder"
+            ref="workOrder"
+            style="margin: 20px 40px"
+            :subid="this.$route.params.subid"
+          ></task-list>
+        </el-col>
+      </el-row>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+import devicePage from "@/components/syllogeDevice/equipment"; //工单
+import alarmList from "@/components/syllogeAlarm/alarmlist"; //报警列表
+import TaskList from "@/components/task-list"; //工单
+import {
+  getsubstation,
+  getpowerAndUsages,
+  getchargeKwhAndHours
+} from "@/api/api";
+
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+export default {
+  components: {
+    devicePage,
+    alarmList,
+    TaskList
+  },
+  data() {
+    return {
+      batterypickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      powerpickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "今天",
+            onClick(picker) {
+              picker.$emit("pick", new Date());
+            }
+          },
+          {
+            text: "昨天",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24);
+              picker.$emit("pick", date);
+            }
+          },
+          {
+            text: "一周前",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", date);
+            }
+          }
+        ]
+      },
+      activecurrent: "first",
+      status: {
+        updateTime: ""
+      },
+      Earningsdataimg: [
+        "static/imgs/storedred.png",
+        "static/imgs/storedgreen.png",
+        "static/imgs/storedblue.png",
+        "static/imgs/storedred.png"
+      ],
+      EarningsData: [],
+      totalDevice: 0, //设备总数
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台"
+        // splitLine: {
+        //   show: false
+        // }
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 20,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      ChargerchartData: {
+        rows: [],
+        columns: ["desc", "count"]
+      },
+      ringSettings: {
+        offsetY: 140,
+        radius: [80, 120]
+      },
+      ringlegend: {
+        top: 80,
+        right: 40,
+        width: 60
+      },
+      ringscolor: ["#11CF98", "#9DB6D1", "#566CFE", "#FFA45F"],
+      chargingtotal: 0, //充电桩的总个数
+      charggarden: {},
+      powertime: timeFormatdata(new Date()), //功率时间
+      gardendata: [],
+      powerchartData: {
+        rows: [],
+        columns: ["time", "power", "usage"]
+      },
+      poweryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      powercolor: ["#1B77FC", "#FB5A6E"],
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 20);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      powergrid: {
+        right: 60,
+        left: 60
+      },
+      powerSettings: {
+        labelMap: {
+          power: "功率",
+          usage: "使用率"
+        },
+        axisSite: { right: ["使用率"] },
+        yAxisType: ["", "percent"],
+        yAxisName: ["功率", "比率"]
+      },
+      datatime: "月",
+      timevalue: timeFormatmonth(new Date()),
+      typedate: "month",
+      batterychartData: {
+        columns: ["time", "chargeKwh", "hour"],
+        rows: []
+      },
+      batterSetting: {
+        labelMap: {
+          chargeKwh: "充电",
+          hour: "等效小时"
+        }
+      },
+      batterextend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%"
+      },
+      batteryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      }
+    };
+  },
+  methods: {
+    getpower() {
+      var parms = {
+        date: this.powertime
+      };
+      getpowerAndUsages(this.$route.params.subid, parms).then(res => {
+        console.log("功率趋势图");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.powerchartData.rows = res.data.data.logs;
+          //this.powerSettings.yAxisName[0] = "单位/" + res.data.data.unit[0];
+        }
+      });
+    },
+
+    handleClick() {},
+    getsubSummary() {
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          // cosnole.log("总汇");
+          // cosnole.log(res);
+          console.log("总汇==");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.status = res.data.data.status;
+            this.EarningsData = res.data.data.statistics;
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+            //  this.gardendata = res.data.data.chargingPileTypeAndStatusCounts;
+
+            this.ChargerchartData.rows =
+              res.data.data.chargingPileStatusAndCounts;
+            let chagedata = res.data.data.chargingPileTypeAndStatusCounts;
+            let allData = [];
+            for (let j = 0; j < chagedata.length; j++) {
+              let deviobj = {
+                datavalue: {
+                  rows: [],
+                  columns: ["desc", "count"]
+                }
+              };
+              let devicetatal = 0;
+              for (let g = 0; g < chagedata[j].valueDescAndCounts.length; g++) {
+                //this.chargingtotal += chagedata[j].valueDescAndCounts.count;
+                if (chagedata[j].valueDescAndCounts[g].value === 10) {
+                  deviobj["use"] = chagedata[j].valueDescAndCounts[g].count;
+                }
+                // console.log(chagedata[j].valueDescAndCounts[g].count);
+                deviobj["name"] = chagedata[j].type.desc;
+                devicetatal += chagedata[j].valueDescAndCounts[g].count;
+                deviobj["taotal"] = devicetatal;
+                deviobj.datavalue["rows"] = chagedata[j].valueDescAndCounts;
+              }
+              allData.push(deviobj);
+              // console.log("数值总数");
+              // console.log(allData);
+              this.gardendata = allData;
+              // if (res.data.data.chargingPileStatusAndCounts[j].value === 10) {
+              //   this.charggarden = res.data.data.chargingPileStatusAndCounts[j];
+              // }
+            }
+          }
+        }
+      );
+    },
+    changepower() {
+      this.getpower();
+    },
+    chargeKwhAndHourslist() {
+      let data = this.timevalue.split("-");
+      if (this.timevalue == "") {
+        //总
+        var year = "";
+        var month = "";
+      } else if (this.datatime == "年") {
+        var year = data[0];
+        var month = "";
+      } else {
+        var year = data[0];
+        var month = data[1];
+      }
+      getchargeKwhAndHours(this.$route.params.subid, year, month).then(res => {
+        console.log("--等效---");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.batterychartData.rows = res.data.data.logs;
+          this.batteryAxis.name = "单位/" + res.data.data.units[0];
+        }
+      });
+    },
+
+    changetypadata() {
+      //放电
+      this.timevalue = timeFormatdata(new Date());
+      console.log(this.datatime);
+      switch (this.datatime) {
+        case "月":
+          this.typedate = "month";
+          // this.getyeardata();
+          break;
+        case "年":
+          this.typedate = "year";
+          // this.getyeardata();
+          break;
+        default:
+          this.timevalue = "";
+          // this.getyeardata();
+          break;
+      }
+      //this.getenergycharts();
+      this.chargeKwhAndHourslist();
+    },
+    batterychangetime() {
+      //
+      this.chargeKwhAndHourslist();
+      console.log(this.timevalue);
+    }
+  },
+  mounted() {
+    this.getsubSummary();
+
+    this.getpower();
+    this.chargeKwhAndHourslist();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.unitName {
+  height: 30px;
+  line-height: 30px;
+}
+.namebottom {
+  color: #181343;
+  font-family: "微软雅黑";
+  font-weight: 600;
+  font-size: 18px;
+}
+.nametop {
+  color: #636f8a;
+  font-family: "微软雅黑";
+}
+.charstationdata {
+  height: 222px;
+  margin-top: 60px;
+}
+.right20 {
+  margin-right: 20px;
+}
+.sumtotal {
+  // float: right;
+  // padding-right: 40px;
+  color: #181343;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  position: absolute;
+  right: 10px;
+}
+.Nouse {
+  position: absolute;
+  width: 120px;
+  // border: 1px solid;
+  height: 80px;
+  text-align: center;
+  left: calc(50% - 60px);
+  top: calc(50% - 40px);
+  z-index: 1000000;
+}
+.Nousemessage {
+  height: 40px;
+  line-height: 40px;
+  // border: 1px solid red;
+}
+.nousetotal {
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #181343;
+}
+.nousescale {
+  font-family: Microsoft YaHei;
+  font-weight: 800;
+  color: #181343;
+  font-size: 30px;
+}
+.day_charge {
+  .timetab {
+    float: right;
+    .timebox {
+      padding-right: 40px;
+    }
+  }
+}
+</style>
+<style >
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+</style>

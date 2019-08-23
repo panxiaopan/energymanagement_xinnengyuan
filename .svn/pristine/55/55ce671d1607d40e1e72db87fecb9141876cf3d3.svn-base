@@ -1,0 +1,42 @@
+<template>
+  <!-- <div>充电站</div> -->
+  <el-row style="height:100%;min-width:1460px;">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-row class="Devicemain">
+      <el-row v-if="activecurrent=='first'" style="height:100%">
+        <el-col :span="24" style="height:100%">
+          <div class="mainbox"></div>
+        </el-col>
+      </el-row>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      activecurrent: "first"
+    };
+  },
+  methods: {
+    handleClick() {}
+  },
+  mounted() {}
+};
+</script>
+
+<style lang="scss" scoped>
+</style>
+<style >
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+</style>

@@ -1,0 +1,419 @@
+<template>
+  <el-col :span="24" class="mainbox">
+    <el-col :span="8" class="deviceleftlist">
+      <div class="devicelist">
+        <div style="padding:20px">
+          <el-input placeholder="请输入设备名称" v-model="deviceName" class="input-with-select">
+            <el-button slot="append" icon="el-icon-search" @click="seachDevice"></el-button>
+          </el-input>
+          <div class="equipmentType">设备类型</div>
+          <el-select
+            v-model="deviceType"
+            placeholder="请选择设备类型"
+            style="width:100%"
+            @change="changedevicetype"
+          >
+            <el-option
+              v-for="item in deviceoptions"
+              :key="item.value"
+              :label="item.name"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+
+          <div style="min-height:400px;">
+            <div class="deviceselect" v-for="(item ,index) in device_list" :key="index">
+              <el-radio-group
+                v-model="currentradio"
+                @change="changeradio"
+                style="width:100%;height:100%"
+              >
+                <el-radio :label="index">
+                  <p style="padding: 0 10px">
+                    <span class="currentdeviceName">{{item.name}}</span>
+                    <span style="float:right">
+                      <span class="devicetype devicebreakdown" v-if="item.status.value==40"></span>
+                      <span class="devicetype devicealrem" v-if="item.status.value==30"></span>
+                      <span class="devicetype deviceoffline" v-if="item.status.value==20"></span>
+                      <span class="devicetype devicenormal" v-if="item.status.value==10"></span>
+                      {{item.status.desc}}
+                    </span>
+                  </p>
+                  <span style="margin-left:10px">
+                    <i class="el-icon-location"></i>
+                  </span>
+                  <span>{{item.address}}</span>
+                </el-radio>
+              </el-radio-group>
+            </div>
+          </div>
+          <el-col :span="24" style="margin-top:20px">
+            <page-compent :pageSize="size" :pagetotal="paggtatol" @fanye="pageIndexChange"></page-compent>
+          </el-col>
+        </div>
+      </div>
+    </el-col>
+    <el-col :span="16" style="height:100%;padding:20px 0px;overflow:hidden">
+      <div style="height:100%">
+        <div class="equipmentType">设备信息</div>
+        <p class="device_detail" v-if="device_list[currentradio]">
+          <span>设备状态:{{device_list[currentradio].status.desc}}</span>
+          <span class="devicesty">设备更新时间:{{device_list[currentradio].status.updateTime}}</span>
+        </p>
+        <p class="device_detail" v-if="device_list[currentradio]">
+          <span>设备品牌:{{device_list[currentradio].brandName}}</span>
+          <span class="devicesty">设备型号:{{device_list[currentradio].modelName}}</span>
+        </p>
+        <div>
+          <el-table :data="devicetableDatamesage" height="550" border style="width: 90%">
+            <el-table-column prop="measureName" label="测点名称"></el-table-column>
+            <el-table-column prop="value" label="数值"></el-table-column>
+            <el-table-column prop="unit" label="单位"></el-table-column>
+            <el-table-column label="查看历史">
+              <template slot-scope="scope">
+                <i
+                  class="fa fa-eye lookover"
+                  aria-hidden="true"
+                  @click="checkinformation(scope.row)"
+                ></i>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </el-col>
+    <el-dialog :title="pointname" :visible.sync="DevicedialogVisible" width="40%">
+      <div style="float:right">
+        <el-date-picker
+          v-model="valuedevicetime"
+          type="daterange"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          :picker-options="devicepickerOptions"
+          @change="changedevice_time"
+        ></el-date-picker>
+      </div>
+      <div style="margin-top:20px">
+        <ve-line
+          :data="singlechartData"
+          :legend-visible="false"
+          :xAxis="singaxisLabel"
+          :settings="singsettings"
+          :yAxis="singsyAxis"
+        ></ve-line>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="DevicedialogVisible = false" size="mini">关 闭</el-button>
+      </span>
+    </el-dialog>
+  </el-col>
+</template>
+
+<script>
+import pageCompent from "@/components/pagination"; //分页
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+import {
+  getdevice,
+  getdeviceTypes,
+  getdevicesrealtime,
+  getdeviceIddataId
+} from "@/api/api";
+export default {
+  components: {
+    pageCompent
+  },
+  data() {
+    return {
+      currentradio: 0, //默认选中第一个
+      start: 0, //起始记录数，默认为0
+      size: 5, //每页记录数，默认为10
+      paggtatol: null, //总条数/
+      deviceType: "",
+      deviceName: "", //设备名称
+      deviceoptions: [], //设备类型选择
+      valuedevicetime: [timeFormastart(new Date()), timeFormanow(new Date())], //设备时间
+      pointname: "", //点中的名字
+      currentindex: "", //电机的单个设备
+      DevicedialogVisible: false, //设备弹框
+      device_list: [], //设备列表
+      devicepickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近三个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit("pick", [start, end]);
+            }
+          }
+        ],
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      singlechartData: {
+        columns: ["time", "value"],
+        rows: []
+      },
+      singaxisLabel: {
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            // console.log(value)
+            var str_before = value.split(" ")[0];
+            var str_after = value.split(" ")[1];
+            return str_after + "\n" + str_before;
+          }
+        }
+      },
+      singsettings: {
+        labelMap: {
+          value: "值"
+        }
+      },
+      singsyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      devicetableDatamesage: []
+    };
+  },
+  methods: {
+    getdevicetype() {
+      //设备类型
+      getdeviceTypes(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("设备类型");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.deviceoptions = res.data.data;
+          }
+        }
+      );
+    },
+    pageIndexChange(index) {
+      console.log(index);
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getdevicelist();
+      //分页
+    },
+    getdevicelist() {
+      //获取子站的设备列表\
+      var parms = {
+        start: this.start,
+        size: this.size,
+        keyword: this.deviceName,
+        deviceType: this.deviceType
+      };
+      getdevice(this.$route.params.id, this.$route.params.subid, parms).then(
+        res => {
+          console.log("=设备==");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.device_list = res.data.data.rows;
+            if (this.start == 0) {
+              //因为就第一次的时候总数是对的,,
+              //页面值过来了一次
+              this.paggtatol = res.data.data.total;
+            }
+          }
+        }
+      );
+    },
+    seachDevice() {
+      //关键词查找
+      this.getdevicelist();
+    },
+
+    changeradio() {
+      console.log("当前选中");
+      console.log(this.currentradio);
+      //
+      this.$nextTick(() => {
+        this.getdevicedDeil();
+      });
+    },
+    changedevicetype() {
+      //设备类型
+      //console.log(this.deviceType);
+      this.getdevicelist();
+      setTimeout(() => {
+        this.getdevicedDeil();
+      }, 400);
+      // console.log("数组");
+      // console.log(this.device_list);
+      // console.log(this.device_list[this.currentradio].id);
+    },
+    getdevicedDeil() {
+      //实时数据
+      getdevicesrealtime(this.device_list[this.currentradio].id).then(res => {
+        console.log("实时数据");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.devicetableDatamesage = res.data.data;
+        }
+      });
+    },
+    checkinformation(index) {
+      //查看设备信息
+      this.valuedevicetime = [
+        timeFormastart(new Date()),
+        timeFormanow(new Date())
+      ];
+      console.log(index);
+      this.pointname = index.measureName;
+      this.currentindex = index.dataId;
+      this.DevicedialogVisible = true;
+      this.getsingdevicedetail();
+    },
+    getsingdevicedetail() {
+      var parms = {
+        startTime: this.valuedevicetime[0],
+        endTime: this.valuedevicetime[1]
+      };
+      getdeviceIddataId(
+        this.device_list[this.currentradio].id,
+        this.currentindex,
+        parms
+      ).then(res => {
+        console.log("------单个设备");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.singlechartData.rows = res.data.data.logs;
+          this.singsyAxis.name = "单位/" + res.data.data.unit;
+        }
+      });
+    },
+    changedevice_time() {
+      //改变时间
+      this.getsingdevicedetail();
+      console.log(this.valuedevicetime);
+    }
+  },
+  mounted() {
+    this.getdevicetype();
+    this.getdevicelist();
+    console.log(this.device_list);
+    setTimeout(() => {
+      this.getdevicedDeil();
+    }, 800);
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.devicelist {
+  height: 100%;
+  border: 1px solid #ededed;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.deviceleftlist {
+  height: 100%;
+  padding: 20px 70px;
+}
+.device_detail {
+  width: 40%;
+  font-size: 14px;
+  font-family: "微软雅黑";
+  color: #606266;
+  .devicesty {
+    float: right;
+    width: 60%;
+  }
+}
+.equipmentType {
+  font-family: "微软雅黑";
+  font-size: 14px;
+  color: #181343;
+  height: 40px;
+  line-height: 40px;
+  font-weight: 800;
+}
+.currentdeviceName {
+  font-family: "微软雅黑";
+  font-size: 16px;
+  font-weight: 800;
+}
+.devicetype {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.devicealrem {
+  background: #f85e36;
+}
+.deviceoffline {
+  background: #799bc0;
+}
+.devicenormal {
+  background: #84be62;
+}
+.devicebreakdown {
+  background: #ffbb1e;
+}
+.deviceselect {
+  height: 80px;
+  line-height: 80px;
+  margin-top: 20px;
+  // border: 1px solid;
+}
+.lookover {
+  cursor: pointer;
+}
+</style>
+<style>
+.deviceselect .el-radio__inner {
+  display: none;
+}
+.deviceselect .el-radio {
+  width: 100%;
+  height: 100%;
+  /* vertical-align: middle;
+  line-height: 80px; */
+  vertical-align: top;
+}
+.deviceselect .is-checked {
+  background: aliceblue;
+}
+</style>
+

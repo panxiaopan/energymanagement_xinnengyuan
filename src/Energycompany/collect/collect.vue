@@ -10,501 +10,588 @@
         <el-tab-pane label="概述" name="second"></el-tab-pane>
       </el-tabs>
     </el-col>
-    <el-col :span="24">
-      <div class="EnergySystem" style="margin-top:20px">
-        <div class="titleName">
-          <div class="titlefont">智慧能源站信息</div>
-        </div>
-        <div class="Devicetotal">
-          <div class="DeviceTotal">全局设备分类统计</div>
-          <div class="DeviceNumber">{{totalDevice}}</div>
-          <div class="Devicepcs">设备总数(个)</div>
-        </div>
-        <div class="progressbar">
-          <div class="DeviceTotal">系统状态</div>
-          <div style="width:200px">
-            <el-progress
-              :text-inside="true"
-              :stroke-width="26"
-              :percentage="Devicepercentage.score"
-              :color="customColorMethod"
-            ></el-progress>
-            <div class="bardesc">{{Devicepercentage.desc}}</div>
-          </div>
-        </div>
-        <ve-histogram
-          :data="devicechartData"
-          :settings="devicechartSettings"
-          :extend="devicechartExtend"
-          :yAxis="deviceyAxisOption"
-          :legend="devicelegend_top"
-          height="100%"
-          :grid="devicegrid"
-          :colors="deviceColor"
-        ></ve-histogram>
-      </div>
-    </el-col>
-    <el-col :span="24" v-if="monitorobj.hasOwnProperty('solarSummary')">
-      <div class="EnergySystem">
-        <div class="titleName">
-          <div class="titlefont">
-            <img src="../../assets/imgs/Photovoltaic.png" alt class="boximg" />
-            光伏
-          </div>
-        </div>
-        <div class="photovoltaic">
-          <div class="photovoltaicleft">
-            <div class="Devicetotal">
-              <div class="DeviceTotal">系统状态</div>
 
-              <div style="width:200px">
-                <el-progress
-                  :text-inside="true"
-                  :stroke-width="26"
-                  :percentage="photovoltaicbar.score"
-                  :color="customColorMethod"
-                ></el-progress>
-                <div class="bardesc">{{photovoltaicbar.desc}}</div>
-              </div>
+    <el-row v-if="activecurrent=='first' ">
+      <el-col :span="24">
+        <div class="EnergySystem" style="margin-top:20px">
+          <div class="titleName">
+            <div class="titlefont">智慧能源站信息</div>
+          </div>
+          <div class="Devicetotal">
+            <div class="DeviceTotal">全局设备分类统计</div>
+            <div class="DeviceNumber">{{totalDevice}}</div>
+            <div class="Devicepcs">设备总数(个)</div>
+          </div>
+          <div class="progressbar">
+            <div class="DeviceTotal">系统状态</div>
+            <div style="width:200px">
+              <el-progress
+                :text-inside="true"
+                :stroke-width="26"
+                :percentage="Devicepercentage.score"
+                :color="customColorMethod"
+              ></el-progress>
+              <div class="bardesc">{{Devicepercentage.desc}}</div>
             </div>
           </div>
-          <div class="photovoltaicright">
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/install.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">装机容量({{solarSummary.installedCapacity.unit}})</div>
-                  <div class="unitsvalue">{{solarSummary.installedCapacity.value}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/power.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">今日电量({{solarSummary.todayKwh.unit}})</div>
-                  <div class="unitsvalue">{{solarSummary.todayKwh.value}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/power.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">当前功率({{solarSummary.currentActivePower.unit}})</div>
-                  <div class="unitsvalue">{{solarSummary.currentActivePower.value}}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="height:300px">
-          <ve-line
-            :data="CPVchartData"
-            :settings="CPVchartSettings"
+          <ve-histogram
+            :data="devicechartData"
+            :settings="devicechartSettings"
+            :extend="devicechartExtend"
+            :yAxis="deviceyAxisOption"
+            :legend="devicelegend_top"
             height="100%"
-            :yAxis="CPVyAxis"
-            :legend-visible="false"
-            :colors="CPVcolors"
-            :xAxis="tonngxAxis"
-            :extend="CPVchartExtend"
-            :grid="CPVgrid"
-          ></ve-line>
+            :grid="devicegrid"
+            :colors="deviceColor"
+          ></ve-histogram>
         </div>
-      </div>
-    </el-col>
-    <el-col :span="24" v-if="monitorobj.hasOwnProperty('energyStorageSummary')">
-      <div class="storedenergy">
-        <div class="titleName">
-          <div class="titlefont">
-            <img src="../../assets/imgs/storedenery.png" alt class="boximg" />
-            储能
-          </div>
-        </div>
-        <div class="photovoltaic">
-          <div class="photovoltaicleft">
-            <div class="Devicetotal">
-              <div class="DeviceTotal">系统状态</div>
-
-              <div style="width:200px">
-                <el-progress
-                  :text-inside="true"
-                  :stroke-width="26"
-                  :percentage="storedenergy.score"
-                  :color="customColorMethod"
-                ></el-progress>
-                <div class="bardesc">{{storedenergy.desc}}</div>
-              </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('solarSummary')">
+        <div class="EnergySystem">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/Photovoltaic.png" alt class="boximg" />
+              光伏
             </div>
           </div>
-          <div class="photovoltaicright">
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/install.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">装机容量({{energyStorageSummary.batteryCapacity.unit}})</div>
-                  <div class="unitsvalue">{{energyStorageSummary.batteryCapacity.value}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/power.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">额定功率({{energyStorageSummary.ratedPower.unit}})</div>
-                  <div class="unitsvalue">{{energyStorageSummary.ratedPower.value}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="photovolcapacity">
-              <div class="photovolbox">
-                <div class="photvolboxleft">
-                  <img src="../../assets/imgs/power.png" alt class="boximg" />
-                </div>
-                <div class="photvolboxright">
-                  <div class="units">当前功率({{energyStorageSummary.currentActivePower.unit}})</div>
-                  <div class="unitsvalue">{{energyStorageSummary.currentActivePower.value}}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="photomessage">运行信息</div>
-        <div class="photomiddle">
-          <div class="middlebox">
-            <div class="photovolbox">
-              <div class="reserve_energy fristback">
-                <img src="../../assets/imgs/fristback.png" alt class="boximg" />
-              </div>
-              <div class="photvolboxright">
-                <div class="unitsvalue">{{energyStorageSummary.todayChargeKwh.value}}</div>
-                <div class="units">日充电量({{energyStorageSummary.todayChargeKwh.unit}})</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="middlebox">
-            <div class="photovolbox">
-              <div class="reserve_energy secondback">
-                <img src="../../assets/imgs/secondback.png" alt class="boximg" />
-              </div>
-              <div class="photvolboxright">
-                <div class="unitsvalue">{{energyStorageSummary.todayDischargeKwh.value}}</div>
-                <div class="units">日放电量({{energyStorageSummary.todayDischargeKwh.unit}})</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="middlebox">
-            <div class="photovolbox">
-              <div class="reserve_energy thirdnack">
-                <img src="../../assets/imgs/thirdnack.png" alt class="boximg" />
-              </div>
-              <div class="photvolboxright">
-                <div class="unitsvalue">{{energyStorageSummary.SOC}}</div>
-                <div class="units">总SOC</div>
-              </div>
-            </div>
-          </div>
-          <div class="middlebox">
-            <div class="photovolbox">
-              <div class="reserve_energy fourthback">
-                <img src="../../assets/imgs/fourthback.png" alt class="boximg" />
-              </div>
-              <div class="photvolboxright">
-                <div class="unitsvalue">{{energyStorageSummary.SOH}}</div>
-                <div class="units">总SOH</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="photovfoot">
-          <div class="photomessage">日充放电量趋势图</div>
-          <ve-line
-            :data="photvochartData"
-            height="100%"
-            :xAxis="tonngxAxis"
-            :settings="photvosetting"
-            :yAxis="photyAxis"
-            :colors="photycolors"
-            :grid="phogrid"
-            :legend="phogridlegend"
-          ></ve-line>
-        </div>
-      </div>
-    </el-col>
-    <el-col :span="24" v-if="monitorobj.hasOwnProperty('chargingStationSummary')">
-      <div class="storedenergy">
-        <div class="titleName">
-          <div class="titlefont">
-            <img src="../../assets/imgs/chargingstation.png" alt class="boximg" />
-            充电站
-          </div>
-        </div>
-        <el-col :span="24">
-          <el-col :span="18">
-            <div>
-              <div class="energytotal">
+          <div class="photovoltaic">
+            <div class="photovoltaicleft">
+              <div class="Devicetotal">
                 <div class="DeviceTotal">系统状态</div>
 
                 <div style="width:200px">
                   <el-progress
                     :text-inside="true"
                     :stroke-width="26"
-                    :percentage="rechargevar.status.score"
+                    :percentage="photovoltaicbar.score"
                     :color="customColorMethod"
                   ></el-progress>
-                  <div class="bardesc">{{rechargevar.status.desc}}</div>
+                  <div class="bardesc">{{photovoltaicbar.desc}}</div>
                 </div>
               </div>
             </div>
-            <div class="energymessage">系统信息</div>
-            <div class="systemmessage">
-              <div class="systembox">
-                <div class="photvolboxright">
-                  <div class="unitsvalue">{{rechargevar.installedCapacity.value}}</div>
-                  <div class="units">装机功率({{rechargevar.installedCapacity.unit}})</div>
-                </div>
-              </div>
-              <div class="systembox">
-                <div class="photvolboxright">
-                  <div class="unitsvalue">{{rechargevar.dcChargingPileNumber}}</div>
-                  <div class="units">直流充电桩(个)</div>
-                </div>
-              </div>
-              <div class="systembox">
-                <div class="photvolboxright">
-                  <div class="unitsvalue">{{rechargevar.acChargingPileNumber}}</div>
-                  <div class="units">交流充电桩(个)</div>
-                </div>
-              </div>
-            </div>
-            <div class="energymessage">运行信息</div>
-            <div class="operationmsssage">
-              <div class="operationbox">
-                <div class="photvolboxright">
-                  <div class="units">实时功率</div>
-                  <div class="unitsvalue">
-                    {{rechargevar.currentActivePower.value}}
-                    <span
-                      style="font-size:10px"
-                    >{{rechargevar.currentActivePower.unit}}</span>
+            <div class="photovoltaicright">
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/install.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">装机容量({{solarSummary.installedCapacity.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.installedCapacity.value}}</div>
                   </div>
                 </div>
-                <div class="eleline">
-                  <img src="../../assets/imgs/operation1.png" alt />
-                </div>
               </div>
-              <div class="operationbox">
-                <div class="photvolboxright">
-                  <div class="units">日充电量</div>
-                  <div class="unitsvalue">
-                    {{rechargevar.todayChargeKwh.value}}
-                    <span
-                      style="font-size:10px"
-                    >{{rechargevar.todayChargeKwh.unit}}</span>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">今日电量({{solarSummary.todayKwh.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.todayKwh.value}}</div>
                   </div>
                 </div>
-                <div class="eleline">
-                  <img src="../../assets/imgs/operation2.png" alt />
-                </div>
               </div>
-              <div class="operationbox">
-                <div class="photvolboxright">
-                  <div class="units">日充时长</div>
-                  <div class="unitsvalue">
-                    {{rechargevar.todayChargeDuration.value}}
-                    <span
-                      style="font-size:10px"
-                    >{{rechargevar.todayChargeDuration.unit}}</span>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
                   </div>
-                </div>
-                <div class="eleline">
-                  <img src="../../assets/imgs/operation3.png" alt />
-                </div>
-              </div>
-              <div class="operationbox">
-                <div class="photvolboxright">
-                  <div class="units">日充电次数</div>
-                  <div class="unitsvalue">
-                    {{rechargevar.todayChargeTimes}}
-                    <span style="font-size:10px">次</span>
+                  <div class="photvolboxright">
+                    <div class="units">当前功率({{solarSummary.currentActivePower.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.currentActivePower.value}}</div>
                   </div>
-                </div>
-                <div class="eleline">
-                  <img src="../../assets/imgs/operation4.png" alt />
                 </div>
               </div>
             </div>
-            <div class="energymessage">当天运行情况</div>
-            <div style="height:220px">
-              <ve-histogram
-                :data="energychartData"
-                :settings="energychartSettings"
-                height="100%"
-                :extend="devicechartExtend"
-                :yAxis="energyyAxis"
-                :colors="energcolor"
-                :grid="recent30grid"
-              ></ve-histogram>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="eneryleft">
-              <div class="lineleft">
-                <div class="energymessage">充电桩使用状态统计</div>
-                <div style="height:240px">
-                  <ve-pie
-                    :data="enerypiechartData"
-                    :colors="enerypiecolor"
-                    :legend="enerypieextend"
-                    height="100%"
-                    :settings="enerypiechartSettings"
-                  ></ve-pie>
-                </div>
-                <div class="energymessage">近30天使用统计</div>
-                <div style="height:300px">
-                  <ve-histogram
-                    :data="recent30chartData"
-                    height="100%"
-                    :extend="devicechartExtend"
-                    :yAxis="deviceyAxisOption"
-                    :colors="recent30color"
-                    :settings="recent30settings"
-                    :legend-visible="false"
-                    :grid="recent30grid"
-                  ></ve-histogram>
-                </div>
-              </div>
-            </div>
-          </el-col>
-        </el-col>
-      </div>
-    </el-col>
-    <el-col :span="24" v-if="monitorobj.hasOwnProperty('fireProtectionSummary')">
-      <div class="EnergySystem">
-        <div class="titleName">
-          <div class="titlefont">
-            <img src="../../assets/imgs/firecontrol.png" alt class="boximg" />
-            消防
+          </div>
+          <div style="height:300px">
+            <ve-line
+              :data="CPVchartData"
+              :settings="CPVchartSettings"
+              height="100%"
+              :yAxis="CPVyAxis"
+              :legend-visible="false"
+              :colors="CPVcolors"
+              :xAxis="tonngxAxis"
+              :extend="CPVchartExtend"
+              :grid="CPVgrid"
+            ></ve-line>
           </div>
         </div>
-        <el-col :span="24" style="height:calc(100% - 60px)">
-          <el-col :span="6" style="height:100%;padding: 20px;">
-            <div class="firecontrol">
-              <div>
-                安全责任人:{{fireProtectionConfig.manResponsibleForFireSecurity.name}}
-                {{fireProtectionConfig.manResponsibleForFireSecurity.tel}}
-              </div>
-              <div class="firecontrolbox">
-                <div class="photvolboxright">
-                  <div class="units">今日报警</div>
-                  <div class="unitsvalue">{{fireProtectionConfig.todayAlarmCount}}</div>
-                </div>
-              </div>
-              <div class="firecontrolbox">
-                <div class="photvolboxright">
-                  <div class="units">待处理报警</div>
-                  <div class="unitsvalue">{{fireProtectionConfig.leftAlarmCount}}</div>
-                </div>
-              </div>
-              <div class="firecontrolbox">
-                <div class="photvolboxright">
-                  <div class="units">历史报警</div>
-                  <div class="unitsvalue">{{fireProtectionConfig.historyAlarmCount}}</div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('energyStorageSummary')">
+        <div class="storedenergy">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/storedenery.png" alt class="boximg" />
+              储能
+            </div>
+          </div>
+          <div class="photovoltaic">
+            <div class="photovoltaicleft">
+              <div class="Devicetotal">
+                <div class="DeviceTotal">系统状态</div>
+
+                <div style="width:200px">
+                  <el-progress
+                    :text-inside="true"
+                    :stroke-width="26"
+                    :percentage="storedenergy.score"
+                    :color="customColorMethod"
+                  ></el-progress>
+                  <div class="bardesc">{{storedenergy.desc}}</div>
                 </div>
               </div>
             </div>
-          </el-col>
-          <el-col :span="18">
-            <div class="hj-analysis-diagnosis__chartWrapper" style="position:relative">
-              <div class="chart__title">最近七天报警处理趋势图</div>
-              <div style="position: absolute;right:7%;z-index:100000;top:15%">
-                <el-select
-                  v-model="Hazard_type"
-                  @change="changeHazardType"
-                  placeholder="请选择"
-                  style="width:120px;"
-                  size="mini"
-                >
-                  <el-option
-                    v-for="(item,index) in Hazardoptions"
-                    :key="index"
-                    :label="item.deviceType"
-                    :value="index"
-                  ></el-option>
-                </el-select>
+            <div class="photovoltaicright">
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/install.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">装机容量({{energyStorageSummary.batteryCapacity.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.batteryCapacity.value}}</div>
+                  </div>
+                </div>
               </div>
-              <div style="height:400px">
-                <ve-line
-                  :data="HazardchartData"
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">额定功率({{energyStorageSummary.ratedPower.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.ratedPower.value}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">当前功率({{energyStorageSummary.currentActivePower.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.currentActivePower.value}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="photomessage">运行信息</div>
+          <div class="photomiddle">
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy fristback">
+                  <img src="../../assets/imgs/fristback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.todayChargeKwh.value}}</div>
+                  <div class="units">日充电量({{energyStorageSummary.todayChargeKwh.unit}})</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy secondback">
+                  <img src="../../assets/imgs/secondback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.todayDischargeKwh.value}}</div>
+                  <div class="units">日放电量({{energyStorageSummary.todayDischargeKwh.unit}})</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy thirdnack">
+                  <img src="../../assets/imgs/thirdnack.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.SOC}}</div>
+                  <div class="units">总SOC</div>
+                </div>
+              </div>
+            </div>
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy fourthback">
+                  <img src="../../assets/imgs/fourthback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.SOH}}</div>
+                  <div class="units">总SOH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="photovfoot">
+            <div class="photomessage">日充放电量趋势图</div>
+            <ve-line
+              :data="photvochartData"
+              height="100%"
+              :xAxis="tonngxAxis"
+              :settings="photvosetting"
+              :yAxis="photyAxis"
+              :colors="photycolors"
+              :grid="phogrid"
+              :legend="phogridlegend"
+            ></ve-line>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('chargingStationSummary')">
+        <div class="storedenergy">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/chargingstation.png" alt class="boximg" />
+              充电站
+            </div>
+          </div>
+          <el-col :span="24">
+            <el-col :span="18">
+              <div>
+                <div class="energytotal">
+                  <div class="DeviceTotal">系统状态</div>
+
+                  <div style="width:200px">
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="26"
+                      :percentage="rechargevar.status.score"
+                      :color="customColorMethod"
+                    ></el-progress>
+                    <div class="bardesc">{{rechargevar.status.desc}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">系统信息</div>
+              <div class="systemmessage">
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.installedCapacity.value}}</div>
+                    <div class="units">装机功率({{rechargevar.installedCapacity.unit}})</div>
+                  </div>
+                </div>
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.dcChargingPileNumber}}</div>
+                    <div class="units">直流充电桩(个)</div>
+                  </div>
+                </div>
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.acChargingPileNumber}}</div>
+                    <div class="units">交流充电桩(个)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">运行信息</div>
+              <div class="operationmsssage">
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">实时功率</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.currentActivePower.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.currentActivePower.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation1.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">日充电量</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayChargeKwh.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.todayChargeKwh.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation2.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">日充时长</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayChargeDuration.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.todayChargeDuration.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation3.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">日充电次数</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayChargeTimes}}
+                      <span style="font-size:10px">次</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation4.png" alt />
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">当天运行情况</div>
+              <div style="height:220px">
+                <ve-histogram
+                  :data="energychartData"
+                  :settings="energychartSettings"
                   height="100%"
-                  :settings="Hazardsetting"
-                  :xAxis="xAxisOption"
-                  :grid="Hazard_grid"
-                  :legend="Hazard_legend"
-                  :yAxis="Hazard_yAxis"
-                  :colors="HazardColor"
-                  :extend="joinchartExtend"
-                ></ve-line>
+                  :extend="devicechartExtend"
+                  :yAxis="energyyAxis"
+                  :colors="energcolor"
+                  :grid="recent30grid"
+                ></ve-histogram>
               </div>
-              <!-- <vue-chart :options="hazardCountOptions" not-merge auto-resize class="diagnosis__chart"></vue-chart> -->
-            </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="eneryleft">
+                <div class="lineleft">
+                  <div class="energymessage">充电桩使用状态统计</div>
+                  <div style="height:240px">
+                    <ve-pie
+                      :data="enerypiechartData"
+                      :colors="enerypiecolor"
+                      :legend="enerypieextend"
+                      height="100%"
+                      :settings="enerypiechartSettings"
+                    ></ve-pie>
+                  </div>
+                  <div class="energymessage">近30天使用统计</div>
+                  <div style="height:300px">
+                    <ve-histogram
+                      :data="recent30chartData"
+                      height="100%"
+                      :extend="devicechartExtend"
+                      :yAxis="deviceyAxisOption"
+                      :colors="recent30color"
+                      :settings="recent30settings"
+                      :legend-visible="false"
+                      :grid="recent30grid"
+                    ></ve-histogram>
+                  </div>
+                </div>
+              </div>
+            </el-col>
           </el-col>
-        </el-col>
-      </div>
-    </el-col>
-    <el-col :span="24" v-if="monitorobj.hasOwnProperty('securitySystemSummary')">
-      <div class="safe_protection">
-        <div class="titleName">
-          <div class="titlefont">
-            <img src="../../assets/imgs/camar.png" alt class="boximg" />
-            安防
-          </div>
         </div>
-        <el-col :span="24">
-          <el-col :span="18">
-            <div class="monitoringpic">
-              <div
-                class="picurl"
-                v-for="(item,index) in securitySystemSummary.stickCameras"
-                :key="index"
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('fireProtectionSummary')">
+        <div class="EnergySystem">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/firecontrol.png" alt class="boximg" />
+              消防
+            </div>
+          </div>
+          <el-col :span="24" style="height:calc(100% - 60px)">
+            <el-col :span="6" style="height:100%;padding: 20px;">
+              <div class="firecontrol">
+                <div>
+                  安全责任人:{{fireProtectionConfig.manResponsibleForFireSecurity.name}}
+                  {{fireProtectionConfig.manResponsibleForFireSecurity.tel}}
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">今日报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.todayAlarmCount}}</div>
+                  </div>
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">待处理报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.leftAlarmCount}}</div>
+                  </div>
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">历史报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.historyAlarmCount}}</div>
+                  </div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="18">
+              <div class="hj-analysis-diagnosis__chartWrapper" style="position:relative">
+                <div class="chart__title">最近七天报警处理趋势图</div>
+                <div style="position: absolute;right:7%;z-index:100000;top:15%">
+                  <el-select
+                    v-model="Hazard_type"
+                    @change="changeHazardType"
+                    placeholder="请选择"
+                    style="width:120px;"
+                    size="mini"
+                  >
+                    <el-option
+                      v-for="(item,index) in Hazardoptions"
+                      :key="index"
+                      :label="item.deviceType"
+                      :value="index"
+                    ></el-option>
+                  </el-select>
+                </div>
+                <div style="height:400px">
+                  <ve-line
+                    :data="HazardchartData"
+                    height="100%"
+                    :settings="Hazardsetting"
+                    :xAxis="xAxisOption"
+                    :grid="Hazard_grid"
+                    :legend="Hazard_legend"
+                    :yAxis="Hazard_yAxis"
+                    :colors="HazardColor"
+                    :extend="joinchartExtend"
+                  ></ve-line>
+                </div>
+                <!-- <vue-chart :options="hazardCountOptions" not-merge auto-resize class="diagnosis__chart"></vue-chart> -->
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('securitySystemSummary')">
+        <div class="safe_protection">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/camar.png" alt class="boximg" />
+              安防
+            </div>
+          </div>
+          <el-col :span="24">
+            <el-col :span="18">
+              <div class="monitoringpic">
+                <div
+                  class="picurl"
+                  v-for="(item,index) in securitySystemSummary.stickCameras"
+                  :key="index"
+                >
+                  <img :src="item.coverPic" alt style="width:240px;height:160px" />
+                  <div class="covername">{{item.name}}</div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="cameramessage">
+                <div class="cameracount">{{securitySystemSummary.cameraCount}}</div>
+                <div class="camerNumber">摄像头个数</div>
+                <div>
+                  <el-button type="primary" plain round>查看更多</el-button>
+                </div>
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row v-if="activecurrent=='second'">
+      <el-row class="Devicemain">
+        <div class="mainbox summarizeheight" v-for="(item,index) in summarizedata" :key="index">
+          <div>
+            <div class="boxName summtitle">{{item.stationType.desc}}</div>
+          </div>
+          <hr />
+          <el-col :span="24">
+            <el-col :span="12" class="summtitle">
+              <div style="margin-bottom: 10px;">
+                <span class="basicmesg">基本信息</span>
+              </div>
+              <div class="titletype">
+                <div class="sumgarden"></div>
+                <span>所有者:</span>
+                <span>{{item.owner.name}}</span>
+              </div>
+              <div class="titletype">
+                <div class="sumgarden"></div>
+                <!-- <span >品牌:</span> -->
+                <span v-for="(items,index) in item.deviceTypeAndBrandNames" :key="index">
+                  <span class="deviceTypeclass">{{items.deviceTypeName}}:</span>
+                  <span v-for="(itemchirden,index) in items.brandNames" :key="index">
+                    <span>{{itemchirden}}</span>
+                  </span>
+                </span>
+              </div>
+              <div class="titletype">
+                <div class="sumgarden"></div>
+                <span>安装日期:</span>
+                <span>{{item.installedDate}}</span>
+              </div>
+
+              <div class="sumDetails">
+                <div class="subbox" v-for="(itemgrandson,index) in item.statistics" :key="index">
+                  <div class="capacityvalue unitName">{{itemgrandson.name}}/{{itemgrandson.unit}}</div>
+                  <div class="capacityvalue unitvalue">{{itemgrandson.value}}</div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="12" style="height:310px;">
+              <baidu-map
+                class="bm-view"
+                :zoom="18"
+                :center="{lng:item.longitude,lat:item.latitude}"
               >
-                <img :src="item.coverPic" alt style="width:240px;height:160px" />
-                <div class="covername">{{item.name}}</div>
-              </div>
-            </div>
+                <bm-marker :position="{lng:item.longitude,lat:item.latitude}">
+                  <bm-navigation anchor="BMAP_ANCHOR_TOP_RIGHT"></bm-navigation>
+                </bm-marker>
+              </baidu-map>
+            </el-col>
           </el-col>
-          <el-col :span="6">
-            <div class="cameramessage">
-              <div class="cameracount">{{securitySystemSummary.cameraCount}}</div>
-              <div class="camerNumber">摄像头个数</div>
-              <div>
-                <el-button type="primary" plain round>查看更多</el-button>
+        </div>
+        <div class="mainbox summarizeheight">
+          <div>
+            <div class="boxName summtitle">消防</div>
+          </div>
+          <hr />
+          <el-col :span="24">
+            <el-col :span="12" class="summtitle">
+              <div style="margin-bottom: 10px;">
+                <span class="basicmesg">基本信息</span>
               </div>
-            </div>
+              <div class="titletype" v-for="(item,index) in firefright.statistics" :key="index">
+                <div class="sumgarden"></div>
+                <span>{{item.name}} /</span>
+                <span>{{item.unit}}</span>
+                <span class="sumgarvalue">{{item.value}}</span>
+              </div>
+            </el-col>
+            <el-col :span="12">
+              <div class="firekind">
+                消防设施种类:
+                <span
+                  v-for="(item,index) in firefright.fireFacilityTypes"
+                  :key="index"
+                >{{item.name}}、</span>
+              </div>
+            </el-col>
           </el-col>
-        </el-col>
-      </div>
-    </el-col>
+        </div>
+      </el-row>
+    </el-row>
   </el-row>
 </template>
 
 <script>
-import { getstationssummary } from "@/api/api";
+import { getstationssummary, getoverview } from "@/api/api";
 export default {
   data() {
     return {
+      // center:{},
       //用来检测对象中是否含有属性
       monitorobj: {},
       //安防
@@ -826,7 +913,9 @@ export default {
             show: true,
             lineStyle: { color: "#b1b1b1" } //
           }
-        }
+        },
+        summarizedata: [],
+        firefright: {} //消防
       }
     };
   },
@@ -940,10 +1029,24 @@ export default {
         }
       });
       // console.log(getstationssummary);
+    },
+    getDetail() {
+      getoverview(this.$route.params.id).then(res => {
+        console.log("-详情--");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.summarizedata = res.data.data.subStationOverviews;
+          if (res.data.data.hasOwnProperty("fireProtection")) {
+            //监测是有含有属性
+            this.firefright = res.data.data.fireProtection;
+          }
+        }
+      });
     }
   },
   mounted() {
     this.getstationlist();
+    this.getDetail();
   }
 };
 </script>
@@ -1060,7 +1163,7 @@ export default {
 }
 .photvolboxright {
   display: inline-block;
-  width: 120px;
+  width: 100px;
   height: 60px;
   //border: 1px solid red;
   vertical-align: middle;
@@ -1075,6 +1178,8 @@ export default {
     font-weight: 800;
     font-size: 24px;
     font-family: "微软雅黑";
+    width: 130px;
+    overflow: hidden;
   }
 }
 .photomiddle {
@@ -1177,10 +1282,11 @@ export default {
 }
 .eleline {
   display: inline-block;
-  height: 40px;
+  height: 20px;
   width: 50px;
   vertical-align: middle;
-  line-height: 40px;
+  line-height: 20px;
+  margin-top: -20px;
 }
 .eneryleft {
   height: 700px;
@@ -1268,6 +1374,91 @@ export default {
   font-family: "微软雅黑";
   font-size: 14px;
   margin-bottom: 40px;
+  color: #636f8a;
+}
+.summarizeheight {
+  height: 380px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.summarizetitle {
+  padding: 20px 20px 0px 20px;
+}
+.basicmesg {
+  font-size: 14px;
+  font-family: "MicrosoftYaHei-Bold";
+  font-weight: bold;
+}
+.summtitle {
+  padding-left: 40px;
+}
+.titletype {
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  font-family: "MicrosoftYaHei";
+  font-weight: 400;
+}
+.sumgarden {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: #6f8ddb;
+}
+.sumDetails {
+  height: 200px;
+  padding-top: 20px;
+  // border: 1px solid red;
+}
+.subbox {
+  height: 100px;
+  display: inline-block;
+  width: 48%;
+  // border: 1px solid;
+}
+.capacityvalue {
+  height: 40px;
+  line-height: 40px;
+}
+.unitName {
+  color: #636f8a;
+  font-family: "MicrosoftYaHei";
+  font-size: 14px;
+  font-weight: 400;
+}
+.unitvalue {
+  font-size: 24px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #181343;
+}
+.deviceTypeclass {
+  display: inline-block;
+  // padding-left: 20px;
+}
+// .deviceTypeclass:first-of-type {
+//   display: inline-block;
+//   padding-left: 0px;
+// }
+.bm-view {
+  width: 100%;
+  height: 100%;
+}
+.sumgarvalue {
+  // display: inline-block;
+  float: right;
+  margin-right: 100px;
+  width: 100px;
+  font-size: 16px;
+  color: #181343;
+  font-family: "MicrosoftYaHei";
+  font-weight: bold;
+}
+.firekind {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
   color: #636f8a;
 }
 </style>
