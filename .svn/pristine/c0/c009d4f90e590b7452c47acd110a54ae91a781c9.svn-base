@@ -1,0 +1,1159 @@
+<template>
+  <!-- <div>地图主页</div> -->
+  <el-row class="mapmain">
+    <div style="height:100%;height:100%;">
+      <baidu-map
+        class="map"
+        center="广东"
+        :zoom="zoom"
+        :mapStyle="mapStyle"
+        :scroll-wheel-zoom="true"
+      >
+        <!-- <bm-overlay pane="labelPane"></bm-overlay> -->
+      </baidu-map>
+    </div>
+    <div class="floatimg">
+      <!-- <div class="titleName">HUAJE</div> -->
+      <div class="back_home imgchangs" @click="backHome">返回首页</div>
+      <div class="headline imgchangs">
+        <span class="Nameheadline">智慧能源云平台</span>
+      </div>
+      <div class="datetime imgchangs">
+        <span class="nowtime">{{ nowtime }}</span>
+      </div>
+      <div class="retreatForm imgchangs" @click="exitout">
+        <span class="nowtime">退出</span>
+      </div>
+    </div>
+    <div class="dv_decoration">
+      <dv-decoration-3 style="width:250px;height:30px;" />
+    </div>
+    <div class="seach_one">
+      <el-input placeholder="请输入内容" v-model="keyword" @keyup.native.enter="getsouncalList()">
+        <el-button slot="append">
+          <i class="fa fa-search"></i>
+        </el-button>
+      </el-input>
+    </div>
+
+    <div class="main_left">
+      <div style="padding:0px 4px">
+        <div class="rightradious rightradious_left"></div>
+        <div class="rightradious rightradious_right"></div>
+
+        <div class="main_top main_topright">
+          <div class="tabtoggle">
+            <el-tabs v-model="TabactiveName" @tab-click="TabhandleClick">
+              <el-tab-pane label="能源站列表" name="first"></el-tab-pane>
+              <el-tab-pane label="收藏" name="second"></el-tab-pane>
+              <el-tab-pane label="历史" name="third"></el-tab-pane>
+            </el-tabs>
+          </div>
+          <div class="type_Select">
+            <span class="sp_order">排序字段</span>
+            <div class="spselect optionsele">
+              <el-select
+                v-model="orderCol"
+                placeholder="请选择"
+                size="mini"
+                popper-class="suctom_select"
+                @change="changeorder"
+              >
+                <el-option
+                  v-for="item in typeoptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                  class="hazardoption"
+                ></el-option>
+              </el-select>
+            </div>
+            <span class="sorticon" @click="sortclick">
+              <i v-if="orderType=='desc' " class="el-icon-bottom toggleicon"></i>
+              <i v-else class="el-icon-top toggleicon"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="SocalUnit" v-for="(item,index) in souncalData" :key="index">
+        <div class="socaltopimg imgchangs"></div>
+        <div class="Socal_Conctent">
+          <div class="Socal_left">
+            <img
+              :src="!item.coverPicUrl?'../../static/mapimg/default.jpg':`${baseUrl}`+item.coverPicUrl"
+              alt
+              class="imgsoincal"
+            />
+          </div>
+          <div class="Socal_right">
+            <div class="SouncalName">{{item.name}}</div>
+            <div style="margin-bottom:10px">
+              <span
+                class="soun_radious"
+                :class="{soun_god:item.status.value==10,soun_general:item.status.value==20,soun_bad:item.status.value==30}"
+              ></span>
+              <span
+                class="soun_godfont"
+                :class="{soun_godfont:item.status.value==10,soun_generalfont:item.status.value==20,soun_badfont:item.status.value==30}"
+              >{{item.status.desc}}</span>
+              <span class="soun_time">{{item.updateTime}}</span>
+            </div>
+            <div class="sounmes">
+              子站:
+              <span v-for="(itemschirden,indexs) in item.subStationTypes" :key="indexs">
+                {{itemschirden.type.desc}}
+                <span v-if="item.subStationTypes.length>1">、</span>
+              </span>
+            </div>
+            <div class="sounmes">设备数量:{{item.deviceCount}}个</div>
+            <div class="sounmes">地址:{{item.address}}</div>
+          </div>
+        </div>
+      </div>
+      <div class="pageturing">
+        <div style="padding-top:10px;text-align:center">
+          <el-pagination
+            background
+            layout="prev, pager, next"
+            :page-size="size"
+            @current-change="pageIndexChange"
+            :total="totalnum"
+          ></el-pagination>
+        </div>
+      </div>
+      <div class="soun_foot imgchangs"></div>
+    </div>
+    <div class="main_center">
+      <div class="tabtoggle">
+        <el-tabs v-model="Child_standing">
+          <el-tab-pane label="光伏" name="first"></el-tab-pane>
+          <el-tab-pane label="储能" name="second"></el-tab-pane>
+          <el-tab-pane label="充电站" name="third"></el-tab-pane>
+          <el-tab-pane label="消防" name="fourth"></el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+    <div class="main_right">
+      <div style="padding: 0px 4px">
+        <div class="rightradious rightradious_left"></div>
+        <div class="rightradious rightradious_right"></div>
+        <div class="main_top main_topright">
+          <el-col :span="24">
+            <el-col :span="12">
+              <div class="enery_mes">能源站总数(个)</div>
+              <div class="enery_back imgchangs">320</div>
+            </el-col>
+            <el-col :span="12">
+              <div class="enery_mes">历史报警数(个)</div>
+              <div class="enery_back imgchangs">330</div>
+            </el-col>
+          </el-col>
+        </div>
+      </div>
+      <div class="socaltopimg imgchangs"></div>
+      <div style="padding: 0px 4px">
+        <div class="main_rightbottom">
+          <div style="height:165px; ">
+            <div class="marin_right_title">综合能源站运行健康状态</div>
+            <div style="padding-left: 20px;">
+              <div style="width:90%;height:30px;">
+                <div class="proesstype soun_bad" ref="sounBad"></div>
+                <div class="proesstype soun_general" ref="sounGeneral"></div>
+                <div class="proesstype soun_god" ref="sounGod"></div>
+              </div>
+              <div class="typeshow">
+                <span class="type_back soun_bad"></span>
+                <span style="margin-left:10px">{{stationStatusStatistics[2].desc}}</span>
+                <div class="type_show_number">{{stationStatusStatistics[2].count}}</div>
+              </div>
+              <div class="typeshow">
+                <span class="type_back soun_general"></span>
+                <span style="margin-left:10px">{{stationStatusStatistics[1].desc}}</span>
+                <div class="type_show_number">{{stationStatusStatistics[1].count}}</div>
+              </div>
+              <div class="typeshow">
+                <span class="type_back soun_god"></span>
+                <span style="margin-left:10px">{{stationStatusStatistics[0].desc}}</span>
+                <div class="type_show_number">{{stationStatusStatistics[0].count}}</div>
+              </div>
+            </div>
+          </div>
+          <div style="height:240px;">
+            <div class="rectangle">
+              <span style="margin-left:20px">运维信息统计</span>
+            </div>
+            <div class="operations imgchangs">
+              <ve-bar
+                :data="optionchartData"
+                height="100%"
+                :extend="operaextend"
+                :label="labelvebar"
+                :legend-visible="false"
+                :grid="operation_grid"
+                :textStyle="textcolor"
+                :xAxis="operationxAxis"
+                :colors="opercolor"
+                :settings="opersettings"
+              ></ve-bar>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="socaltopimg imgchangs"></div>
+      <div style="padding: 0px 4px">
+        <div class="socal_alrem">
+          <div class="souncal_tital">
+            <div class="alrem_information">报警信息</div>
+            <div class="dispose_no">
+              <span class="alrem_type">未处理</span>
+              <span class="alremNumber">23</span>
+            </div>
+            <div class="dispose_no">
+              <span class="alrem_type">今日报警</span>
+              <span class="alremNumber">203</span>
+            </div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <dv-decoration-4 :reverse="true" style="width:100%;height:5px;color:red" />
+          </div>
+          <div style="padding:0px 20px">
+            <dv-scroll-board :config="configData" style="width:100%;height:160px" />
+          </div>
+        </div>
+      </div>
+      <div class="soun_foot imgchangs"></div>
+    </div>
+  </el-row>
+</template>
+<script>
+import { timeFormanow } from "@/assets/js/common";
+import { getSations, getmapsummary } from "@/api/api";
+import { baseUrl } from "../../static/baseurl";
+const fullWidth = 300;
+const borderGap = 3;
+const borderWidth = 3;
+const usefulWidth = fullWidth - (borderGap + borderWidth) * 2;
+const pieceLength = [0.25, 0.35, 0.4];
+const pieceGap = 3;
+const lineDash = pieceLength
+  .map(l => [usefulWidth * l, pieceGap])
+  .reduce((all, current) => [...all, ...current], []);
+export default {
+  data() {
+    return {
+      baseUrl,
+      keyword: "",
+      orderCol: "",
+      orderType: "desc",
+      start: 0,
+      size: 3,
+      totalnum: 0,
+      typeoptions: [
+        {
+          value: "installedDate",
+          label: "安装日期"
+        },
+        {
+          value: "currentStatus",
+          label: "当前状态"
+        },
+        {
+          value: "deviceCount",
+          label: "设备数量"
+        }
+      ],
+      TabactiveName: "first",
+      nowtime: timeFormanow(new Date()),
+      timeFormanow,
+      zoom: 9,
+      mapStyle: {
+        styleJson: [
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: {
+              color: "#2B5892" // 水的颜色 2B5892 0C224E'
+            }
+          },
+          {
+            featureType: "land",
+            elementType: "geometry",
+            stylers: {
+              color: "#03092F" //调整土地颜色  03092F 004981
+            }
+          },
+          {
+            featureType: "building", //调整建筑物颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#1a5787"
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "highway", //调整高速道路颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#03292F" // 03092F 004981
+            }
+          },
+          {
+            featureType: "highway", //调整高速名字是否可视
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "building", //调整建筑物标签是否可视
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "arterial", //调整一些干道颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#03292F" //03292F 004981
+            }
+          },
+          {
+            featureType: "arterial",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "green",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "subway", //调整地铁颜色
+            elementType: "geometry.stroke",
+            stylers: {
+              color: "#03292F" // 03292F 003051
+            }
+          },
+          {
+            featureType: "subway",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "all", //调整所有的标签的边缘颜色
+            elementType: "labels.text.stroke",
+            stylers: {
+              color: "rgba(255,255,255,1)"
+            }
+          },
+          {
+            featureType: "all", //调整所有标签的填充颜色
+            elementType: "labels.text.fill",
+            stylers: {
+              color: "#2B5892" // 03292F 28D1BE
+            }
+          },
+          {
+            featureType: "manmade",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "manmade",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "local",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "local",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "subway",
+            elementType: "geometry",
+            stylers: {
+              lightness: -65
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "all",
+            stylers: {
+              lightness: -40
+            }
+          },
+          {
+            featureType: "boundary",
+            elementType: "geometry",
+            stylers: {
+              color: "#064f85", // 03292F
+              weight: "1",
+              lightness: -29
+            }
+          },
+          {
+            featureType: "boundary",
+            elementType: "geometry.fill",
+            stylers: {
+              color: "#029fd4" // 03292F
+            }
+          }
+        ]
+      },
+      souncalData: [],
+      Child_standing: "frist",
+      optionchartData: {
+        columns: ["desc", "count"],
+        rows: []
+      },
+      labelvebar: {
+        normal: {
+          position: "right",
+          show: true
+        }
+      },
+      operaextend: {
+        series: {
+          label: { show: true, position: "right" },
+          barWidth: 20
+        }
+      },
+      operation_grid: {
+        left: 50,
+        right: 80,
+        bottom: 10,
+        top: 20
+      },
+      textcolor: {
+        color: "#fff"
+      },
+      operationxAxis: {
+        splitLine: {
+          show: false
+        },
+        show: false
+      },
+      opercolor: ["#3699FF"],
+      opersettings: {
+        labelMap: {
+          count: "数量"
+        }
+      },
+      configData: {
+        headerBGC: "#071E6A",
+        oddRowBGC: "#11244F",
+        evenRowBGC: "#0A1945",
+        header: ["能源站名称", "设备", "时间", "描述"],
+        rowNum: 4,
+        data: [
+          ["行1列1", "行1列2", "行1列3", "123"],
+          ["行3列1", "行3列2", "行3列3", "858"],
+          ["行4列1", "行4列2", "行4列3", "822"],
+          ["行5列1", "行5列2", "行5列3", "858696"],
+          ["行6列1", "行6列2", "行6列3", "862"]
+          // ["行7列1", "行7列2", "行7列3"],
+          // ["行8列1", "行8列2", "行8列3"],
+          // ["行9列1", "行9列2", "行9列3"],
+          // ["行10列1", "行10列2", "行10列3"]
+        ]
+      },
+      stationStatusStatistics: [
+        { desc: "", count: "" },
+        { desc: "", count: "" },
+        { desc: "", count: "" }
+      ]
+    };
+  },
+  methods: {
+    backHome() {
+      this.$router.push("/realTimeMain");
+    },
+    exitout() {
+      this.$router.push("/login");
+    },
+    TabhandleClick() {
+      console.log();
+      // this.getsouncalList();
+    },
+    changeorder() {
+      this.getsouncalList();
+    },
+    sortclick() {
+      if (this.orderType == "desc") {
+        this.orderType = "asc";
+      } else {
+        this.orderType = "desc";
+      }
+      this.getsouncalList();
+    },
+    getsouncalList() {
+      var params = {
+        keyword: this.keyword,
+        orderCol: this.orderCol,
+        orderType: this.orderType,
+        start: this.start,
+        size: this.size
+      };
+      getSations(params).then(res => {
+        console.log("社会单位");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.souncalData = res.data.data.rows;
+          if (this.start == 0) {
+            this.totalnum = res.data.data.total;
+          }
+        }
+      });
+    },
+    pageIndexChange(index) {
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getsouncalList();
+    },
+    getmapsummarymes() {
+      getmapsummary().then(res => {
+        console.log("---汇总信息--");
+        console.log(res);
+        let resultData = [];
+        if (res.data.head.code == 0) {
+          this.optionchartData.rows = res.data.data.workOrderStatistics;
+          let condata = res.data.data.realtimeAlarm.alarms;
+          for (var i = 0; i < condata.length; i++) {
+            let data = [];
+            //console.log(condata[i].station.name);
+            data = [
+              condata[i].station.name,
+              condata[i].device.name,
+              condata[i].time,
+              condata[i].detail
+            ];
+            //  console.log(JSON.stringify(data));
+            // console.log()
+            this.configData.data.push(data);
+            // resultData.push(data);
+          }
+          console.log(resultData);
+          this.stationStatusStatistics = res.data.data.stationStatusStatistics;
+          // this.configData.data = resultData;
+          // this.$set(this.configData, "data", resultData);
+          let amount = res.data.data.totalStationCount;
+          res.data.data.stationStatusStatistics.forEach(item => {
+            console.log(item);
+            switch (item.value) {
+              case 30:
+                this.$refs.sounBad.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+                break;
+              case 20:
+                this.$refs.sounGeneral.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+                break;
+              case 10:
+                this.$refs.sounGod.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+              default:
+                break;
+            }
+          });
+
+          // this.$refs.sounBad.style.width = "20%";
+          console.log("得到的数组");
+          console.log(this.configData.data);
+        }
+      });
+    }
+  },
+  mounted() {
+    this.getmapsummarymes();
+    var ti = setInterval(() => {
+      // clearTimeout(t)
+      this.nowtime = this.timeFormanow(new Date());
+    }, 1000);
+    this.getsouncalList();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.mapmain {
+  width: 100%;
+  height: 100%;
+  min-width: 1300px;
+  // border: 1px solid;
+  min-height: 960px;
+  .map {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.floatimg {
+  position: absolute;
+  //color: red;
+  z-index: 1000;
+  top: 0px;
+  width: 100%;
+  left: 0px;
+  height: 90px;
+  //border: 1px solid red;
+  line-height: 90px;
+}
+.titleName {
+  color: #c7dcde;
+  line-height: 60px;
+  font-family: "微软雅黑";
+  display: inline-block;
+}
+.back_home {
+  // left: 280px;
+  display: inline-block;
+  color: #dce1ff;
+  font-size: 14px;
+  text-align: center;
+  line-height: 36px;
+  width: 120px;
+  height: 32px;
+  background-image: url("../../static/mapimg/back_home.png");
+  cursor: pointer;
+  position: absolute;
+  top: calc(50% - 16px);
+  left: 20%;
+}
+.imgchangs {
+  background-size: 100% 100%;
+  background-position: 0% 0%;
+  background-repeat: no-repeat;
+  // position: relative;
+  vertical-align: middle;
+}
+.headline {
+  display: inline-block;
+  background-image: url("../../static/mapimg/headline.png");
+  // width: 745px;
+  width: 40%;
+  height: 90px;
+  line-height: 80px;
+  position: relative;
+  left: 30%;
+  text-align: center;
+}
+.Nameheadline {
+  color: #c3faff;
+  font-family: "微软雅黑";
+  font-size: 34px;
+  position: relative;
+}
+.datetime {
+  display: inline-block;
+  background-image: url("../../static/mapimg/date.png");
+  width: 218px;
+  height: 32px;
+  right: 14%;
+  position: absolute;
+  top: calc(50% - 16px);
+  line-height: 37px;
+  text-align: center;
+}
+.nowtime {
+  color: #dce1ff;
+  font-family: "微软雅黑";
+}
+.retreatForm {
+  width: 120px;
+  height: 32px;
+  display: inline-block;
+  position: absolute;
+  background-image: url("../../static/mapimg/exit.png");
+  right: 4%;
+  line-height: 32px;
+  text-align: center;
+  top: calc(50% - 16px);
+  cursor: pointer;
+}
+.main_left {
+  position: absolute;
+  z-index: 1000;
+  top: 90px;
+  height: calc(100% - 120px);
+  width: 20%;
+  background: rgba(21, 33, 91, 0.5);
+  left: 10px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  min-width: 410px;
+}
+.main_center {
+  position: absolute;
+  z-index: 1000;
+  height: 300px;
+  width: 50%;
+  background: rgba(21, 33, 91, 0.5);
+  font-family: "微软雅黑";
+  left: 25%;
+  bottom: 10px;
+  border-radius: 8px;
+}
+.main_right {
+  position: absolute;
+  z-index: 1000;
+  top: 90px;
+  height: calc(100% - 120px);
+  width: 20%;
+  background: rgba(21, 33, 91, 0.5);
+  right: 10px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  // background-image: url("../../static/mapimg/sideright.png");
+  // display: inline-block;
+  min-width: 410px;
+}
+
+.seach_one {
+  position: absolute;
+  z-index: 1000;
+  left: 30%;
+  // border: 1px solid red;
+  height: 30px;
+  top: 160px;
+  width: 340px;
+}
+.tabtoggle {
+  width: 100%;
+  background: rgba(50, 91, 211, 0.4);
+  z-index: 10000000;
+  color: #fff;
+}
+.dv_decoration {
+  top: 90px;
+  left: calc(50% - 125px);
+  position: absolute;
+  z-index: 1000;
+}
+.sp_order {
+  color: #fff;
+  font-family: "微软雅黑";
+  // margin-left: 20px;
+  margin-right: 8px;
+}
+.spselect {
+  width: 168px;
+  display: inline-block;
+}
+.type_Select {
+  margin-top: 40px;
+}
+.hazardoption {
+  //width: 148px;
+  // background: #010a31;
+  color: #00d3e9;
+}
+.sorticon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: #1f3784;
+  vertical-align: middle;
+  margin-left: 10px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+}
+.toggleicon {
+  vertical-align: middle;
+}
+.main_top {
+  height: 127px;
+  // border: 1px solid red;
+  padding: 5px 23px 0px 23px;
+}
+.socaltopimg {
+  background-image: url("../../static/mapimg/souncaltop.png");
+  //width: 100%;
+  height: 10px;
+}
+.SocalUnit {
+  width: 100%;
+}
+.Socal_Conctent {
+  height: 175px;
+  border: 1px solid #4c9cf7;
+  border-top: 0px;
+  border-bottom: 0px;
+  margin: 0px 3px;
+}
+.Socal_left {
+  width: 30%;
+  display: inline-block;
+  // border: 1px solid red;
+  height: 100%;
+  text-align: center;
+  vertical-align: top;
+}
+.imgsoincal {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  margin-top: 12px;
+}
+.Socal_right {
+  width: 68%;
+  // border: 1px solid red;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  color: #fff;
+  font-family: Microsoft YaHei;
+}
+
+.SouncalName {
+  //margin-top: 10px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+}
+.soun_radious {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+}
+.soun_god {
+  background: #23f166;
+  vertical-align: middle;
+}
+.soun_godfont {
+  color: #23f166;
+  margin-left: 10px;
+}
+.soun_general {
+  background: #3699ff;
+  vertical-align: middle;
+}
+.soun_generalfont {
+  color: #3699ff;
+}
+.soun_bad {
+  background: #eb1e1e;
+  vertical-align: middle;
+}
+.soun_badfont {
+  color: #eb1e1e;
+}
+.soun_time {
+  margin-left: 20px;
+  color: #1d86ff;
+}
+.sounmes {
+  height: 30px;
+  line-height: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pageturing {
+  height: 120px;
+  border: 1px solid #4c9cf7;
+  margin: 0px 3px;
+  border-top: 0px;
+  border-bottom: 0px;
+}
+.soun_foot {
+  background-image: url("../../static/mapimg/Souncalfooter.png");
+  height: 10px;
+}
+.side {
+  display: inline-block;
+  background-image: url("../../static/mapimg/side.png");
+  width: 10px;
+  // height: 100%;
+  position: absolute;
+  left: 8px;
+  height: 127px;
+}
+.sideright {
+  display: inline-block;
+  background-image: url("../../static/mapimg/side.png");
+  width: 10px;
+  height: 127px;
+  position: absolute;
+  right: 9px;
+  top: 15px;
+}
+.main_topright {
+  border: 1px solid #4c9cf7;
+  border-top: 0px;
+  border-bottom: 0px;
+}
+.rightradious {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  border: 1px solid #4c9cf7;
+}
+.rightradious_right {
+  float: right;
+  position: relative;
+  right: -4px;
+  top: 6px;
+}
+.rightradious_left {
+  position: relative;
+  top: 3px;
+  left: -4px;
+}
+.enery_back {
+  width: 132px;
+  height: 62px;
+  background-image: url("../../static/mapimg/enerystation.png");
+  font-size: 24px;
+  font-family: "微软雅黑";
+  color: #dce1ff;
+  text-align: center;
+  line-height: 62px;
+}
+.enery_mes {
+  color: #dce1ff;
+  font-family: "微软雅黑";
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.marin_right_title {
+  color: #dce1ff;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  padding: 20px 0px 20px 20px;
+}
+.main_rightbottom {
+  height: 400px;
+  border: 1px solid #4c9cf7;
+  border-top: 0px;
+  border-bottom: 0px;
+}
+.rectangle {
+  background-image: url("../../static/mapimg/rectangle.png");
+  width: 204px;
+  height: 39px;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  margin-left: 20px;
+  line-height: 39px;
+  margin-bottom: 8px;
+}
+.operations {
+  background-image: url("../../static/mapimg/operation.png");
+  // width: 371px;
+  height: 179px;
+  margin: 0px 20px 0px 20px;
+  position: relative;
+}
+.socal_alrem {
+  height: 250px;
+  border: 1px solid #4c9cf7;
+  border-top: 0px;
+  border-bottom: 0px;
+}
+.souncal_tital {
+  height: 60px;
+  line-height: 60px;
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #fff;
+}
+.alrem_information {
+  height: 40px;
+  display: inline-block;
+  width: 120px;
+  border-right: 1px solid #0f2671;
+  line-height: 40px;
+  text-align: center;
+}
+.dispose_no {
+  display: inline-block;
+  margin-left: 10px;
+}
+.alremNumber {
+  font-size: 20px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  margin-left: 10px;
+  vertical-align: sub;
+}
+.alrem_type {
+  color: #1d86ff;
+}
+.alrem_message {
+  height: 48px;
+  background: #071e6a;
+  color: #1d86ff;
+}
+.proesstype {
+  display: inline-block;
+  height: 12px;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+}
+.typeshow {
+  display: inline-block;
+  // height: 40px;
+  // border: 1px solid;
+  width: 30%;
+  vertical-align: middle;
+  color: #1d86ff;
+}
+.type_back {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+.type_show_number {
+  font-size: 20px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #fff;
+  height: 40px;
+  line-height: 40px;
+  width: 60px;
+  text-align: center;
+}
+</style>
+<style >
+.seach_one .el-input__inner {
+  background-color: #010d30;
+  border: 1px solid #1161c0;
+  color: #fff;
+}
+.seach_one .fa-search {
+  color: #1161c0;
+}
+.seach_one .el-input-group__append {
+  background: #010d30;
+  border: 1px solid #1161c0;
+  border-left: 0px;
+}
+
+.el-select-dropdown {
+  border: none;
+}
+.BMap_cpyCtrl {
+  display: none;
+}
+.anchorBL {
+  display: none;
+}
+.tabtoggle .el-tabs__item {
+  color: #fff;
+}
+.tabtoggle .el-tabs__header {
+  margin: 0px;
+}
+.tabtoggle .is-active {
+  color: #00eaff;
+}
+.tabtoggle .el-tabs__active-bar {
+  background-color: #00eaff;
+}
+.tabtoggle .el-tabs__nav-scroll {
+  padding-left: 50px;
+}
+.tabtoggle .el-tabs__nav-wrap::after {
+  background-color: rgba(50, 91, 211, 0.4);
+}
+.spselect input {
+  background: rgba(31, 55, 132, 1);
+  border: none;
+}
+.spselect .el-select-dropdown__list {
+  background: rgba(31, 55, 132, 1);
+}
+.suctom_select .el-select-dropdown__list {
+  background-color: #010a31;
+}
+.suctom_select .el-select-dropdown__item:hover {
+  background: #0f3360;
+}
+.suctom_select .el-select-dropdown__item.hover {
+  background: #0f3360;
+}
+.suctom_select span {
+  margin-left: 15px;
+}
+
+.suctom_select .el-popper[x-placement^="bottom"] .popper__arrow::after {
+  border-bottom-color: #0f3360;
+}
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+.optionsele > .el-popper {
+  background: #010a31 !important;
+}
+.optionsele .el-input__inner {
+  background: #010a31;
+  color: #00d3e9;
+  border: 1px solid #00d3e9;
+}
+.optionsele .el-input__suffix-inner .el-input__icon {
+  color: #00d3e9;
+}
+.optionsele .el-scrollbar {
+  background: #010a31 !important;
+}
+.optionsele .el-popper {
+  border: none;
+}
+.optionsele > .el-select-dropdown__list {
+  background: #010a31 !important;
+}
+
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+.suctom_select > .el-select-dropdown {
+  background: #010a31;
+  border: 1px solid #010a31;
+}
+</style>

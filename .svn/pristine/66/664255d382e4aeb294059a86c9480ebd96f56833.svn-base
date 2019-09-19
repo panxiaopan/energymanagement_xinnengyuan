@@ -1,0 +1,51 @@
+@charset "utf-8";
+@import "./variable.less";
+
+// 不同主题使用顶级前缀区分 参数为主色，其他色调可通过主色color转换 或为固定色
+.hjGreen {
+  .hjTheme(#31b944, rgba(18, 72, 23, 0.8));
+}
+
+.hjBlue {
+  .hjTheme(#51b9ff, rgba(18, 34, 86, 0.8));
+}
+
+// .el-dropdown-menu {
+//   background: #cdd5e4;
+// }
+
+.hj-hazard-management__tableList__filter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px;
+  cursor: pointer;
+
+  i {
+    color: #20a0ff;
+  }
+}
+
+.hj-hazard-management__tableList__popover {
+  cursor: pointer;
+  // &:focus {
+  //   color: #20a0ff;
+  // }
+}
+
+.hj-web-container-header__dropdown_menuItem {
+  display: inline-block;
+  width: 5vw;
+  text-align: center;
+  letter-spacing: 0.5vw;
+}
+
+.hj-row-center-layout {
+  display: flex;
+  justify-content: center;
+}
+
+.hj-common-empty-data {
+  padding: 1vh;
+  text-align: center;
+}

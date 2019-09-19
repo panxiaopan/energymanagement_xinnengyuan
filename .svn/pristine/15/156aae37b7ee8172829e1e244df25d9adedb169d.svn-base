@@ -1,0 +1,45 @@
+.hj-station-management-wrapper {
+  .el-form-item {
+    .el-cascader--medium {
+      width: 100%;
+    }
+    .el-select {
+      width: 100%;
+    }
+  }
+  .el-form-item__label {
+    color: #313131;
+  }
+  // .el-checkbox {
+  //   color: darken(#ffffff, 30%);
+  // }
+  .hj-station-management-map-search-header {
+    padding: 10px;
+    position: absolute;
+    top: 1vh;
+    left: 3vw;
+    z-index: 99;
+    // background-color:
+    .search-input {
+      width: 30%;
+      min-width: 300px;
+    }
+  }
+  .hj-station-management-item--latLng {
+    display: flex;
+    justify-content: space-between;
+  }
+  .hj-station-form-item__more {
+    display: flex;
+    justify-content: flex-end;
+
+    span {
+      text-decoration: underline;
+      color: @baseColor;
+      cursor: pointer;
+    }
+  }
+  .el-upload__tip {
+    color: darken(#ffffff, 30%);
+  }
+}

@@ -1,0 +1,828 @@
+<template>
+  <div class="hj-maintence-staff-base-property">
+    <el-table :data="formData" border style="width: 100%" :row-class-name="tableRowClassName">
+      <el-table-column prop="label" :label="$t('systemSetting.basicProperty')">
+      </el-table-column>
+      <el-table-column :render-header="renderHeader">
+        <template slot-scope="scope">
+          <el-input v-if="scope.row.props=='createTime'||scope.row.props=='updateTime'" readonly size="small" v-model="scope.row.value"></el-input>
+          <el-cascader v-else-if="scope.row.props == 'addrjson'" v-model="scope.row.value" :options="addressOptions" :props="addressProps" :disabled="readonly" :placeholder="$t('systemSetting.selectAddr')" clearable @change="changeAddr" @active-item-change="handleItemChange" style="width:100%;"></el-cascader>
+          <!-- <el-checkbox v-else-if="scope.row.props=='resetPassword'" v-model="scope.row.value" :disabled="readonly">重置密码</el-checkbox> -->
+          <el-input v-else-if="scope.row.props!='path'" :class="{'hj-maitenance-base-input': scope.row.props=='path'}" :readonly="readonly" size="small" v-model="scope.row.value" :placeholder="scope.row.placeholder"></el-input>
+          <el-cascader v-else-if="scope.row.props=='path'" ref="cascader" size="small" :options="options" :props="defaultProps" change-on-select clearable @change="change" v-model="scope.row.value" :disabled="readonly" style="width:100%;"></el-cascader>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+</template>
+
+
+<style lang='less'>
+.hj-maintence-staff-base-property {
+  .el-form-item__label {
+    color: #f8fcff;
+  }
+  .hj-maitenance-base-input {
+    width: 100%;
+  }
+  // .info-row {
+  //   // height: 2vh;
+  //   // padding: 0;
+  //   .el-table th,
+  //   .el-table td {
+  //     padding: 5px 0;
+  //   }
+  // }
+  .info-row:nth-child(2n) {
+    background-color: #fff;
+  }
+  .info-row:nth-child(2n + 1) {
+    background-color: #fafafa;
+  }
+  .el-table th,
+  .el-table td {
+    padding: 5px 0;
+  }
+}
+</style>
+<script>
+import { createNamespacedHelpers } from "vuex";
+const { mapState } = createNamespacedHelpers("systemSetting");
+export default {
+  name: "maintenanceStaffBaseProperty",
+  componentName: "maintenanceStaffBaseProperty",
+  mixins: [],
+  components: {},
+  // <--props-->
+  props: {
+    authEdit: {
+      type: Boolean,
+      default: true
+    },
+    authResetPassword: {
+      type: Boolean,
+      default: true
+    },
+    data: {
+      type: [Object, Array],
+      default: () => {}
+    },
+    rules: {
+      type: Object,
+      default: () => {
+        return null;
+      }
+    }
+  },
+  data() {
+    var addressMap = new Map();
+    // var chinaItem = {name: '中国',id:100, areaList:[]}
+    // addressMap.set(chinaItem.id, chinaItem)
+    return {
+      isEditUserGroup: false,
+      // resetPasswordUrl: `./auth/users/${userId}/passwordReset`, // 入参  userId
+      defaultRules: {
+        loginName: {
+          type: String,
+          require: true,
+          name: this.$t("systemSetting.loginName"),
+          message: ""
+        },
+        username: {
+          type: String,
+          require: true,
+          name: this.$t("systemSetting.nickname"),
+          message: ""
+        },
+        tel: {
+          type: Number,
+          require: true,
+          name: this.$t("systemSetting.telephone"),
+          rule: /^1[34578]\d{9}$/,
+          message: this.$t("systemSetting.errorPhoneNum")
+        },
+        addrjson: {
+          type: Object,
+          require: true,
+          name: this.$t("systemSetting.address"),
+          message: ""
+        }
+      },
+      addressMap,
+      defaultProps: {
+        label: "name",
+        value: "id",
+        children: "subTrees"
+      },
+      // addressProps:{
+      //   label: 'name',
+      //   value: 'id',
+      //   children: 'areaList'
+      // },
+      addressProps: {
+        label: "name",
+        value: "id",
+        children: "areaList"
+      },
+      options: [],
+      addressOptions: [],
+      currentData: null,
+      readonly: true,
+      staffBasePropertyForm: [
+        // {
+        //   label: '用户Id',
+        //   value: '用户Id',
+        //   props: 'userId',
+        // },
+        {
+          label: this.$t("systemSetting.telephone"),
+          value: this.$t("systemSetting.telephone"),
+          props: "tel",
+          placeholder: this.$t("systemSetting.inputPhoneNum")
+        },
+        {
+          label: this.$t("systemSetting.loginName"),
+          value: this.$t("systemSetting.loginName"),
+          props: "loginName",
+          placeholder: this.$t("systemSetting.inputLoginName")
+        },
+        {
+          label: this.$t("systemSetting.nickname"),
+          value: this.$t("systemSetting.nickname"),
+          props: "username",
+          placeholder: this.$t("systemSetting.inputNickname")
+        },
+        {
+          label: this.$t("systemSetting.address"),
+          value: this.$t("systemSetting.address"),
+          props: "addrjson",
+          placeholder: this.$t("systemSetting.inputAddr")
+        },
+        {
+          label: this.$t("systemSetting.detailedAddr"),
+          value: this.$t("systemSetting.detailedAddr"),
+          props: "remark",
+          placeholder: this.$t("systemSetting.inputDetailedAddr")
+        },
+        {
+          label: this.$t("systemSetting.createTime"),
+          value: this.$t("systemSetting.createTime"),
+          props: "createTime",
+          placeholder: this.$t("systemSetting.inputCreateTime")
+        },
+        {
+          label: this.$t("systemSetting.editTime"),
+          value: this.$t("systemSetting.editTime"),
+          props: "updateTime",
+          placeholder: this.$t("systemSetting.inputEditTime")
+        },
+        {
+          label: this.$t("systemSetting.userGroup"),
+          value: this.$t("systemSetting.userGroup"),
+          props: "path",
+          placeholder: this.$t("systemSetting.selectUserGroup")
+        }
+        // {
+        //   label: this.$t('systemSetting.resetPassword'),
+        //   value: this.$t('systemSetting.resetPassword'),
+        //   props: 'resetPassword',
+        //   placeholder: this.$t('systemSetting.resetPassword')
+        // }
+      ],
+      // ['userId','username','tel','address','createTime','updateTime','path']
+      testSize: "mini"
+    };
+  },
+  computed: {
+    ...mapState(["userTreeList"]),
+    formData: {
+      get(params) {
+        console.log("formData get params", params);
+        var result = this.getStaffBasePropertyFormData(
+          this.staffBasePropertyForm
+        );
+        console.log("row.addrjson", this.data.addrjson);
+        console.log("row", this.data);
+        console.log("result.address.value", result);
+        this.readonly = true;
+        return result;
+      },
+      set(val) {
+        console.log("formData set val", val);
+      }
+    }
+  },
+  watch: {
+    // data(newVal, oldVal) {
+    //   console.log('newVal', newVal)
+    //   console.log('this.addressOptions', this.addressOptions)
+    // }
+  },
+  methods: {
+    queryAddressJsonData({ parentId, activeLength = 5, childrenIdArr = null }) {
+      var url = `./common/areas/parentId/${parentId}`;
+      // var json = {
+      //   parentId
+      // };
+      this.$http({
+        url
+        // json
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          var areaList = response.data.data || null;
+          if (areaList && areaList.length) {
+            if (parentId === 0) {
+              areaList.forEach(item => {
+                item.areaList = [];
+                this.addressMap.set(item.id, item);
+                this.addressOptions.push(item);
+              });
+            } else if (this.addressMap.has(parentId)) {
+              this.addressMap.get(parentId).areaList = areaList.map(item => {
+                if (childrenIdArr && childrenIdArr.length > 1) {
+                  item.areaList = [];
+                } else if (activeLength < 4) {
+                  item.areaList = [];
+                }
+                this.addressMap.set(item.id, item);
+                return item;
+              });
+            }
+
+            if (childrenIdArr && childrenIdArr.length > 0) {
+              var nextParentId = childrenIdArr.shift();
+              if (!!nextParentId) {
+                this.queryAddressJsonData({
+                  parentId: nextParentId,
+                  childrenIdArr
+                });
+              }
+            }
+          }
+        }
+      });
+    },
+    changeAddr(val) {
+      console.log("changeAddr", val);
+      console.log("this.currentData", this.currentData);
+      console.log("this.data", this.data);
+      console.log("this.formData", this.formData);
+      // 110 北京
+      // this.queryAddressJsonData({parentId: 0 , nextIndex: 0})
+    },
+    handleItemChange(val) {
+      console.log("active item:", val);
+      console.log("this.formData", this.formData);
+      if (val && val.length && val.length < 5) {
+        var parentId = val[val.length - 1];
+        if (!parentId) {
+          var copyVal = [...val];
+          copyVal.reverse();
+          copyVal.some(item => {
+            if (item) {
+              parentId = item;
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
+        console.log(
+          "this.addressMap.has(parentId)",
+          this.addressMap.has(parentId)
+        );
+        if (
+          !this.addressMap.has(parentId) ||
+          !this.addressMap.get(parentId).areaList ||
+          !this.addressMap.get(parentId).areaList.length
+        ) {
+          this.queryAddressJsonData({
+            parentId,
+            activeLength: val.length
+          });
+        }
+      }
+    },
+    change(val) {
+      console.log(val);
+      console.log(this.formData);
+      console.log(this.currentData);
+    },
+    testClick() {
+      console.log("this.formData", this.formData);
+    },
+    tableRowClassName(row, index) {
+      return "info-row";
+    },
+    getStaffBasePropertyFormData(model) {
+      var resultArr = model.map((item, index) => {
+        if (item.props == "path") {
+          item.value = this.data[item.props].split("_").map(item => {
+            return +item;
+          });
+        } else if (item.props == "addrjson") {
+          this.setAddrOptions(this.getAddressIdArr(this.data[item.props]));
+          item.value = this.getAddressIdArr(this.data[item.props]);
+        } else if (item.props == "remark") {
+          item.value = this.data.addrjson.remark;
+        } else {
+          item.value = this.data[item.props];
+        }
+        return { ...item };
+      });
+      // return resultArr.push({ props: 'resetPassword', value: false });
+      return resultArr;
+    },
+    setDataByFormData(model) {
+      var newData = {};
+      var groupId = "";
+      model.forEach(item => {
+        if (item.props == "path") {
+          groupId = item.value[item.value.length - 1];
+          newData[item.props] = item.value.join("_");
+        } else if (item.props == "addrjson") {
+          newData[item.props] = {};
+          var propertyNameArr = Array.of(
+            "country",
+            "province",
+            "city",
+            "county",
+            "town"
+          );
+          item.value &&
+            item.value.length &&
+            item.value.forEach((code, index) => {
+              var addrObj = this.addressMap.get(code);
+              if (addrObj) {
+                var { name, id } = addrObj;
+                newData[item.props][propertyNameArr[index]] = {
+                  name,
+                  id
+                };
+              }
+            });
+        } else if (item.props == "remark") {
+          if (!newData.addrjson) {
+            newData.addrjson = {};
+          }
+          newData.addrjson.remark = item.value;
+        } else {
+          newData[item.props] = item.value;
+        }
+      });
+      return {
+        newData,
+        groupId
+      };
+    },
+    validate(rules, objData) {
+      var flag = false;
+      Object.keys(rules).some(item => {
+        if (rules[item].require) {
+          if (objData[item] === "" || objData[item] === undefined) {
+            this.$message.error(
+              rules[item].name + this.$t("systemSetting.canNotBeNull")
+            );
+            flag = true;
+            return flag;
+          }
+        }
+        if (rules[item].type && !Array.isArray(rules[item].type)) {
+          if (typeof objData[item] !== "object") {
+            if (
+              rules[item].type.constructor === Function &&
+              typeof objData[item] !== rules[item].type.name.toLowerCase()
+            ) {
+              this.$message.error(
+                rules[item].name + this.$t("systemSetting.errorType")
+              );
+              flag = true;
+              return flag;
+            }
+            // if(rules[item].type.constructor!==Function && objData[item] instanceof )
+          } else if (typeof objData[item] === "object") {
+            if (
+              !(
+                objData[item] instanceof rules[item].type &&
+                objData[item].constructor == rules[item].type
+              )
+            ) {
+              this.$message.error(
+                rules[item].name + this.$t("systemSetting.errorType")
+              );
+              flag = true;
+              return flag;
+            }
+          }
+        }
+        if (rules[item].rule && !rules[item].rule.test(objData[item])) {
+          this.$message.error(rules[item].message);
+          flag = true;
+          return flag;
+        }
+        return false;
+        // if(Array.isArray(rules[item].type)&&rules[item].type.length){
+        //   var isOriginClass=true
+        //     rules[item].type.forEach((child)=>{
+        //       if(child.constructor===Function){
+        //       }else{
+        //       }
+        //     })
+        //
+        //   return false
+        // }else if(typeof rules[item].type == 'function'){
+        //
+        //   return false
+        // }
+      });
+      return flag;
+    },
+    updatePersonalInfo() {
+      var transformObjData = this.setDataByFormData(this.formData);
+      this.currentData = transformObjData.newData;
+      console.log("setDataByFormData", transformObjData);
+      this.currentData.tel = +this.currentData.tel;
+      var isNotValidate = this.validate(
+        this.rules || this.defaultRules,
+        this.currentData
+      );
+      if (isNotValidate) {
+        return;
+      }
+      var url = `./auth/users/${this.data.userId}`;
+      var {
+        loginName,
+        username,
+        tel,
+        addrjson
+        // resetPassword
+      } = this.currentData;
+
+      var json = {
+        loginName,
+        username,
+        tel,
+        address: JSON.stringify(addrjson)
+        // resetPasswordFlag: resetPassword
+      };
+      // json.userId = this.data.userId;
+      // json.groupId = transformObjData.groupId;
+      json.pathId = transformObjData.groupId;
+      this.$http({
+        url,
+        json,
+        method: "put"
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          this.$message({
+            type: "success",
+            message: this.$t("systemSetting.modifySuccessfully")
+          });
+          Object.assign(this.data, this.currentData);
+          this.data.tel = this.data.tel + "";
+          this.readonly = true;
+
+          if (this.isEditUserGroup) {
+            this.$emit("update-usergroup");
+            this.isEditUserGroup = false;
+          }
+        } else {
+          this.isEditUserGroup = false;
+        }
+      });
+    },
+    checkFormDataIschanged(formData) {
+      var isChangeData = false;
+      formData.some((item, index) => {
+        console.log("item", item);
+        if (item.props == "path") {
+          console.log("this.currentData[item.props]", this.data[item.props]);
+          console.log("item.value.join(", ")", item.value.join(","));
+          console.log("item.value", item.value);
+
+          if (this.data[item.props] != item.value.join("_")) {
+            this.isEditUserGroup = true;
+            isChangeData = true;
+            console.log("item.props", item.props, isChangeData);
+            return true;
+          } else {
+            return false;
+          }
+        } else if (item.props == "addrjson") {
+          var propertyNameArr = Array.of(
+            "country",
+            "province",
+            "city",
+            "county",
+            "town"
+          );
+          //             if((typeof this.data.addrjson==''&&item.value.length)){}
+          if (!item.value.length) {
+            if (this.data.addrjson == "") {
+              return false;
+            } else {
+              isChangeData = true;
+              return true;
+            }
+          } else {
+            item.value.some((code, index) => {
+              var addrjsonObj = this.data.addrjson[propertyNameArr[index]];
+              console.log(
+                "item.props=='addrjson'",
+                addrjsonObj && addrjsonObj.id,
+                code
+              );
+              if (!addrjsonObj || addrjsonObj.id != code) {
+                isChangeData = true;
+                console.log("item.props", item.props, isChangeData);
+                return isChangeData;
+              } else {
+                return false;
+              }
+            });
+            return isChangeData;
+          }
+        } else if (item.props == "remark") {
+          if (item.value !== this.data.addrjson.remark) {
+            console.log("item.props", item.props, isChangeData);
+            return (isChangeData = true);
+          }
+          return false;
+        } else if (this.data[item.props] != item.value) {
+          console.log("item.props", item.props, isChangeData);
+          return (isChangeData = true);
+        } else {
+          console.log("item.props else");
+          return false;
+        }
+      });
+      return isChangeData;
+    },
+    click(e) {
+      // e.stopPropagation()
+      console.log("this.currentData", this.currentData);
+      console.log("this.data", this.data);
+      console.log("this.formData", this.formData);
+      if (!this.readonly) {
+        var isChangeData = this.checkFormDataIschanged(this.formData);
+        if (isChangeData) {
+          this.$confirm(
+            this.$t("systemSetting.confirmEditedResult"),
+            this.$t("common.warning2"),
+            {
+              confirmButtonText: this.$t("systemSetting.ok"),
+              cancelButtonText: this.$t("systemSetting.cancel"),
+              type: "warning"
+              // showClose:false,
+              // closeOnClickModal: false,
+              // callback(action, instance) {
+              //   console.log('action')
+              //   console.log('instance', instance)
+              //   instance.$children = []
+              // },
+            }
+          ).then(
+            res => {
+              this.updatePersonalInfo();
+            },
+            res => {
+              this.isEditUserGroup = false;
+              console.log(res);
+              this.$message({
+                type: "info",
+                message: this.$t("systemSetting.cancelledEdit")
+              });
+              console.log("this.data.username", this.data.username);
+              console.log("formData", this.formData);
+              console.log("staffBasePropertyForm", this.staffBasePropertyForm);
+              this.staffBasePropertyForm = this.getStaffBasePropertyFormData(
+                this.staffBasePropertyForm
+              );
+              this.readonly = !this.readonly;
+            }
+          );
+          return;
+        }
+      }
+      this.readonly = !this.readonly;
+    },
+    cancelUpdatePersonalInfo() {
+      if (!this.readonly && this.checkFormDataIschanged(this.formData)) {
+        this.staffBasePropertyForm = this.getStaffBasePropertyFormData(
+          this.staffBasePropertyForm
+        );
+      }
+      this.readonly = !this.readonly;
+    },
+    // clickCancel(e){
+    // },
+    clickResetPassword(e) {
+      // clickResetPassword
+      this.$confirm(
+        this.$t("systemSetting.confirmResetPassword"),
+        this.$t("systemSetting.tips"),
+        {
+          confirmButtonText: this.$t("systemSetting.ok"),
+          cancelButtonText: this.$t("systemSetting.cancel"),
+          type: "warning"
+        }
+      ).then(
+        res => {
+          console.log("clickResetPassword", res);
+          this.$http({
+            // url: this.resetPasswordUrl,
+            url: `./auth/users/${this.data.userId}/passwordReset`,
+            json: {
+              // userId: this.data.userId
+            },
+            method: "post"
+          }).then(response => {
+            let code =
+              response.data && response.data.head && response.data.head.code;
+            if (+code === 0) {
+              this.$message.success(
+                this.$t("common.resetPasswordSuccessfully")
+              );
+            }
+          });
+        },
+        res => {
+          console.log("clickResetPassword cancel", res);
+        }
+      );
+      // .catch(e => {
+      //   console.log('catch', e);
+      // });
+    },
+    confirmCorrect() {},
+    renderHeader(h, renderHeaderParams) {
+      // {column,  $index}
+      console.log("renderHeaderParams", renderHeaderParams);
+      // renderHeaderParams.store.states.data
+      // return  <el-button size='mini' style='border-radius:14px;border:1px solid #ccc;'><i class='el-icon-edit'></i></el-button>
+      var children = h("i", {
+        class: ["el-icon-edit"]
+      });
+      var clickModified = this.$t("systemSetting.click2Edit"),
+        confirmModified = this.$t("systemSetting.confirmEdit"),
+        resetPassword = this.$t("systemSetting.resetPassword"),
+        cancel = this.$t("systemSetting.cancel");
+      return (
+        <div>
+          <el-button
+            v-show={this.authEdit}
+            size="mini"
+            style={{ borderRadius: "14px", border: "1px solid #ccc" }}
+            nativeOnClick={this.click}
+          >
+            <i v-show={this.readonly} class={["el-icon-edit"]}>
+              {clickModified}
+            </i>
+            <span v-show={!this.readonly}>{confirmModified}</span>
+          </el-button>
+          <el-button
+            v-show={!this.readonly}
+            size="mini"
+            style={{ borderRadius: "14px", border: "1px solid #ccc" }}
+            nativeOnClick={this.cancelUpdatePersonalInfo}
+          >
+            {cancel}
+          </el-button>
+          <el-button
+            v-show={this.authResetPassword}
+            disabled={!this.readonly}
+            size="mini"
+            style={{ borderRadius: "14px", border: "1px solid #ccc" }}
+            nativeOnClick={this.clickResetPassword}
+          >
+            {resetPassword}
+          </el-button>
+        </div>
+      );
+
+      // return <el-button size="mini" style={{borderRadius: '14px',border: '1px solid #ccc'}} nativeOnClick={this.click.bind(this, renderHeaderParams.store.states.data)}><i v-show={this.readonly} class={["el-icon-edit"]}>
+      // 点击修改</i><span v-show={!this.readonly}>确定修改</span></el-button>
+
+      // return h('el-button', {
+      //   props: {
+      //     // size: this.testSize,
+      //     size: 'mini',
+      //   },
+      //   style: {
+      //     borderRadius: '14px',
+      //     border: '1px solid #ccc',
+      //   },
+      //   nativeOn: {
+      //     click: this.click
+      //   },
+      // }, [children])
+    },
+    checkChildArr(arr) {
+      if (!arr || !arr.length) {
+        return;
+      }
+      arr.forEach(item => {
+        if (!item.subTrees) {
+          return;
+        }
+        // item.id=item.id+''
+        if (!item.subTrees.length) {
+          item.subTrees = undefined;
+          return;
+        }
+        this.checkChildArr(item.subTrees);
+      });
+    },
+    getAddressIdArr(addrObj) {
+      var { city, town, county, country, province } = addrObj;
+      console.log(
+        "this.getAddressIdArr",
+        "city",
+        city,
+        "town",
+        town,
+        "county",
+        county,
+        "country",
+        country,
+        "province",
+        province
+      );
+      console.log(
+        Array.of(
+          country && country.id,
+          province && province.id,
+          city && city.id,
+          county && county.id,
+          town && town.id
+        )
+      );
+      var result = Array.of(
+        country && country.id,
+        province && province.id,
+        city && city.id,
+        county && county.id,
+        town && town.id
+      );
+      var results = [];
+      result.forEach((item, index, arr) => {
+        if (item) {
+          results.push(item);
+        }
+      });
+      return results;
+    },
+    setAddrOptions(childrenArr) {
+      if (!childrenArr || !childrenArr.length) {
+        return;
+      }
+      var parentId = childrenArr[0];
+      childrenArr.shift();
+      if (childrenArr.length) {
+        this.queryAddressJsonData({
+          parentId: parentId,
+          childrenIdArr: childrenArr
+        });
+      } else {
+        this.queryAddressJsonData({
+          parentId: parentId
+        });
+      }
+    },
+    queryAddressOptions(childrenArr) {
+      // 中国 areaid 100
+      // 0 groable 全球
+      if (this.data && this.data.addrjson) {
+        var childrenIdArr = this.getAddressIdArr(this.data.addrjson);
+        console.log("this.getAddressIdArr childrenIdArr", childrenIdArr);
+        this.queryAddressJsonData({
+          parentId: 0,
+          childrenIdArr
+        });
+      } else {
+        this.queryAddressJsonData({
+          parentId: 0
+        });
+      }
+    }
+  },
+  created() {
+    this.queryAddressOptions();
+  },
+  mounted() {
+    // var options = this.$store.state.userTreeList;
+    var options = this.userTreeList;
+    this.checkChildArr(options);
+    this.options = options;
+    console.log("options", this.options);
+    console.log("this.data", this.data);
+    this.currentData = this.data;
+  },
+  destroyed() {}
+};
+</script>
+

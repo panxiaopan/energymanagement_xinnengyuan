@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+.hj-maintence-staff-tab {
+  .el-pagination {
+    /*color: #EEF1F6;*/
+    color: #8391a5;
+    /*color: teal;*/
+  }
+  .linkColor {
+    color: blue;
+    border-bottom: 1px solid blue;
+    cursor: pointer;
+  }
+}

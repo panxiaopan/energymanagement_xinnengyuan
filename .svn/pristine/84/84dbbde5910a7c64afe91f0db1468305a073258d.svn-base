@@ -1,0 +1,121 @@
+<template>
+  <div>
+    <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+      <el-form-item v-if="authShowGroup" :label="userGroupType" prop="type">
+        <el-radio-group v-model="form.type">
+          <el-radio  label="groupUser">{{$t("systemSetting.enterpriseUserGroup")}}</el-radio>
+          <el-radio  label="maintainerGroup">{{$t("systemSetting.backendOpsGroup")}}</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item :label="userGroupName" prop="groupName">
+        <el-input v-model="form.groupName" :placeholder="inputPlaceHolder"></el-input>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import AuthValidator from "@/mixins/authValidator.js";
+export default {
+  name: "createUserGroup",
+  componentName: "createUserGroup",
+  mixins: [AuthValidator],
+  components: {},
+  props: {
+    authShowGroup: {
+      type: Boolean,
+      default: true
+    }
+  },
+  data() {
+    var typeValidator = (rules, value, callback) => {
+      if (value) {
+        callback();
+      } else {
+        callback(new Error(this.$t("systemSetting.usrGroupTypeCanNotBeNull")));
+      }
+    };
+    var groupNameValidator = (rule, value, callback) => {
+      if (value) {
+        callback();
+      } else {
+        callback(new Error(this.$t("systemSetting.usrNameCanNotBeNull")));
+      }
+    };
+    return {
+      inputPlaceHolder: this.$t("systemSetting.inputUserGroupName"),
+      userGroupName: this.$t("systemSetting.userGroupName") + ": ",
+      userGroupType: this.$t("systemSetting.userGroupType") + ": ",
+      form: {
+        type: "maintainerGroup",
+        groupName: ""
+      },
+      rules: {
+        type: [
+          // typeValidator
+          {
+            require: true,
+            message: this.$t("systemSetting.selectUserGroupType"),
+            trigger: "blur"
+          }
+        ],
+        groupName: [
+          groupNameValidator
+          // {
+          //   // require: true,
+          //   pattern: /.+/g,
+          //   message: '请输入用户组名称',
+          //   trigger: 'blur,change'
+          // }
+        ]
+      },
+      // showUserGroupType: true
+    };
+  },
+  // computed: {
+  //   addUserGroupShowGroupAuth(){
+  //     return this.$store.state.hjSystemAuthObj.addUserGroupShowGroupAuth
+  //   }
+  // },
+  
+  methods: {
+    testClick() {
+      this.$refs.form.resetFields();
+
+      // console.log('this.form', this.form)
+    },
+    submitForm(submitFun) {
+      var validated = false;
+      this.$refs.form.validate(valid => {
+        validated = valid;
+        if (valid) {
+          if (submitFun) {
+            submitFun();
+          }
+          console.log("submit");
+          return true;
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+      return validated;
+    },
+    resetForm() {
+      this.$refs.form.resetFields();
+    }
+  },
+  created() {},
+  mounted() {
+    // var auth = this.authValidator("user_permission_mgr_add_usergroup");
+
+    // if (!this.auth) {
+    //   // groupUser maintainerGroup
+    //   this.showUserGroupType = false;
+    //   this.form.type = "maintainerGroup";
+    // }
+  },
+  destroyed() {}
+};
+</script>
+

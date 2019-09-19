@@ -1,0 +1,38 @@
+@charset "utf-8";
+
+.hj-bind-user {
+  .hj-bind-user__box {
+    // padding: 0;
+    overflow-y: auto;
+    min-height: 250px;
+    max-height: 350px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  ul,
+  li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  ul > li {
+    &:not(.active):hover {
+      background-color: #eef1f6;
+    }
+    text-indent: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  /*    ul>li:not(:first-child){
+      padding-top: 5px;
+      padding-bottom: 5px;
+    };*/
+  ul > li:not(:last-child) {
+    border-bottom: 1px solid #eef1f6;
+  }
+  .active {
+    background-color: #74b9ff;
+    // 74B9FF
+    // 3699FF
+  }
+}

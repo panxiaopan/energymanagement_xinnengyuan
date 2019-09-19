@@ -1,0 +1,18 @@
+<template>
+  <div class="hj-user-rights-management-wrapper">
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "UserRightsManagement",
+  data() {
+    return {
+      name: "UserRightsManagement"
+    };
+  },
+  methods: {},
+  mounted() {}
+};
+</script>

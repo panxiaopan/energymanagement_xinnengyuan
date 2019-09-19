@@ -1,0 +1,254 @@
+<template>
+  <div class="hj-maintenace-staff-wrapper">
+    <el-row class="hj-maintenace-staff-content" type="flex" :gutter="30">
+      <el-col :xs="6" :sm="6" :md="6" :lg="5" class="hj-maintenace-staff-user-group-tree">
+        <user-group-tree
+          :auth-edit="addUserGroupAuth.auth"
+          :auth-delete="deleteUserGroupAuth.auth"
+          ref="userGroupTree"
+          :active-id="activeId"
+          @click-node="clickNode"
+          :treeMaxHeight="treeMaxHeight"
+          is-show-add-icon
+        ></user-group-tree>
+      </el-col>
+      <el-col :xs="18" :sm="18" :md="18" :lg="19" class="user-station-content">
+        <el-tabs v-model="activeTabName" type="card" @tab-click="tabClick">
+          <el-tab-pane :label="labelTextObj.user" name="user">
+            <maintenance-staff-tab
+              ref="user"
+              :auth-transform="transformUser2OpsUserAuth.auth"
+              :auth-edit="addAndUpdateUserAuth.auth"
+              :query-url="queryUserListUrl"
+              :path-alias="currentPathAlias"
+              :node-id="currentNodeId"
+              show-transfer
+              :show-delete="false"
+              :config="userConfig"
+              type="user"
+              @click-path="clickPath"
+            ></maintenance-staff-tab>
+          </el-tab-pane>
+          <el-tab-pane :label="labelTextObj.maintainer" name="maintainer">
+            <maintenance-staff-tab
+              ref="maintainer"
+              :auth-edit="deleteOpsUserAuth.auth"
+              :query-url="queryUserListUrl"
+              :path-alias="currentPathAlias"
+              :node-id="currentNodeId"
+              :config="maintainerConfig"
+              @click-path="clickPath"
+            ></maintenance-staff-tab>
+          </el-tab-pane>
+          <el-tab-pane :label="labelTextObj.socialUnit" name="socialUnit">
+            <socail-unit-tab
+              ref="socialUnit"
+              :auth-edit="addAndUpdateUserAuth.auth"
+              :query-url="querySocialUnitsUrl"
+              :node-id="currentNodeId"
+              :show-edit-path-btn="false"
+              :config="socialUnitConfig"
+              user-type="socialUnit"
+            ></socail-unit-tab>
+          </el-tab-pane>
+        </el-tabs>
+        <el-button style="position:absolute; top:15px;right:15px;" @click="clickUseDoc">使用说明</el-button>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+<script>
+import UserGroupTree from "./user-group-tree";
+import AuthValidator from "@/mixins/authValidator.js";
+import MaintenanceStaffTab from "./maintenance-staff-tab";
+import SocailUnitTab from "./social-unit-tab";
+import { mapState } from "vuex";
+export default {
+  name: "maintenanceStaff",
+  componentName: "maintenanceStaff",
+  mixins: [AuthValidator],
+  components: {
+    UserGroupTree,
+    MaintenanceStaffTab,
+    SocailUnitTab
+  },
+  props: {
+    activeName: {
+      type: String,
+      default: "user"
+    },
+    activeId: {
+      type: [String, Number],
+      default: 1
+    }
+  },
+  data() {
+    // var wrapperHeight = window.innerHeight - 61 - 20 - 0 + "px";
+
+    var labelTextObj = {
+      user: this.$t("systemSetting.proprietor"),
+      maintainer: this.$t("systemSetting.opsMember"),
+      socialUnit: this.$t("systemSetting.socialUnit")
+    };
+    return {
+      maintainerConfig: {
+        nodePath: "",
+        showSearch: true,
+        showAddIcon: true
+      },
+      userConfig: {
+        nodePath: "",
+        showSearch: true,
+        childrenLabel: this.$t("systemSetting.user"),
+        showAddIcon: true
+      },
+      socialUnitConfig: {
+        nodePath: "",
+        showSearch: true,
+        childrenLabel: this.$t("systemSetting.socialUnit"),
+        placeholder: this.$t("systemSetting.inputStationNameAddr"),
+        showAddIcon: true
+      },
+      menuObj: {
+        maintainer: {
+          currentNodeId: NaN,
+          oldNodeId: NaN
+        },
+        user: {
+          currentNodeId: NaN,
+          oldNodeId: NaN
+        },
+        socialUnit: {
+          currentNodeId: NaN,
+          oldNodeId: NaN
+        }
+      },
+      currentNodePath: "",
+      currentPathAlias: "",
+      currentNodeId: NaN,
+      oldNodeId: NaN,
+      // wrapperHeight,
+      showChildrenContent: false,
+      labelTextObj,
+      activeTabName: "user"
+    };
+  },
+  computed: {
+    ...mapState({
+      getState: state => {
+        console.log("------");
+        console.log(state);
+      }
+    }),
+    // ?? ?????
+    addUserGroupAuth() {
+      return this.$store.state.hjSystemAuthObj.addUserGroupAuth;
+    },
+    deleteUserGroupAuth() {
+      return this.$store.state.hjSystemAuthObj.deleteUserGroupAuth;
+    },
+    addAndUpdateUserAuth() {
+      console.log(this.$store);
+      this.getState;
+      return this.$store.state.hjSystemAuthObj.addAndUpdateUserAuth;
+    },
+    // ???? ??????
+    transformUser2OpsUserAuth() {
+      return this.$store.state.hjSystemAuthObj.transformUser2OpsUserAuth;
+    },
+    deleteOpsUserAuth() {
+      return this.$store.state.hjSystemAuthObj.deleteOpsUserAuth;
+    },
+    queryUserListUrl() {
+      return `./auth/groups/${this.currentNodeId}/users`;
+    },
+    querySocialUnitsUrl() {
+      return `./auth/groups/${this.currentNodeId}/stations`;
+    },
+    treeMaxHeight() {
+      // return window.innerHeight - 61 - 20 - 44 + "px";
+      return "94%";
+    }
+  },
+  watch: {
+    currentNodePath(newVal, oldVal) {
+      this.maintainerConfig.nodePath = newVal;
+      this.userConfig.nodePath = newVal;
+      this.socialUnitConfig.nodePath = newVal;
+    },
+    addAndUpdateUserAuth: {
+      deep: true,
+      handler(newVal, oldVal) {
+        this.maintainerConfig.showAddIcon = newVal.auth;
+        this.userConfig.showAddIcon = newVal.auth;
+        this.socialUnitConfig.showAddIcon = newVal.auth;
+      }
+    }
+    // activeName(newVal, oldVal) {
+    //   this.activeTabName = newVal;
+    // }
+  },
+  methods: {
+    clickUseDoc() {
+      var useDocHtmlPlace =
+        "../../../../../static/doc/user-authorization-management/manual.html?" +
+        "random=" +
+        Math.random() * 123456789;
+      if (process.env.NODE_ENV && process.env.NODE_ENV == "production") {
+        useDocHtmlPlace =
+          "../../../../../doc/user-authorization-management/manual.html?" +
+          "random=" +
+          Math.random() * 123456789;
+      }
+      // window.location.href = useDocHtmlPlace;
+      window.open(useDocHtmlPlace);
+    },
+    clickPath(nodeId) {
+      this.$refs.userGroupTree.setCurrentNode(nodeId);
+    },
+    clickAddMaintenanceStaff() {},
+
+    clickNode(params) {
+      // if (this.currentNodeId == this.menuObj[this.activeTabName].oldNodeId) {
+      //   return
+      // }
+      console.log("params click node", params);
+      this.currentNodeId = params.currentNodeData.id;
+      this.menuObj[this.activeTabName].oldNodeId = this.currentNodeId;
+      this.currentNodePath = params.currentNodeData.pathName;
+      this.currentPathAlias = params.currentNodeData.pathAlias;
+      this.$nextTick(() => {
+        this.$refs[this.activeTabName].queryData(true);
+      });
+
+      this.$router.push({
+        name: "maintenanceStaff",
+        params: { activeName: this.activeTabName, activeId: this.currentNodeId }
+      });
+    },
+    tabClick(vm) {
+      // console.log("vm.name", vm.name, "this.activeTabName", this.activeTabName);
+      if (this.menuObj[vm.name].oldNodeId != this.currentNodeId) {
+        // this.menuObj[vm.name].oldNodeId =  this.currentNodeId
+        this.$refs[vm.name] &&
+          this.$refs[vm.name].queryData &&
+          this.$refs[vm.name].queryData();
+      }
+      this.$router.push({
+        name: "maintenanceStaff",
+        params: { activeName: vm.name, activeId: this.currentNodeId }
+      });
+      // this.oldNodeId = this.currentNodeId
+    }
+  },
+  mounted() {
+    this.activeTabName = this.activeName;
+    //this.activeName = "user";
+  }
+};
+</script>
+<style lang="less">
+@import "./index.less";
+</style>
+
+

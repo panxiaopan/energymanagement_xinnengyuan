@@ -1,0 +1,332 @@
+<template>
+  <div class="hj-social-unit-device-list-wrapper">
+    <el-row class="hj-social-unit-device-list-head">
+      <el-col :span="5">
+        <div class="hj-social-unit-device-list-head__item">
+          <el-input
+            v-model="keyword"
+            :placeholder="searchePlaceholder"
+            size="medium"
+            @keyup.enter.stop.native="handleEnterSearch"
+          >
+            <i slot="suffix" class="el-input__icon el-icon-search"></i>
+          </el-input>&nbsp;&nbsp;
+          <el-button type="primary" @click="click2Search" size="medium">{{$t("common.search")}}</el-button>
+        </div>
+      </el-col>
+      <el-col :span="19">
+        <div
+          class="hj-social-unit-device-list-head__addStation"
+          v-if="addAndUpdateStationAuth.auth"
+        >
+          <el-button type="primary" size="medium" @click="addStation">
+            <i class="el-icon-plus"></i>
+            &nbsp;{{$t("common.addSocialUnit")}}
+          </el-button>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row class="hj-social-unit-device-list-body">
+      <el-table
+        :data="dataList"
+        border
+        style="width:100%"
+        v-loading="loading"
+        @sort-change="sortChange"
+      >
+        <el-table-column prop="name" :label="tableText.socialUnit" min-width="150" align="center"></el-table-column>
+        <el-table-column prop="address" :label="tableText.address" min-width="150" align="center"></el-table-column>
+        <!-- <el-table-column prop="totalDeviceCount" :label="tableText.deviceCount" min-width="80" align="center">
+        </el-table-column>
+        <el-table-column prop="onlineDeviceCount" :label="tableText.onlineCount" min-width="80" align="center" >
+        </el-table-column>
+        <el-table-column prop="offlineDeviceCount" :label="tableText.offlineCount" min-width="80" align="center">
+        </el-table-column>
+        <el-table-column prop="pendingRiskCount" :label="tableText.todoHazard" min-width="80" align="center">
+        </el-table-column>
+        <el-table-column prop="processingRiskCount" :label="tableText.handlingHazard" min-width="80" align="center">
+        </el-table-column>-->
+        <el-table-column
+          prop="manResponsibleForFireSecurity"
+          :label="tableText.manResponsible"
+          min-width="120"
+          align="center"
+        >
+          <template slot-scope="scope">
+            <span>{{computedManResponsible(scope)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="installedDate"
+          :label="tableText.installedDate"
+          min-width="100"
+          align="center"
+        ></el-table-column>
+        <el-table-column :label="tableText.operation" min-width="100" align="center">
+          <template slot-scope="scope">
+            <el-button
+              v-if="addAndUpdateStationAuth.auth"
+              circle
+              @click="click2View(scope)"
+              size="mini"
+            >
+              <i class="el-icon-view"></i>
+            </el-button>
+            <el-button
+              v-if="deleteStationAuth.auth"
+              circle
+              @click="click2Remove(scope)"
+              size="mini"
+            >
+              <i class="el-icon-delete"></i>
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-row>
+    <div class="hj-social-unit-device-list__pagination">
+      <el-pagination
+        @size-change="changePageSize"
+        @current-change="changeCurrentPage"
+        :current-page.sync="paginationOptions.currentPage"
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="paginationOptions.pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+<script>
+import md5 from "md5";
+export default {
+  name: "SocialUnitDeviceList",
+  props: {
+    queryUrl: {
+      type: String,
+      default: "./socialUnits/config"
+    }
+  },
+  data() {
+    var orderColMap = new Map([
+      ["name", "name"],
+      ["address", "addr"],
+      ["installDate", "install_date"],
+      ["installCapacity", "install_capacity"],
+      ["currentKw", "cur_kw"],
+      ["dayEfficiency", "day_effi"],
+      ["dayKwh", "day_kwh"],
+      ["totalKwh", "total_kwh"],
+      ["currentStatus", "cur_status"],
+      ["ownerName", "owner_name"],
+      ["updateTime", "update_time"],
+      ["healthDegree", "healthDegree"]
+    ]);
+    var tableText = {
+      socialUnit: this.$t("realTimeMonitoring.socialUnit"),
+      address: this.$t("realTimeMonitoring.address"),
+      deviceCount: this.$t("realTimeMonitoring.deviceCount"),
+      onlineCount: this.$t("realTimeMonitoring.onlineCount"),
+      offlineCount: this.$t("realTimeMonitoring.offlineCount"),
+      todoHazard: this.$t("realTimeMonitoring.todoHazard"),
+      handlingHazard: this.$t("realTimeMonitoring.handlingHazard"),
+      installedDate: this.$t("systemSetting.installedDate"),
+      manResponsible: this.$t("systemSetting.manResponsible"),
+      operation: this.$t("realTimeMonitoring.operation")
+    };
+    return {
+      total: 0,
+      dataList: [],
+      paginationOptions: {
+        currentPage: 1,
+        pageSize: 10
+      },
+      ratedPowerLabel: `${this.$t("common.ratedPower")}`,
+      batteryCapacityLabel: `${this.$t("common.installedCapacity")}`,
+      searchePlaceholder: this.$t("socialUnitManagement.searchKeyword"),
+      keyword: "",
+      orderColMap,
+      tableText,
+      loading: false
+    };
+  },
+  computed: {
+    config() {
+      var url = this.queryUrl;
+      var start =
+        (this.paginationOptions.currentPage - 1) *
+        this.paginationOptions.pageSize;
+      var size = this.paginationOptions.pageSize;
+      var json = {
+        start,
+        size,
+        keyword: this.keyword
+        // orderCol: "",
+        // orderType: "asc"
+      };
+      return {
+        url,
+        json
+      };
+    },
+    password() {
+      return this.$store.state.login.userInfo.password;
+    },
+    addAndUpdateStationAuth() {
+      return this.$store.state.hjSystemAuthObj.addAndUpdateStationAuth;
+    },
+    deleteStationAuth() {
+      return this.$store.state.hjSystemAuthObj.deleteStationAuth;
+    }
+  },
+  methods: {
+    computedManResponsible(scope) {
+      let manResponsibleForFireSecurity =
+        scope.row.manResponsibleForFireSecurity;
+      let { name, tel } = manResponsibleForFireSecurity;
+      return `${name}, ${tel}`;
+    },
+    sortChange({ prop, order }) {
+      // var orderCol = ''
+      // var orderType = ''
+      // if (typeof prop !== 'undefined' && typeof order !== 'undefined') {
+      //   orderCol = this.orderColMap.get(prop);
+      //   orderType = order === 'ascending' ? 'asc' : 'desc'
+      // }
+      // Object.assign(this.config.json, {orderCol, orderType})
+      // this.$nextTick(()=>{
+      //   this.queryDataList()
+      // })
+    },
+    click2Search() {
+      this.handleEnterSearch();
+    },
+    handleEnterSearch() {
+      this.paginationOptions.currentPage = 1;
+      // Object.assign(this.config.json, {
+      //   keyword: this.keyword,
+      //   start: 0,
+      //   size: 10
+      // });
+      this.$nextTick(() => {
+        this.queryDataList();
+      });
+    },
+    changePageSize(pageSize) {
+      this.paginationOptions.pageSize = pageSize;
+      this.paginationOptions.currentPage = 1; // 回到第一页
+      this.$nextTick(() => {
+        this.queryDataList();
+      });
+    },
+    changeCurrentPage(currentPage) {
+      this.$nextTick(() => {
+        this.queryDataList();
+      });
+    },
+    addStation() {
+      this.$router.push({
+        name: "socialUnitManagement",
+        params: { unitId: NaN }
+      });
+    },
+    click2View(scope) {
+      var unitId = scope.row.id || "--";
+      console.log("unitId++++++", unitId);
+      this.$router.push({
+        path: `/systemSetting/socialUnitManagement/${unitId}`
+      });
+    },
+    queryDataList() {
+      this.loading = true;
+      this.$http({
+        ...this.config
+      })
+        .then(response => {
+          let code = response.data.head && response.data.head.code;
+          let data = response.data.data;
+          if (code === 0 && data) {
+            if (typeof data.total !== "undefined") {
+              this.total = data.total;
+            }
+            console.log("response social unit list", data.rows);
+            this.dataList = data.rows;
+            this.loading = false;
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+        });
+    },
+    click2Remove(scope) {
+      var unitId = scope.row.id || "--";
+      if (unitId === "--") {
+        this.$message.error(this.$t("common.unvalidStationId"));
+        return;
+      }
+      var url = `./socialUnits/${unitId}`;
+      var message = this.$t("systemSetting.removeSocialUnitSuccessfully");
+      this.$confirm(
+        this.$t("common.unrecoverableUnitTips"),
+        this.$t("common.warning2"),
+        {
+          confirmButtonText: this.$t("common.ok"),
+          cancelButtonText: this.$t("common.cancel"),
+          type: "warning"
+        }
+      )
+        .then(() => {
+          this.$prompt(
+            this.$t("common.inputPasswordTips"),
+            this.$t("systemSetting.password"),
+            {
+              confirmButtonText: this.$t("common.ok"),
+              cancelButtonText: this.$t("common.cancel"),
+              inputType: "password",
+              // inputPattern: /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
+              inputValidator: value => {
+                if (value === "") {
+                  return this.$t("systemSetting.passwordNullError");
+                } else if (md5(value) !== this.password) {
+                  // return md5(value);
+                  return this.$t("systemSetting.passwordError");
+                }
+                return true;
+              }
+            }
+          )
+            .then(({ value }) => {
+              this.$http({
+                url,
+                json: { password: md5(value) },
+                method: "delete"
+              }).then(response => {
+                var code =
+                  response.data &&
+                  response.data.head &&
+                  response.data.head.code;
+                if (+code === 0) {
+                  this.$message.success(message);
+                  // let dataList = [];
+                  // this.dataList = this.dataList.filter(item => {
+                  //   return item.id !== +url.split("/")[2];
+                  // });
+                  this.queryDataList();
+                }
+              });
+            })
+            .catch(() => {});
+        })
+        .catch(() => {});
+    }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.queryDataList();
+    });
+  }
+};
+</script>
+<style lang="less">
+@import "./index.less";
+</style>

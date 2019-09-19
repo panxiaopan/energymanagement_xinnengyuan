@@ -1,0 +1,41 @@
+@charset 'utf-8';
+
+@import "./social-unit-management.less";
+@import "./communication-setting.less";
+
+.hj-station-device-management-wrapper {
+  position: relative;
+  height: 100%;
+  min-height: 90vh;
+  background: #f7f7f7;
+  padding: 1vh 1vw;
+  border-radius: 8px;
+
+  .hj-station-device-management-header_back {
+    position: absolute;
+    right: 2vh;
+    z-index: 10;
+
+    .el-button {
+      cursor: pointer;
+    }
+  }
+
+  .el-tabs__item {
+    color: #313131;
+    font-weight: bold;
+    font-size: 1.48vh;
+  }
+
+  .el-tabs__item.is-active {
+    color: #0b61aa;
+  }
+
+  .el-tabs__item:hover {
+    color: #0b61aa;
+  }
+
+  // .el-form-item__label {
+  //   color: #ffffff;
+  // }
+}

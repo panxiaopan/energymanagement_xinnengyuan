@@ -1,0 +1,14 @@
+.maintenanceStaffBasePropertyPage {
+  color: #313131;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  .el-breadcrumb__inner {
+    color: #313131;
+  }
+  .el-pagination__total,
+  .el-pagination__jump {
+    color: #313131;
+  }
+}

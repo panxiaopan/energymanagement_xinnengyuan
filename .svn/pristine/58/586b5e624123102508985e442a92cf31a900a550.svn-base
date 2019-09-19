@@ -1,0 +1,11 @@
+@charset "utf-8";
+
+.hj-config-station-for-user {
+  .selected-list > li {
+    padding: 10px;
+    &:hover {
+      background-color: #eef1f6;
+      /*EDF7FF*/
+    }
+  }
+}

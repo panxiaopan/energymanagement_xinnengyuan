@@ -1,0 +1,9 @@
+@charset "UTF-8";
+@import "./maintenance-staff/index.less";
+
+.hj-user-rights-management-wrapper {
+  min-width: 100%;
+  min-height: 100%;
+  background-color: #f7f7f7;
+  border-radius: 6px;
+}

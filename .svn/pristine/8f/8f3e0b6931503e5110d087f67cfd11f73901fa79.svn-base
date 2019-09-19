@@ -1,0 +1,773 @@
+<template>
+  <div class="hj-maintence-station-tab">
+    <search-widget ref="searchWidget" :config="config" @click-add="clickAdd"></search-widget>
+    <el-table
+      ref="table"
+      v-loading="loading"
+      :data="tableLists"
+      border
+      style="min-width:100%;"
+      @sort-change="sortChange"
+      @cell-click="cellClick"
+    >
+      <el-table-column :label="$t('systemSetting.identifier')" prop="seriesNumber" :width="66">
+        <template slot-scope="scope">{{(scope.$index+1)+($refs.pagination.currentPage-1)*pageSize}}</template>
+      </el-table-column>
+      <el-table-column
+        v-for="tableItem in tableConfig"
+        :key="tableItem.label"
+        :sortable="tableItem.sortable"
+        :label="tableItem.label"
+        :prop="tableItem.prop"
+        :min-width="tableItem.minWidth?tableItem.minWidth : '--'"
+        :width="tableItem.width?tableItem.width : '--'"
+      >
+        <template slot-scope="scope">
+          <span v-if="tableItem.prop=='pathList'">
+            <span
+              v-for="(scopeItem, scopeIndex) in getTabelPathList(scope.row.pathList, scope.row)"
+              :key="scopeIndex"
+            >
+              {{scopeIndex+1+') '+ scopeItem+';'}}
+              <br v-if="scopeIndex!=scope.row.pathList.length-1" />
+            </span>
+            <!-- <el-button v-if="showEditPathBtn&&authEdit" @click.native.prevent="editBelongingPath(scope.row,scope.$index, tableLists)" size="mini" circle><i class="el-icon-edit"></i></el-button> -->
+          </span>
+          <span v-else-if="tableItem.prop=='ownerName'">
+            <span
+              :class="tableItem.linkColor&&scope.row[tableItem.prop]!== unkown?'linkColor':''"
+              @click.stop="clickCell(scope.row, tableItem.prop,tableItem.linkColor,scope.$index)"
+            >{{scope.row[tableItem.prop]}}</span>
+            <el-button
+              v-if="authEdit"
+              @click.native.prevent="bindUsers(scope.row,scope.$index, tableLists)"
+              size="mini"
+              circle
+            >
+              <i class="el-icon-edit"></i>
+            </el-button>
+          </span>
+          <span
+            v-else
+            :class="tableItem.linkColor?'linkColor':''"
+            @click.stop="clickCell(scope.row, tableItem.prop,tableItem.linkColor)"
+          >{{scope.row[tableItem.prop]}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isShowAction"
+        :label="operationName||defaultOperationName"
+        prop="action"
+        :width="100"
+      >
+        <template slot-scope="scope">
+          <el-button
+            v-if="showView&&authEdit"
+            @click.native.prevent="viewRow(scope.row,scope.$index, tableLists)"
+            size="mini"
+            circle
+          >
+            <i class="el-icon-view"></i>
+          </el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
+        v-if="isShowAction"
+        :label="$t('systemSetting.operation')"
+        prop="action"
+        :width="80"
+      >
+        <template slot-scope="scope">
+          <el-button
+            v-if="showEdit&&authEdit"
+            @click.native.prevent="editRow(scope.row,scope.$index, tableLists)"
+            size="mini"
+            circle
+          >
+            <i class="el-icon-edit"></i>
+          </el-button>
+          <el-tooltip v-if="isGroup" placement="top" :content="deleteSocialUnitTips">
+            <el-button
+              v-if="authEdit&&getIsShowDeleteBtn(scope.row,scope.$index, tableLists)"
+              @click.native.prevent="deleteBelongingPath(scope.row,scope.$index, tableLists)"
+              size="mini"
+              circle
+            >
+              <i class="el-icon-delete"></i>
+            </el-button>
+          </el-tooltip>
+          <div v-else>
+            <el-button
+              v-if="authEdit&&getIsShowDeleteBtn(scope.row,scope.$index, tableLists)"
+              @click.native.prevent="deleteBelongingPath(scope.row,scope.$index, tableLists)"
+              size="mini"
+              circle
+            >
+              <i class="el-icon-delete"></i>
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <custom-pagination
+      ref="pagination"
+      :total="total"
+      :page-size="pageSize"
+      @size-change="handleSizeChange"
+    ></custom-pagination>
+  </div>
+</template>
+<script>
+import SearchWidget from "../search-widget";
+import CustomPagination from "../custom-pagination";
+import { MessageBox } from "element-ui";
+import BindUser from "../bind-user/index.vue";
+import EditStationPath from "../edit-station-path";
+import ViewStationRight from "../view-station-right";
+import transformValueAndUnit from "@/filters/transformValueAndUnit";
+import ConfigStationForUser from "../config-station-for-user/index";
+export default {
+  name: "socialUnitTab",
+  componentName: "socialUnitTab",
+  mixins: [],
+  components: {
+    SearchWidget,
+    CustomPagination,
+    BindUser,
+    EditStationPath,
+    ViewStationRight,
+    ConfigStationForUser
+  },
+  props: {
+    config: {
+      type: Object,
+      default: () => {
+        return {
+          showSearch: false
+        };
+      }
+    },
+    userType: {
+      type: String,
+      default: "maintainer" // socialUnit user
+    },
+    pageType: {
+      type: String,
+      default: "socialUnit" //user
+    },
+    pathAlias: {
+      type: String,
+      default: ""
+    },
+    authEdit: Boolean,
+    isShowAction: {
+      type: Boolean,
+      default: true
+    },
+    showEdit: {
+      type: Boolean,
+      default: false
+    },
+    showDelete: {
+      type: Boolean,
+      default: false
+    },
+    showView: {
+      type: Boolean,
+      default: true
+    },
+    queryUrl: {
+      type: String,
+      default: ""
+    },
+    nodeId: {
+      type: [Number, String],
+      default: NaN
+    },
+    defaultOrderCol: {
+      type: String,
+      default: "install_date"
+    },
+    operationName: {
+      type: String,
+      default: ""
+    },
+    showEditPathBtn: {
+      type: Boolean,
+      default: true
+    },
+    dealFun: {
+      type: Function,
+      default: null
+    },
+    isGroup: {
+      type: Boolean,
+      default: true
+    }
+  },
+  watch: {
+    nodeId() {
+      console.log("----nodeId----------" + this.nodeId);
+    },
+
+    queryUrl() {
+      console.log("queryUrl------change");
+      console.log(this.queryUrl);
+      setTimeout(() => {
+        this.queryData();
+      }, 500);
+    }
+  },
+  data() {
+    var orderFieldMap = new Map([
+      ["stationName", "name"],
+      ["address", "addr"],
+      ["installDate", "install_date"],
+      ["installCapacity", "install_capacity"],
+      ["ownerName", "owner_name"]
+    ]);
+    return {
+      defaultOperationName: this.$t("systemSetting.userWhoCanView"),
+      deleteSocialUnitTips: this.$t("systemSetting.deleteSocialUnitTips"),
+      unkown: this.$t("systemSetting.unknown"),
+      loading: false,
+      tableLists: [],
+      orderCol: this.defaultOrderCol,
+      orderType: "desc",
+      pageSize: 10,
+      total: 10,
+      socialUnitId: NaN,
+      tableConfig: [
+        {
+          label: this.$t("systemSetting.name"),
+          prop: "name",
+          sortable: "custom",
+          linkColor: true
+        },
+        {
+          label: this.$t("systemSetting.proprietor"),
+          prop: "ownerName",
+          sortable: "custom",
+          linkColor: true
+        },
+        {
+          label: this.$t("systemSetting.address"),
+          prop: "address",
+          sortable: "custom",
+          minWidth: 200
+        },
+        {
+          label: this.$t("systemSetting.installedDate"),
+          prop: "installDate",
+          sortable: "custom",
+          width: 120
+        },
+        {
+          label: this.$t("systemSetting.belongGroup"),
+          prop: "pathList",
+          minWidth: 200
+        }
+      ],
+      orderFieldMap
+    };
+  },
+  computed: {
+    postUrl() {
+      if (this.isGroup) {
+        return `./auth/groups/${this.nodeId}/stations/view`;
+      }
+      return `./auth/users/${this.nodeId}/stations/view`;
+    },
+    deleteUrl() {
+      if (this.isGroup) {
+        return `./auth/groups/${this.nodeId}/stations/${this.socialUnitId}/unview`;
+      }
+      return `./auth/users/${this.nodeId}/stations/${this.socialUnitId}/unview`;
+    }
+  },
+  methods: {
+    hjTransformValueAndUnit(value, baseUnit) {
+      return transformValueAndUnit(
+        value,
+        baseUnit,
+        window.localStorage.hjLanguage
+      );
+    },
+    handleSizeChange(val) {
+      this.pageSize = val;
+    },
+    sortChange(val) {
+      var { column, prop, order } = val;
+      if (prop || order) {
+        this.orderCol = this.orderFieldMap.get(prop) || this.defaultOrderCol;
+        this.orderType = order == "ascending" ? "asc" : "desc";
+        // asc，默认）或者降序（desc）
+      } else {
+        this.orderCol = this.defaultOrderCol;
+        this.orderType = "desc";
+      }
+      this.queryData();
+    },
+    cellClick(row, column, cell, event) {
+      // row, column, cell, event
+      console.log("row", row, "column", column, "cell", cell, "event", event);
+      this.$emit("cell-click", { row, column, cell, event });
+    },
+    editRow(row, index, tableData) {
+      this.$emit("edit-row", {
+        row,
+        index,
+        list: tableData,
+        total: this.total,
+        url: this.url,
+        json: this.totalJson,
+        userListNodeId: this.nodeId
+      });
+      console.log("editRow", row);
+    },
+    deleteRow(row, index, tableData) {
+      this.$emit("delete-row", {
+        row,
+        index,
+        list: tableData
+      });
+      console.log("deleteRow", row);
+    },
+    viewRow(row, index, tableData) {
+      console.log("row+++++++", row);
+      // var h = this.$createElement;
+      if (this.$refs.viewStationRight) {
+        this.$refs.viewStationRight.resetData();
+        this.$nextTick(() => {
+          this.$refs.viewStationRight.queryData();
+        });
+      }
+      var message = h => {
+        return (
+          <view-station-right
+            ref="viewStationRight"
+            self={this}
+            station-id={row.id}
+          />
+        );
+      };
+      var title = this.$t("systemSetting.viewableUsers") + '"' + row.name + '"';
+      MessageBox({
+        title,
+        message: message(this.$createElement),
+        showCancelButton: true,
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        customClass: "hj-custom-message-box--userRightsManagement",
+        beforeClose: (action, instance, done) => {
+          if (action === "confirm") {
+            instance.confirmButtonLoading = true;
+            instance.confirmButtonText = this.$t("systemSetting.excuting");
+            setTimeout(() => {
+              instance.confirmButtonLoading = false;
+              done();
+            }, 300);
+          } else {
+            instance.confirmButtonLoading = false;
+            done();
+          }
+        }
+      }).then(action => {});
+    },
+    clickCell(row, prop, isLink, index, isReturn) {
+      if (isReturn) {
+        return;
+      }
+      if (isLink) {
+        if (prop == "ownerName") {
+          var paramsData = {
+            row: { userId: row.ownerId, type: row.ownerType }
+          };
+          this.$emit("edit-row", paramsData);
+          this.$nextTick(() => {
+            this.$router.push({
+              name: "maintenanceStaffBasePropertyPage",
+              params: {
+                currentNodeId: paramsData.row.userId,
+                pageType: this.pageType,
+                userType: paramsData.row.type,
+                userListNodeId: this.nodeId
+              }
+            });
+          });
+        }
+        if (prop == "name") {
+          this.$router.push("/systemSetting/socialUnitManagement/" + row.id);
+        }
+      }
+    },
+    getTabelPathList(pathList, rowData) {
+      console.log("getTabelPathList", pathList, rowData);
+      var ownerPath = rowData.ownerPath || ""; // 该电站拥有者的用户组路径属性
+      var resultList = [];
+      if (!pathList || !pathList.length) {
+        return resultList;
+      }
+      // 判断list item 是否是终端用户组，是终端用户组则该路径去除终端用户组名层级
+
+      resultList = pathList.map(item => {
+        if (item.isTerminal) {
+          //用户组登录名必须不包含'/' 否则会有问题。
+
+          return item.attachPath
+            .split("/")
+            .filter((item, index, arr) => {
+              return !(arr.length - 1 == index);
+            })
+            .join("/");
+        } else {
+          return item.attachPath;
+        }
+      });
+      // localStorage.editBelongingPath;
+      // pathList: {path: ,user:} // 数组对象，包含数据库存储中的路径， 以及该用户相关的信息，是否是终端用户，是终端用户则必须提供终端端用户ID。
+      // 返回的列表必须不存在终端用户组名，向管理员隐藏终端用户组名，故如果 数组项是 终端用户组，则 该路径只取上一层的路径。
+      // 注意去重，
+      return Array.from(new Set(resultList));
+      // return pathList;
+    },
+    deleteBelongingPath(row, index, tableData) {
+      // if (row.pathList.length == 1) {
+      let tips =
+        this.userType == "station"
+          ? this.$t("systemSetting.configUnviewableStationTip")
+          : this.$t("systemSetting.configUnviewableStationForUserTip");
+      let title = this.$t("systemSetting.configUnviewableStation");
+      let options = {
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        type: "warning"
+      };
+      this.$confirm(tips, title, options)
+        .then(() => {
+          this.socialUnitId = row.id;
+          this.doDeleteAction();
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: this.$t("systemSetting.cancelRemove")
+          });
+        });
+    },
+    doDeleteAction() {
+      var url = this.deleteUrl;
+      this.$http({
+        url,
+        method: "delete"
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        let message = this.$t("systemSetting.removeSuccessfully");
+        if (code === 0) {
+          this.$message.success(message);
+          this.queryData(); //删除后更新当前列表
+        }
+      });
+    },
+
+    getIsShowDeleteBtn(row) {
+      var flag =
+        row.pathList.length &&
+        (row.pathList.length == 1 ? !row.pathList[0].ownerPathFlag : true);
+      return flag;
+    },
+    editBelongingPath(row, index, tableData) {
+      if (this.$refs.editStationPath) {
+        this.$refs.editStationPath.clear();
+        this.$refs.editStationPath.resetBelongingPathList();
+      }
+
+      var props = {
+        label: "name",
+        children: "subTrees",
+        value: "id"
+      };
+      var message = h => {
+        return (
+          <edit-station-path
+            ref="editStationPath"
+            row={row}
+            props={props}
+            style={{ color: "teal" }}
+          />
+        );
+      };
+
+      MessageBox({
+        title: this.$t("systemSetting.configViewableForUserOrUserGroup"),
+        message: message(this.$createElement),
+        showCancelButton: true,
+        closeOnClickModal: false,
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        customClass: "hj-custom-message-box--userRightsManagement",
+        beforeClose: (action, instance, done) => {
+          if (action === "confirm") {
+            instance.confirmButtonLoading = true;
+            instance.confirmButtonText = this.$t("systemSetting.excuting");
+            this.savePath(row, props, instance, done);
+          } else {
+            instance.confirmButtonLoading = false;
+            done();
+          }
+        }
+      }).then(action => {});
+    },
+    savePath(row, props, instance, done) {
+      var pathIds = this.$refs.editStationPath.getPathList().map(item => {
+        return item;
+      });
+      var json = {
+        deletedPathIds: pathIds,
+        stationId: row.id
+        // pathIds: pathIds,
+      };
+      this.updateStationPath(json, instance, done);
+    },
+    updateStationPath(json, instance, done) {
+      var url = "./auth/updateStationPath";
+      this.$http({
+        url,
+        json,
+        method: "post"
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          instance && (instance.confirmButtonLoading = false);
+          done && done();
+          this.queryData();
+        } else {
+          instance && (instance.confirmButtonLoading = false);
+          done && done();
+        }
+      });
+    },
+    bindUsers(row, index, tableData) {
+      console.log(row, index, tableData);
+      var message = h => {
+        return <bind-user ref="bindUser" />;
+      };
+      if (this.$refs.bindUser) {
+        this.$refs.bindUser.reset();
+        this.$nextTick(() => {
+          this.$refs.bindUser.queryUserList();
+        });
+      }
+      MessageBox({
+        title: this.$t("systemSetting.specifiedOwner"),
+        message: message(this.$createElement),
+        showCancelButton: true,
+        closeOnClickModal: false,
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        customClass: "hj-custom-message-box--userRightsManagement",
+        beforeClose: (action, instance, done) => {
+          if (action === "confirm") {
+            instance.confirmButtonLoading = true;
+            instance.confirmButtonText = this.$t("systemSetting.excuting");
+            if (this.$refs.bindUser) {
+              this.bindStationToUser(
+                row,
+                this.$refs.bindUser.getSelectedItem(),
+                instance,
+                done
+              );
+            }
+          } else {
+            done();
+          }
+        }
+      }).then(action => {});
+    },
+    bindStationToUser(row, selectedItem, instance, done) {
+      if (!selectedItem) {
+        console.log("selectedItem is not exist");
+        return;
+      }
+      console.log("selectedItem", selectedItem);
+      var url = `./auth/stations/${row.id}/owner/${selectedItem.id}`;
+      console.log("row", row);
+      // var json = {
+      //   stationId: row.id,
+      //   selectedUserId: selectedItem.id
+      // };
+      this.$http({
+        url,
+        // json,
+        method: "put"
+      })
+        .then(response => {
+          let code =
+            response.data && response.data.head && response.data.head.code;
+          if (+code === 0) {
+            let message = this.$t("systemSetting.modifySuccessfully");
+            done();
+            this.$message.success(message);
+            this.queryData();
+            // instance.confirmButtonLoading = false;
+          }
+          instance.confirmButtonLoading = false;
+        })
+        .catch(err => {
+          instance.confirmButtonLoading = false;
+        });
+    },
+    setTableData(total, tableData) {
+      if (!isNaN(total)) {
+        this.total = total;
+      }
+      // if(!tableData||!tableData.length){
+      //     this.failedProcess()
+      //     return
+      // }
+      this.tableLists = tableData || [];
+    },
+    queryData(isResetCurrentPage) {
+      console.log("点击时候的接口");
+      console.log(this.queryUrl);
+
+      if (isNaN(this.nodeId) || !this.queryUrl) {
+        return;
+      }
+      if (isResetCurrentPage) {
+        this.$refs.pagination.currentPage = 1;
+      }
+      this.loading = true;
+      var url = this.queryUrl;
+      var json = {
+        size: this.pageSize,
+        start: this.$refs.pagination.start,
+        allFlag: this.$refs.searchWidget.showChildrenContent,
+        keyword: this.$refs.searchWidget.queryString,
+        orderCol: this.orderCol,
+        orderType: this.orderType
+      };
+      this.$http({ json, url })
+        .then(response => {
+          console.log("-----dw--");
+          console.log(response);
+
+          let code =
+            response.data && response.data.head && response.data.head.code;
+          if (+code === 0) {
+            var data = response.data && response.data.data;
+            this.loading = false;
+            if (this.dealFun) {
+              this.dealFun(response, this.setTableData);
+              return;
+            }
+            if (!!data) {
+              this.total = (data && data.total) || this.total;
+              this.tableLists = (data && data.rows) || this.tableLists;
+            }
+          } else {
+            this.loading = false;
+            this.total = 1;
+            this.$refs.pagination.currentPage = 1;
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+        });
+    },
+    clickAdd() {
+      //  wrapperWidth={0.01 * window.innerWidth + 'px'}
+      // document.querySelectorAll('')
+      var title = this.$t("systemSetting.addStationViewable");
+      var message = h => {
+        return (
+          <config-station-for-user
+            ref="configStationForUser"
+            wrapper-background-color="#fff"
+            self={this}
+          />
+        );
+      };
+      var size = "full";
+      MessageBox({
+        title: title,
+        message: message(this.$createElement),
+        showCancelButton: true,
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        customClass: "hj-custom-message-box--userRightsManagement",
+        size: size,
+        closeOnClickModal: false,
+        beforeClose: function(action, instance, done) {
+          if (action === "confirm") {
+            instance.confirmButtonLoading = true;
+            instance.confirmButtonText = this.$t("systemSetting.excuting");
+            this.saveAdd(instance, done);
+          } else {
+            instance.confirmButtonLoading = false;
+            done();
+          }
+        }.bind(this)
+      }).then(action => {
+        console.log("action", action);
+      });
+      this.$emit("click-add");
+    },
+    saveAdd(instance, done) {
+      var row =
+        this.$refs.configStationForUser &&
+        this.$refs.configStationForUser.getSelectedRow();
+      if (!row) {
+        instance.confirmButtonLoading = false;
+        done();
+        return;
+      }
+      var socialUnitId = row.id;
+      var url = this.postUrl;
+      var json = {
+        socialUnitIds: [socialUnitId]
+        // userId: this.nodeId
+      };
+      this.addToEndUserGroup(instance, done, url, json);
+    },
+    addToEndUserGroup(instance, done, url, json) {
+      this.$http({
+        json,
+        url,
+        method: "post"
+      })
+        .then(response => {
+          let code =
+            response.data && response.data.head && response.data.head.code;
+          if (+code === 0) {
+            instance.confirmButtonLoading = false;
+            done();
+            this.queryData();
+          } else {
+            instance.confirmButtonLoading = false;
+            done();
+          }
+        })
+        .catch(e => {
+          instance.confirmButtonLoading = false;
+          done();
+        });
+    },
+    addToMaintainerGroup(instance, done, url, json) {}
+  },
+  mounted() {
+    console.log("this.$refs.table", this.$refs.table);
+    console.log("this._l", this._l);
+    console.log("传过来");
+    console.log(this.queryUrl);
+  },
+  destroyed() {}
+};
+</script>
+<style lang="less">
+@import "./index.less";
+</style>
+
+

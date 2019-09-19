@@ -1,0 +1,47 @@
+@charset "utf-8";
+
+.hjTheme(@baseColor: #31b944, @hjMapColumnBgColor: rgba(18, 34, 86, 0.8)) {
+  @hjMapTitleColor: #ffffff;
+  @hjMapNoticeColor: lighten(@baseColor, 10%);
+
+  //station-map left-column
+  @hjMapTabItemHoverColor: #d1dbe3;
+  @hjMapTabItemColor: #f8fcff;
+  @hjMapTabItemActiveColor: @baseColor;
+  @hjMapSummaryTextColor: #ffffff;
+  @hjMapSummaryTitleColor: lighten(@baseColor, 10%);
+  @hjMapSummaryNameColor: lighten(@baseColor, 10%);
+  //station-map left-column station-list
+  @hjMapStationListColor: #ffffff;
+  // @hjMapStationListColor: @baseColor;
+  // @hjMapStationListNameColor: @baseColor;
+  @hjMapStationListNameColor: #ffffff;
+  // @hjMapStationListItemColor: lighten(@baseColor, 10%);
+  @hjMapStationListItemColor: #ffffff;
+
+  //station-map main-map
+  @hjMapSearchInputColor: @baseColor;
+  @hjMapSearchCursorColor: #f8fcff;
+  @hjMapCarouselTextColor: #ffffff;
+  // @hjMapCarouselNameColor: lighten(@baseColor, 10%);
+  @hjMapCarouselNameColor: @baseColor;
+  @hjMapTooltipTextColor: #ffffff;
+  @hjMapTooltipLineColor: #e2e2e2;
+  //station-map station-info
+  @hjMapDetailsTextColor: #ffffff;
+  // @hjMapDetailsTitleColor: lighten(@baseColor, 10%);
+  @hjMapDetailsTitleColor: #ffffff;
+  @hjMapDetailsNameColor: #ffffff;
+  @hjMapDetailsTreeColor: @baseColor;
+  @hjMapDetailsTreeContentColor: #218547;
+  @hjMapDetailsTreeHoverColor: darken(@baseColor, 10%);
+
+  @hjWebContainerHeaderBgColor: fadeout(@baseColor, 30%); //#545c64;
+  @hjWebContainerBodyBgColor: fadeout(@baseColor, 40%);
+  @hjMenuBorderColor: spin(@baseColor, 10);
+  @hjMenuItemBgColor: fadein(@baseColor, 10%);
+  @hjMenuItemActiveColor: lighten(@baseColor, 20%); //#ffd04b;
+  // @import "./login/index.less";
+  // @import "./index.less";
+  // @import "./cloud-view/index.less";
+}

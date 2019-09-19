@@ -1,0 +1,111 @@
+<template>
+  <el-row class="hj-view-station-right">
+    <el-col :span="12">
+      <h3 class="hj-view-station-right-title">{{$t("systemSetting.opsMember")}}</h3>
+      <ul class="hj-view-station-item-wrapper">
+        <li v-for="i in maintainerList" :key="i.name">{{i.name}}</li>
+      </ul>
+    </el-col>
+    <el-col :span="12">
+      <h3 class="hj-view-station-right-title">{{$t("systemSetting.user")}}</h3>
+      <ul class="hj-view-station-item-wrapper" style="margin-left:15px;">
+        <li v-for="i in userList" :key="i.name">{{i.name}}</li>
+      </ul>
+    </el-col>
+  </el-row>
+</template>
+
+
+<style lang='less'>
+.hj-view-station-right {
+  .hj-view-station-item-wrapper {
+    padding-left: 15px;
+    & > li {
+      padding-top: 5px;
+      padding-bottom: 5px;
+      list-style-type: none;
+    }
+    border: 1px solid #ccc;
+    min-height: 300px;
+    max-height: 400px;
+    /*overflow-y: auto;*/
+    overflow-y: scroll;
+  }
+  .hj-view-station-right-title {
+    padding: 0 15px 15px 15px;
+  }
+}
+</style>
+<script>
+export default {
+  name: "viewStationRight",
+  componentName: "viewStationRight",
+  mixins: [],
+  components: {},
+  props: {
+    stationId: {
+      type: [Number, String],
+      default: NaN
+    }
+  },
+  data() {
+    const generateData = _ => {
+      const data = [];
+      for (let i = 1; i <= 15; i++) {
+        data.push({
+          key: i,
+          label: `${this.$t("systemSetting.reservedItem")} ${i}`,
+          disabled: i % 4 === 0
+        });
+      }
+      return data;
+    };
+    return {
+      data: generateData(),
+      value1: [1, 4],
+      userList: [],
+      maintainerList: []
+    };
+  },
+  computed: {},
+  watch: {},
+  methods: {
+    handleChangePath(val, arrow, keyArr) {
+      console.log("handleChangePath", val, arrow, keyArr);
+    },
+    resetData() {
+      this.userList = [];
+      this.maintainerList = [];
+    },
+    queryData() {
+      if (isNaN(this.stationId)) {
+        return;
+      }
+      var url = `./auth/stations/${this.stationId}/viewableUsers`;
+      this.$http({
+        url
+        // json
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          var { userList, maintainerList } = response.data.data;
+          this.userList = userList || [];
+          this.maintainerList = maintainerList || [];
+        } else {
+          this.userList = [];
+          this.maintainerList = [];
+        }
+      });
+    }
+  },
+  created() {
+    this.queryData();
+  },
+  mounted() {
+    console.log("this", this);
+  },
+  destroyed() {}
+};
+</script>
+

@@ -1,0 +1,15 @@
+<template>
+  <div class="hj-system-setting-wrapper">
+    <router-view></router-view>
+  </div>
+  
+</template>
+
+ <script>
+export default {
+  name: "SystemSetting",
+  data() {
+    return {};
+  }
+};
+</script>

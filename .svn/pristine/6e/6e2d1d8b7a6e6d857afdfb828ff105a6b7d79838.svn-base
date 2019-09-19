@@ -1,0 +1,494 @@
+<template>
+  <!-- <div>地图主页</div> -->
+  <el-row class="mapmain">
+    <div style="height:100%;height:100%;">
+      <baidu-map
+        class="map"
+        center="广东"
+        :zoom="zoom"
+        :mapStyle="mapStyle"
+        :scroll-wheel-zoom="true"
+      >
+        <!-- <bm-overlay pane="labelPane"></bm-overlay> -->
+      </baidu-map>
+    </div>
+    <div class="floatimg">
+      <!-- <div class="titleName">HUAJE</div> -->
+      <div class="back_home imgchangs" @click="backHome">返回首页</div>
+      <div class="headline imgchangs">
+        <span class="Nameheadline">智慧能源云平台</span>
+      </div>
+      <div class="datetime imgchangs">
+        <span class="nowtime">{{ nowtime }}</span>
+      </div>
+      <div class="retreatForm imgchangs" @click="exitout">
+        <span class="nowtime">退出</span>
+      </div>
+    </div>
+    <div class="dv_decoration">
+      <dv-decoration-3 style="width:250px;height:30px;" />
+    </div>
+
+    <div class="main_concent">
+      <div class="tabtoggle">
+        <el-tabs v-model="TabactiveName" @tab-click="TabhandleClick">
+          <el-tab-pane label="能源站列表" name="first"></el-tab-pane>
+          <el-tab-pane label="收藏" name="second"></el-tab-pane>
+          <el-tab-pane label="历史" name="third"></el-tab-pane>
+        </el-tabs>
+      </div>
+      <div class="type_Select">
+        <span class="sp_order">排序字段</span>
+        <div class="spselect optionsele">
+          <el-select v-model="orderCol" placeholder="请选择" size="mini" popper-class="suctom_select">
+            <el-option
+              v-for="item in typeoptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+              class="hazardoption"
+            ></el-option>
+          </el-select>
+        </div>
+      </div>
+    </div>
+  </el-row>
+</template>
+<script>
+import { timeFormanow } from "@/assets/js/common";
+export default {
+  data() {
+    return {
+      orderCol: "", //排序字段
+      typeoptions: [
+        {
+          value: "installedDate",
+          label: "安装日期"
+        },
+        {
+          value: "currentStatus",
+          label: "当前状态"
+        },
+        {
+          value: "deviceCount",
+          label: "设备数量"
+        }
+      ],
+      TabactiveName: "first",
+      nowtime: timeFormanow(new Date()),
+      timeFormanow,
+      zoom: 9,
+      mapStyle: {
+        styleJson: [
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: {
+              color: "#2B5892" // 水的颜色 2B5892 0C224E'
+            }
+          },
+          {
+            featureType: "land",
+            elementType: "geometry",
+            stylers: {
+              color: "#03092F" //调整土地颜色  03092F 004981
+            }
+          },
+          {
+            featureType: "building", //调整建筑物颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#1a5787"
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "highway", //调整高速道路颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#03292F" // 03092F 004981
+            }
+          },
+          {
+            featureType: "highway", //调整高速名字是否可视
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "building", //调整建筑物标签是否可视
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "arterial", //调整一些干道颜色
+            elementType: "geometry",
+            stylers: {
+              color: "#03292F" //03292F 004981
+            }
+          },
+          {
+            featureType: "arterial",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "green",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "subway", //调整地铁颜色
+            elementType: "geometry.stroke",
+            stylers: {
+              color: "#03292F" // 03292F 003051
+            }
+          },
+          {
+            featureType: "subway",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "all", //调整所有的标签的边缘颜色
+            elementType: "labels.text.stroke",
+            stylers: {
+              color: "rgba(255,255,255,1)"
+            }
+          },
+          {
+            featureType: "all", //调整所有标签的填充颜色
+            elementType: "labels.text.fill",
+            stylers: {
+              color: "#2B5892" // 03292F 28D1BE
+            }
+          },
+          {
+            featureType: "manmade",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "manmade",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "local",
+            elementType: "geometry",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "local",
+            elementType: "labels",
+            stylers: {
+              visibility: "off"
+            }
+          },
+          {
+            featureType: "subway",
+            elementType: "geometry",
+            stylers: {
+              lightness: -65
+            }
+          },
+          {
+            featureType: "railway",
+            elementType: "all",
+            stylers: {
+              lightness: -40
+            }
+          },
+          {
+            featureType: "boundary",
+            elementType: "geometry",
+            stylers: {
+              color: "#064f85", // 03292F
+              weight: "1",
+              lightness: -29
+            }
+          },
+          {
+            featureType: "boundary",
+            elementType: "geometry.fill",
+            stylers: {
+              color: "#029fd4" // 03292F
+            }
+          }
+        ]
+      }
+    };
+  },
+  methods: {
+    backHome() {
+      this.$router.push("/realTimeMain");
+    },
+    exitout() {
+      this.$router.push("/login");
+    },
+    TabhandleClick() {}
+  },
+  mounted() {
+    var ti = setInterval(() => {
+      // clearTimeout(t)
+
+      this.nowtime = this.timeFormanow(new Date());
+      // clearTimeout(ti);
+      //console.log("6666");
+    }, 1000);
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.mapmain {
+  width: 100%;
+  height: 100%;
+  // min-width: 1300px;
+  // border: 1px solid;
+  .map {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.floatimg {
+  position: absolute;
+  //color: red;
+  z-index: 1000;
+  top: 0px;
+  width: 100%;
+  left: 0px;
+  height: 90px;
+  //border: 1px solid red;
+  line-height: 90px;
+}
+.titleName {
+  color: #c7dcde;
+  line-height: 60px;
+  font-family: "微软雅黑";
+  display: inline-block;
+}
+.back_home {
+  // left: 280px;
+  display: inline-block;
+  color: #dce1ff;
+  font-size: 14px;
+  text-align: center;
+  line-height: 36px;
+  width: 120px;
+  height: 32px;
+  background-image: url("../../static/mapimg/back_home.png");
+  cursor: pointer;
+  position: absolute;
+  top: calc(50% - 16px);
+  left: 20%;
+}
+.imgchangs {
+  background-size: 100% 100%;
+  background-position: 0% 0%;
+  background-repeat: no-repeat;
+  // position: relative;
+  vertical-align: middle;
+}
+.headline {
+  display: inline-block;
+  background-image: url("../../static/mapimg/headline.png");
+  // width: 745px;
+  width: 40%;
+  height: 90px;
+  line-height: 80px;
+  position: relative;
+  left: 30%;
+  text-align: center;
+}
+.Nameheadline {
+  color: #c3faff;
+  font-family: "微软雅黑";
+  font-size: 34px;
+  position: relative;
+}
+.datetime {
+  display: inline-block;
+  background-image: url("../../static/mapimg/date.png");
+  width: 218px;
+  height: 32px;
+  right: 14%;
+  position: absolute;
+  top: calc(50% - 16px);
+  line-height: 37px;
+  text-align: center;
+}
+.nowtime {
+  color: #dce1ff;
+  font-family: "微软雅黑";
+}
+.retreatForm {
+  width: 120px;
+  height: 32px;
+  display: inline-block;
+  position: absolute;
+  background-image: url("../../static/mapimg/exit.png");
+  right: 4%;
+  line-height: 32px;
+  text-align: center;
+  top: calc(50% - 16px);
+  cursor: pointer;
+}
+.main_concent {
+  position: absolute;
+  z-index: 1000;
+  top: 90px;
+  // width: 100px;
+  height: 50px;
+  height: calc(100% - 120px);
+  width: 20%;
+  border: 1px solid yellow;
+  background: rgba(21, 33, 91, 0.5);
+  //opacity: 0.5;
+  left: 20px;
+  color: #fff;
+}
+.tabtoggle {
+  width: 100%;
+  //height: 60px;
+  //border: 1px solid red;
+  background: rgba(50, 91, 211, 0.4);
+  //opacity: 0.4;
+  // padding: 0px 20px;
+  z-index: 10000000;
+  color: #fff;
+}
+.dv_decoration {
+  top: 90px;
+  left: calc(50% - 125px);
+  position: absolute;
+  z-index: 1000;
+}
+.sp_order {
+  color: #fff;
+  font-family: "微软雅黑";
+  margin-left: 20px;
+  margin-right: 8px;
+}
+.spselect {
+  width: 120px;
+  display: inline-block;
+}
+.type_Select {
+  margin-top: 20px;
+}
+.hazardoption {
+  //width: 148px;
+  background: #010a31;
+  color: #00d3e9;
+}
+
+.hazardoption .el-select-dropdown {
+  background: #010a31;
+}
+</style>
+<style >
+.BMap_cpyCtrl {
+  display: none;
+}
+.anchorBL {
+  display: none;
+}
+.tabtoggle .el-tabs__item {
+  color: #fff;
+}
+.tabtoggle .el-tabs__header {
+  margin: 0px;
+}
+.tabtoggle .is-active {
+  color: #00eaff;
+}
+.tabtoggle .el-tabs__active-bar {
+  background-color: #00eaff;
+}
+.tabtoggle .el-tabs__nav-scroll {
+  padding-left: 50px;
+}
+.tabtoggle .el-tabs__nav-wrap::after {
+  background-color: rgba(50, 91, 211, 0.4);
+}
+.spselect input {
+  background: rgba(31, 55, 132, 1);
+  border: none;
+}
+.spselect .el-select-dropdown__list {
+  background: rgba(31, 55, 132, 1);
+}
+.suctom_select .el-select-dropdown__list {
+  background-color: #010a31;
+}
+.suctom_select .el-select-dropdown__item:hover {
+  background: #0f3360;
+}
+.suctom_select .el-select-dropdown__item.hover {
+  background: #0f3360;
+}
+.suctom_select span {
+  margin-left: 15px;
+}
+
+.suctom_select .el-popper[x-placement^="bottom"] .popper__arrow::after {
+  border-bottom-color: #0f3360;
+}
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+.optionsele > .el-popper {
+  background: #010a31 !important;
+}
+.optionsele .el-input__inner {
+  background: #010a31;
+  color: #00d3e9;
+  border: 1px solid #00d3e9;
+}
+.optionsele .el-input__suffix-inner .el-input__icon {
+  color: #00d3e9;
+}
+.optionsele .el-scrollbar {
+  background: #010a31 !important;
+}
+.optionsele .el-popper {
+  border: none;
+}
+.optionsele > .el-select-dropdown__list {
+  background: #010a31 !important;
+}
+
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+</style>

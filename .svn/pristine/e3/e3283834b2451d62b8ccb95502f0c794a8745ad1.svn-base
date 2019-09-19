@@ -1,0 +1,472 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>IconFont</title>
+    <link rel="stylesheet" href="demo.css">
+    <link rel="stylesheet" href="iconfont.css">
+</head>
+<body>
+    <div class="main markdown">
+        <h1>IconFont 图标</h1>
+        <ul class="icon_lists clear">
+            
+                <li>
+                <i class="icon iconfont icon-setting"></i>
+                    <div class="name">设置</div>
+                    <div class="fontclass">.icon-setting</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-decrease"></i>
+                    <div class="name">指数下降</div>
+                    <div class="fontclass">.icon-decrease</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-battery-full-right"></i>
+                    <div class="name">电池1</div>
+                    <div class="fontclass">.icon-battery-full-right</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-map"></i>
+                    <div class="name">地图－导航</div>
+                    <div class="fontclass">.icon-map</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-params"></i>
+                    <div class="name">params</div>
+                    <div class="fontclass">.icon-params</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-power"></i>
+                    <div class="name">功率</div>
+                    <div class="fontclass">.icon-power</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-income"></i>
+                    <div class="name">收益</div>
+                    <div class="fontclass">.icon-income</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-bell"></i>
+                    <div class="name">铃铛3</div>
+                    <div class="fontclass">.icon-bell</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-erjiguan"></i>
+                    <div class="name">二极管</div>
+                    <div class="fontclass">.icon-erjiguan</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-shandian"></i>
+                    <div class="name">闪电</div>
+                    <div class="fontclass">.icon-shandian</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-telephone"></i>
+                    <div class="name">电话</div>
+                    <div class="fontclass">.icon-telephone</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-switch-ykq"></i>
+                    <div class="name">遥控器</div>
+                    <div class="fontclass">.icon-switch-ykq</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-no_audio"></i>
+                    <div class="name">disvoice</div>
+                    <div class="fontclass">.icon-no_audio</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-rate-up"></i>
+                    <div class="name">上升</div>
+                    <div class="fontclass">.icon-rate-up</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-rate-down"></i>
+                    <div class="name">下降</div>
+                    <div class="fontclass">.icon-rate-down</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-shangsheng1"></i>
+                    <div class="name">上升</div>
+                    <div class="fontclass">.icon-shangsheng1</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-shipin"></i>
+                    <div class="name">video</div>
+                    <div class="fontclass">.icon-shipin</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-switch-role"></i>
+                    <div class="name">切换用户</div>
+                    <div class="fontclass">.icon-switch-role</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-touxiang"></i>
+                    <div class="name">头像</div>
+                    <div class="fontclass">.icon-touxiang</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-account2"></i>
+                    <div class="name">头像</div>
+                    <div class="fontclass">.icon-account2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-video"></i>
+                    <div class="name">video</div>
+                    <div class="fontclass">.icon-video</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-address-circle"></i>
+                    <div class="name">地址</div>
+                    <div class="fontclass">.icon-address-circle</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-unfold"></i>
+                    <div class="name">展开</div>
+                    <div class="fontclass">.icon-unfold</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-operation"></i>
+                    <div class="name">运维</div>
+                    <div class="fontclass">.icon-operation</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-powerstation"></i>
+                    <div class="name">电站</div>
+                    <div class="fontclass">.icon-powerstation</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-setting2"></i>
+                    <div class="name">设置</div>
+                    <div class="fontclass">.icon-setting2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-smart-eletricity2"></i>
+                    <div class="name">智慧电力</div>
+                    <div class="fontclass">.icon-smart-eletricity2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-home-page"></i>
+                    <div class="name">主页</div>
+                    <div class="fontclass">.icon-home-page</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-address2"></i>
+                    <div class="name">地址</div>
+                    <div class="fontclass">.icon-address2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-cloud-view"></i>
+                    <div class="name">电脑</div>
+                    <div class="fontclass">.icon-cloud-view</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-smart-eletricity"></i>
+                    <div class="name">智慧</div>
+                    <div class="fontclass">.icon-smart-eletricity</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-password"></i>
+                    <div class="name">密码</div>
+                    <div class="fontclass">.icon-password</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-com-error"></i>
+                    <div class="name">无信号30x30</div>
+                    <div class="fontclass">.icon-com-error</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-contact-man"></i>
+                    <div class="name">联系人</div>
+                    <div class="fontclass">.icon-contact-man</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-lightning"></i>
+                    <div class="name">lightning</div>
+                    <div class="fontclass">.icon-lightning</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-fold"></i>
+                    <div class="name">收起</div>
+                    <div class="fontclass">.icon-fold</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-lightning-rect"></i>
+                    <div class="name">闪电</div>
+                    <div class="fontclass">.icon-lightning-rect</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-password3"></i>
+                    <div class="name">密码</div>
+                    <div class="fontclass">.icon-password3</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-error"></i>
+                    <div class="name">错误</div>
+                    <div class="fontclass">.icon-error</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-home"></i>
+                    <div class="name">主页</div>
+                    <div class="fontclass">.icon-home</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-home-page2"></i>
+                    <div class="name">主页</div>
+                    <div class="fontclass">.icon-home-page2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-bell-1"></i>
+                    <div class="name">铃铛</div>
+                    <div class="fontclass">.icon-bell-1</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-user"></i>
+                    <div class="name">user</div>
+                    <div class="fontclass">.icon-user</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-address"></i>
+                    <div class="name">地址</div>
+                    <div class="fontclass">.icon-address</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-operation3"></i>
+                    <div class="name">工具</div>
+                    <div class="fontclass">.icon-operation3</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-task"></i>
+                    <div class="name">任务</div>
+                    <div class="fontclass">.icon-task</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-account"></i>
+                    <div class="name">头像</div>
+                    <div class="fontclass">.icon-account</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-full-screen"></i>
+                    <div class="name">全屏</div>
+                    <div class="fontclass">.icon-full-screen</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-help"></i>
+                    <div class="name">帮助</div>
+                    <div class="fontclass">.icon-help</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-temperature"></i>
+                    <div class="name">温度</div>
+                    <div class="fontclass">.icon-temperature</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-warning"></i>
+                    <div class="name">故障</div>
+                    <div class="fontclass">.icon-warning</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-analytics"></i>
+                    <div class="name">分析</div>
+                    <div class="fontclass">.icon-analytics</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-temperature2"></i>
+                    <div class="name">温度</div>
+                    <div class="fontclass">.icon-temperature2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-hazard-management"></i>
+                    <div class="name">隐患检查</div>
+                    <div class="fontclass">.icon-hazard-management</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-alarm"></i>
+                    <div class="name">报警</div>
+                    <div class="fontclass">.icon-alarm</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-return"></i>
+                    <div class="name">返回</div>
+                    <div class="fontclass">.icon-return</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-close"></i>
+                    <div class="name">关闭</div>
+                    <div class="fontclass">.icon-close</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-video-play"></i>
+                    <div class="name">直播 观看量 播放 摄影 摄像机 面性</div>
+                    <div class="fontclass">.icon-video-play</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-increase"></i>
+                    <div class="name">指数上升</div>
+                    <div class="fontclass">.icon-increase</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-monitoring"></i>
+                    <div class="name">监控</div>
+                    <div class="fontclass">.icon-monitoring</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-password2"></i>
+                    <div class="name">密码</div>
+                    <div class="fontclass">.icon-password2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-normal"></i>
+                    <div class="name">正常</div>
+                    <div class="fontclass">.icon-normal</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-analysis"></i>
+                    <div class="name">分析</div>
+                    <div class="fontclass">.icon-analysis</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-running-state"></i>
+                    <div class="name">task-state-22</div>
+                    <div class="fontclass">.icon-running-state</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-income2"></i>
+                    <div class="name">收益</div>
+                    <div class="fontclass">.icon-income2</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-audio"></i>
+                    <div class="name">audio</div>
+                    <div class="fontclass">.icon-audio</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-standby"></i>
+                    <div class="name">standby</div>
+                    <div class="fontclass">.icon-standby</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-no_voice"></i>
+                    <div class="name">nav_ic_no_voice</div>
+                    <div class="fontclass">.icon-no_voice</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-voice"></i>
+                    <div class="name">声音</div>
+                    <div class="fontclass">.icon-voice</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-unknown"></i>
+                    <div class="name">未知</div>
+                    <div class="fontclass">.icon-unknown</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-yunwei"></i>
+                    <div class="name">运维</div>
+                    <div class="fontclass">.icon-yunwei</div>
+                </li>
+            
+                <li>
+                <i class="icon iconfont icon-operation2"></i>
+                    <div class="name">运维</div>
+                    <div class="fontclass">.icon-operation2</div>
+                </li>
+            
+        </ul>
+
+        <h2 id="font-class-">font-class引用</h2>
+        <hr>
+
+        <p>font-class是unicode使用方式的一种变种，主要是解决unicode书写不直观，语意不明确的问题。</p>
+        <p>与unicode使用方式相比，具有如下特点：</p>
+        <ul>
+        <li>兼容性良好，支持ie8+，及所有现代浏览器。</li>
+        <li>相比于unicode语意明确，书写更直观。可以很容易分辨这个icon是什么。</li>
+        <li>因为使用class来定义图标，所以当要替换图标时，只需要修改class里面的unicode引用。</li>
+        <li>不过因为本质上还是使用的字体，所以多色图标还是不支持的。</li>
+        </ul>
+        <p>使用步骤如下：</p>
+        <h3 id="-fontclass-">第一步：引入项目下面生成的fontclass代码：</h3>
+
+
+        <pre><code class="lang-js hljs javascript"><span class="hljs-comment">&lt;link rel="stylesheet" type="text/css" href="./iconfont.css"&gt;</span></code></pre>
+        <h3 id="-">第二步：挑选相应图标并获取类名，应用于页面：</h3>
+        <pre><code class="lang-css hljs">&lt;<span class="hljs-selector-tag">i</span> <span class="hljs-selector-tag">class</span>="<span class="hljs-selector-tag">iconfont</span> <span class="hljs-selector-tag">icon-xxx</span>"&gt;&lt;/<span class="hljs-selector-tag">i</span>&gt;</code></pre>
+        <blockquote>
+        <p>"iconfont"是你项目下的font-family。可以通过编辑项目查看，默认是"iconfont"。</p>
+        </blockquote>
+    </div>
+</body>
+</html>
