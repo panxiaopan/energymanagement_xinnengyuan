@@ -1,0 +1,50 @@
+<template>
+  <div class="hj-task-management-wrapper">
+    <el-tabs v-model="activeTabName" @tab-click="handleTabClick">
+      <el-tab-pane :label="tabLabel.todoTask" name="todoTask">
+        <task-list ref="todoTask" list-type="todoTask" :query-url="todoUrl"></task-list>
+      </el-tab-pane>
+      <el-tab-pane :label="tabLabel.handledTask" name="handledTask">
+        <task-list ref="handledTask" list-type="handledTask" :query-url="doneUrl"></task-list>
+      </el-tab-pane>
+      <el-tab-pane :label="tabLabel.assignedTask" name="assignedTask">
+        <task-list ref="assignedTask" list-type="assignedTask" :query-url="assignedUrl"></task-list>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+import TaskList from "./task-list";
+export default {
+  name: "TaskManagement",
+  components: {
+    TaskList
+  },
+  data() {
+    return {
+      activeTabName: "todoTask",
+      tabLabel: {
+        todoTask: this.$t("workOrderManagement.myTodo"),
+        handledTask: this.$t("workOrderManagement.doneByMe"),
+        assignedTask: this.$t("workOrderManagement.assignedByMe")
+      },
+      todoUrl: "./workOrders/toBeHandledByMe",
+      doneUrl: "./workOrders/handledByMe",
+      assignedUrl: "./workOrders/startedByMe"
+    };
+  },
+  methods: {
+    handleTabClick(tabName) {
+      // console.log("aha click", tabName);
+      this.$refs[this.activeTabName].queryDataList();
+    }
+  },
+  mounted() {
+    this.$refs.todoTask.queryDataList();
+  }
+};
+</script>
+<style lang="less" scoped >
+@import "./index.less";
+</style>

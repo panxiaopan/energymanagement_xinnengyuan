@@ -1,0 +1,1013 @@
+<template>
+  <div class="hj-task-details-wrapper" v-loading="pageLoading">
+    <!-- <div v-if="isShowBack" class="hj-task-detials__top">
+      <el-button type="primary" @click="click2Return">{{labelTextObj.back2Origin}}</el-button>
+    </div>-->
+    <el-row class="hj-task-details__head">
+      <el-col :span="19" class="head__left">
+        <div class="head__left__item">
+          <span>{{labelTextObj.workOrderNumber}}:&nbsp;</span>
+          <span>{{basicInfo.workOrderNumber}}</span>
+        </div>
+        <div class="head__left__item">
+          <span>{{labelTextObj.workOrderExecutor}}:&nbsp;</span>
+          <el-tooltip v-if="isMultiple" placement="top" :content="basicInfo.workOrderExecutor">
+            <span>{{basicInfo.workOrderExecutor}}</span>
+          </el-tooltip>
+          <span v-else>{{basicInfo.workOrderExecutor}}</span>
+        </div>
+        <div class="head__left__item">
+          <span>{{labelTextObj.contactDetails}}:&nbsp;</span>
+          <el-tooltip v-if="isMultiple" placement="top" :content="basicInfo.executorContact">
+            <span>{{basicInfo.executorContact}}</span>
+          </el-tooltip>
+          <span v-else>{{basicInfo.executorContact}}</span>
+        </div>
+      </el-col>
+      <el-col :span="5" class="head__right">
+        <span>{{labelTextObj.currentStatus}}:&nbsp;</span>
+        <span>{{basicInfo.currentStatus}}</span>
+      </el-col>
+    </el-row>
+    <el-row class="hj-task-details__body">
+      <div class="hj-task-details__body__basicInfo">
+        <el-row class="basic-head">
+          <el-col :span="12" class="basic-head__left">
+            <span>{{labelTextObj.basicInfo}}</span>
+          </el-col>
+          <el-col :span="12" class="basic-head__right">
+            <span>{{labelTextObj.originator}}:&nbsp;</span>
+            <span>{{basicInfo.originator}}</span>&nbsp;&nbsp;
+            <span>{{labelTextObj.contactDetails}}:&nbsp;</span>
+            <span>{{basicInfo.originatorContact}}</span>
+          </el-col>
+        </el-row>
+        <el-row class="basic-body">
+          <el-col :span="12" class="basic-body__content">
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.socialUnit}}:&nbsp;</span>
+              <span>{{basicInfo.socialUnit}}</span>
+            </div>
+            <div class="basic-body__content__item">
+              <!-- 地址字符串大于20个时显示tooltip -->
+              <span>{{labelTextObj.address}}:&nbsp;</span>
+              <el-tooltip
+                v-if="basicInfo.address.length>20"
+                placement="top"
+                :content="basicInfo.address"
+              >
+                <span>{{basicInfo.address}}</span>
+              </el-tooltip>
+              <span v-else>{{basicInfo.address}}</span>
+            </div>
+            <div v-if="showHazard||showMaintenance">
+              <div class="basic-body__content__item">
+                <span>{{labelTextObj.deviceName}}:&nbsp;</span>
+                <span>{{basicInfo.deviceName}}</span>
+              </div>
+              <div class="basic-body__content__item">
+                <span>{{labelTextObj.devicePos}}:&nbsp;</span>
+                <span>{{basicInfo.devicePos}}</span>
+              </div>
+            </div>
+            <div v-else>
+              <div class="basic-body__content__item">
+                <span>{{labelTextObj.inspectionTitle}}:&nbsp;</span>
+                <span>{{basicInfo.inspectionTitle}}</span>
+              </div>
+              <div class="basic-body__content__item">
+                <span>{{labelTextObj.inspectionDesc}}:&nbsp;</span>
+                <span>{{basicInfo.inspectionDesc}}</span>
+              </div>
+            </div>
+          </el-col>
+          <!-- 隐患特有内容 -->
+          <el-col v-if="showHazard" :span="12" class="basic-body__content">
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.workOrderType}}:&nbsp;</span>
+              <span>{{basicInfo.workOrderType}}</span>
+            </div>
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.hazardLevel}}:&nbsp;</span>
+              <span>{{basicInfo.hazardLevel}}</span>
+            </div>
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.hazardDesc}}:&nbsp;</span>
+              <el-tooltip
+                v-if="basicInfo.hazardDesc.length>20"
+                placement="top"
+                :content="basicInfo.hazardDesc"
+              >
+                <span>{{basicInfo.hazardDesc}}</span>
+              </el-tooltip>
+              <span>{{basicInfo.hazardDesc}}</span>
+            </div>
+          </el-col>
+          <!-- 维保特有内容 -->
+          <el-col v-if="showMaintenance" :span="12" class="basic-body__content">
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.workOrderType}}:&nbsp;</span>
+              <span>{{basicInfo.workOrderType}}</span>
+            </div>
+            <div class="basic-body__content__item">
+              <span>{{labelTextObj.description}}:&nbsp;</span>
+              <span>{{basicInfo.hazardDesc}}</span>
+            </div>
+          </el-col>
+          <!-- 巡检特有内容 -->
+          <!-- <el-col v-if="showInspection" :span="12" class="basic-body__content">
+            <div class="basic-body__content__item"><span>{{labelTextObj.inspectionStartTime}}:&nbsp;</span><span>{{basicInfo.inspectionStartTime}}</span></div>
+            <div class="basic-body__content__item"><span>{{labelTextObj.inspectionEndTime}}:&nbsp;</span><span>{{basicInfo.inspectionEndTime}}</span></div>
+            <div class="basic-body__content__item"><span>{{labelTextObj.inspectionResult}}:&nbsp;</span><span>{{basicInfo.inspectionResult}}</span></div>
+          </el-col>-->
+        </el-row>
+      </div>
+      <div class="hj-task-details__body__relatedInfo" v-if="relatedInfo">
+        <div class="related-head">
+          <span>{{labelTextObj.relatedInfo}}</span>
+        </div>
+        <div class="related-body">
+          <div class="related-body__item">
+            <span class="related-body__item__name">{{labelTextObj.relatedDesc}}:&nbsp;</span>
+            <span
+              :class="[normalClass, activedClass]"
+              @click="click2ShowSourceOrder"
+            >{{computedRelatedDesc}}</span>
+          </div>
+          <div class="related-body__item">
+            <span class="related-body__item__name">{{labelTextObj.relatedType}}:&nbsp;</span>
+            <span class="related-body__item__value">{{computedRelatedType}}</span>
+          </div>
+          <div class="related-body__item">
+            <span class="related-body__item__name">{{labelTextObj.relatedTime}}:&nbsp;</span>
+            <span class="related-body__item__value">{{computedRelatedTime}}</span>
+          </div>
+          <div class="related-body__item--linked">
+            <div class="related-body__item__name">
+              <span>{{labelTextObj.relatedWorkOrder}}:&nbsp;</span>
+            </div>
+            <div v-if="isEmpty">
+              <span>{{labelTextObj.emptyData}}</span>
+            </div>
+            <div v-else class="related-body__item__value">
+              <div
+                class="related-body__item__value__sub"
+                v-for="item in relatedInfo.linkedWorkOrders"
+                :key="item.id"
+                @click="click2ShowRelatedOrder(item)"
+              >{{item.name}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hj-task-details__body__details">
+        <div class="details-head">
+          <span>{{labelTextObj.workOrderFlow}}</span>
+        </div>
+        <div class="hj-task-details-step">
+          <el-steps :space="200" :active="currentStep" align-center finish-status="success">
+            <el-step :title="stepTextObj.assigned"></el-step>
+            <el-step :title="stepTextObj.received"></el-step>
+            <el-step :title="stepTextObj.resolved"></el-step>
+            <el-step :title="stepTextObj.closed"></el-step>
+          </el-steps>
+        </div>
+
+        <div v-show="enableOperation && authOperate" class="hj-task-details-operate">
+          <el-button
+            type="primary"
+            :loading="showNextStepLoading"
+            size="small"
+            @click.native="nextStep"
+          >{{nextStepText}}</el-button>&nbsp;&nbsp;
+          <el-button
+            v-if="currentStep == 2"
+            type="primary"
+            size="small"
+            @click.native="addNewComment"
+          >{{commentText}}</el-button>&nbsp;&nbsp;
+          <el-button
+            v-if="currentStep == 3"
+            type="primary"
+            size="small"
+            @click.native="rejectStep"
+          >{{rejectText}}</el-button>
+          <el-dropdown v-if="currentStep == 2" trigger="click" @command="handleCommand">
+            <el-button type="primary" size="small">
+              {{labelTextObj.more}}
+              <i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="risk">{{labelTextObj.addHazard}}</el-dropdown-item>
+              <el-dropdown-item command="maintenance">{{labelTextObj.addMaintenance}}</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+        <div
+          class="hj-task-details-history"
+          :class="[showDetails ? 'hj-task-details-history--showDetails' : '']"
+        >
+          <!-- <el-collapse-transition> -->
+          <timeline>
+            <!-- 单个步骤项 -->
+            <timeline-item
+              v-for="(item, itemIndex) in stepOptions"
+              v-if="!!stepOptions.length"
+              :key="item.step"
+              :hasChild="item.comments && !!item.comments.length"
+            >
+              <div slot="time">
+                <div>{{ item.startTime | filterTime }}</div>
+              </div>
+              <div slot="content">
+                <span>{{ contentTitle(item) }}</span>&nbsp;&nbsp;
+                <br />
+                <div v-if="showContent(item)">
+                  <div>
+                    <span>{{ item.comments[0].remark }}</span>&nbsp;&nbsp;&nbsp;
+                  </div>
+                  <div v-if="item.comments[0].attachments && item.comments[0].attachments.length">
+                    <img
+                      :class="['ximgClass'+itemIndex]"
+                      v-for="(img, imgIndex) in item.comments[0].attachments"
+                      :key="'img'+imgIndex"
+                      v-if="img.url"
+                      :src="computedUrl(img.url)"
+                      height="50"
+                      width="50"
+                      :alt="$t('workOrderManagement.attachment')"
+                      @click="clickImage(img.url)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <!-- 评论 批注列表 -->
+              <timeline-item-list
+                v-if="showContentComment(item)"
+                v-for="(subItem,subItemIndex) in item.comments"
+                :key="subItemIndex"
+                :isFirst="itemIndex === 0 && subItemIndex === 0"
+              >
+                <div slot="content">
+                  <div>
+                    <span>{{ subItem.remark }}</span>&nbsp;&nbsp;&nbsp;
+                  </div>
+                  <div v-if="subItem.attachments.length" style="text-align:left">
+                    <div v-for="(img, imgIndex) in subItem.attachments" :key="'img'+imgIndex">
+                      <img
+                        :class="['ximgClass'+itemIndex+subItemIndex]"
+                        v-if="img.url"
+                        :src="computedUrl(img.url)"
+                        height="50"
+                        width="50"
+                        :alt="$t('workOrderManagement.attachment')"
+                        @click="clickImage(img.url)"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div slot="time">
+                  <div>{{ subItem.time | filterTime }}</div>
+                </div>
+              </timeline-item-list>
+            </timeline-item>
+          </timeline>
+          <!-- </el-collapse-transition> -->
+          <div
+            v-if="!showDetails"
+            @click="showDetails=!showDetails"
+            :class="[showDetails ? 'hj-task-details-history__hideDetails': 'hj-task-details-history__viewDetails']"
+          >
+            <span>{{showDetails ? toggleText.foldUp : toggleText.show}}</span>
+            <i :class="[showDetails ? 'el-icon-arrow-up' : 'el-icon-arrow-down']"></i>
+          </div>
+        </div>
+      </div>
+    </el-row>
+
+    <el-dialog
+      :show-close="true"
+      append-to-body
+      :visible.sync="showImgDialog"
+      custom-class="hj-custom-dialog-wrapper--image"
+    >
+      <img :src="imgSrc" :height="imgHeight" :width="imgWidth" alt="failedloading" />
+    </el-dialog>
+    <el-dialog
+      :visible.sync="showCommentDialog"
+      :title="commentDialogTitle"
+      custom-class="hj-custom-dialog-wrapper--form"
+      :show-close="false"
+      :close-on-click-modal="false"
+      append-to-body
+      center
+    >
+      <add-comment
+        ref="addComment"
+        :comment-type="commentType"
+        :add-url="addUrl"
+        :approve-url="approveUrl"
+        :close-url="closeUrl"
+      ></add-comment>
+      <span slot="footer">
+        <el-button @click="cancelAddComment" size="small">{{cancel}}</el-button>
+        <el-button
+          type="primary"
+          :loading="showLoading"
+          @click="submitNewComment"
+          size="small"
+        >{{ok}}</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      :visible.sync="showWorkOrderDialog"
+      :title="workOrderDialogTitle"
+      :show-close="false"
+      :close-on-click-modal="false"
+      custom-class="hj-custom-dialog-wrapper--form"
+      append-to-body
+      center
+    >
+      <add-work-order
+        ref="addWorkOrder"
+        :work-order-type="workOrderTypeStr"
+        :post-url="workOrderUrl"
+        :is-from-hazard="false"
+        :event-data="eventData"
+      ></add-work-order>
+      <span slot="footer">
+        <el-button @click="cancelAddWorkOrder" size="small">{{cancel}}</el-button>
+        <el-button
+          type="primary"
+          :loading="showLoading"
+          @click="submitWorkOrder"
+          size="small"
+        >{{ok}}</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import AddWorkOrder from "@/components/hazard-management/add-work-order";
+import "./index.less";
+import Timeline from "@/components/common/timeline/index.vue";
+import TimelineItem from "@/components/common/timeline/timeline-item.vue";
+import TimelineItemList from "@/components/common/timeline/timeline-item-list.vue";
+import GetCompressedImageData from "@/mixins/getCompressedImageData.js";
+import AddComment from "./add-comment.vue";
+
+const WORK_ORDER_TYPE_RISK = 1; // 消缺
+const WORK_ORDER_TYPE_PATROL = 2; // 巡检
+const WORK_ORDER_TYPE_MAINTENANCE = 3; // 维保
+
+const WORK_ORDER_STATE_RECEIVE = 200; // 待接收
+const WORK_ORDER_STATE_HANDLE = 300; // 处理中
+const WORK_ORDER_STATE_FINISH = 400; // 已完成
+const WORK_ORDER_STATE_CLOSE = 500; // 已关闭
+
+export default {
+  name: "workOrderDetail",
+  mixins: [GetCompressedImageData],
+  components: {
+    Timeline,
+    TimelineItem,
+    TimelineItemList,
+    AddWorkOrder,
+    // AddMaintenance,
+    // TaskDetails
+    AddComment
+  },
+  props: {
+    workOrderType: {
+      type: [Number, String],
+      default: "risk"
+    },
+    queryUrl: {
+      type: String,
+      default: ""
+    },
+    orderId: {
+      type: [String, Number],
+      default: "--"
+    },
+    flowId: {
+      type: [String, Number],
+      default: "--"
+    },
+    authOperate: {
+      type: Boolean,
+      default: true
+    },
+    hasFinished: {
+      type: Boolean,
+      default: true
+    }
+  },
+  watch: {
+    queryUrl(newId, oldId) {
+      this.initOrderState();
+    }
+  },
+  data() {
+    var labelTextObj = {
+      relatedInfo: this.$t("workOrderManagement.relatedInfo"),
+      workOrderNumber: this.$t("workOrderManagement.workOrderNumber"),
+      workOrderExecutor: this.$t("workOrderManagement.handler"),
+      contactDetails: this.$t("workOrderManagement.contactDetails"),
+      currentStatus: this.$t("workOrderManagement.currenStatus"),
+      originator: this.$t("workOrderManagement.originator"),
+      basicInfo: this.$t("workOrderManagement.basicInfo"),
+      socialUnit: this.$t("workOrderManagement.socialUnit"),
+      address: this.$t("workOrderManagement.address"),
+      hazardDesc: this.$t("workOrderManagement.hazardDesc"),
+      deviceName: this.$t("workOrderManagement.deviceName"),
+      devicePos: this.$t("workOrderManagement.devicePos"),
+      hazardLevel: this.$t("workOrderManagement.hazardLevel"),
+      workOrderFlow: this.$t("workOrderManagement.workOrderFlow"),
+      inspectionTitle: this.$t("workOrderManagement.inspectionTitle"),
+      inspectionDesc: this.$t("workOrderManagement.inspectionContent"),
+      inspectionStartTime: this.$t("workOrderManagement.inspectionStartTime"),
+      inspectionEndTime: this.$t("workOrderManagement.inspectionEndTime"),
+      inspectionResult: this.$t("workOrderManagement.inspectionResult"),
+      maintenanceReason: this.$t("workOrderManagement.maintenanceReason"),
+      maintenanceType: this.$t("workOrderManagement.maintenanceType"),
+      workOrderType: this.$t("workOrderManagement.workOrderType"),
+      description: this.$t("common.description"),
+      more: this.$t("common.more"),
+      addHazard: this.$t("workOrderManagement.addWorkOrder"),
+      addMaintenance: this.$t("workOrderManagement.addMaintenance"),
+      addCommentSuccess: this.$t("workOrderManagement.addCommentSuccess"),
+      submitSuccess: this.$t("workOrderManagement.submitSuccess"),
+      rejectedSuccess: this.$t("workOrderManagement.rejectedSuccess"),
+      approvedSuccess: this.$t("workOrderManagement.approvedSuccess"),
+      relatedDesc: this.$t("workOrderManagement.relatedDesc"),
+      relatedWorkOrder: this.$t("workOrderManagement.relatedWorkOrder"),
+      relatedTime: this.$t("workOrderManagement.relatedTime"),
+      emptyData: this.$t("common.emptyData"),
+      back2Origin: this.$t("workOrderManagement.back2OrginWorkOrder"),
+      relatedType: this.$t("workOrderManagement.relatedType")
+    };
+
+    return {
+      labelTextObj,
+      // basicInfo,
+      isShowBack: false,
+      processing: this.$t("workOrderManagement.processing"),
+      descTextObj: {
+        device: this.$t("workOrderManagement.device"),
+        title: this.$t("workOrderManagement.title"),
+        desc: this.$t("workOrderManagement.description")
+      },
+      enableOperation: true,
+      stepOptions: [
+        //   {
+        //     show: true,
+        //     id: 2,
+        //     bizStateShow: "处理中",
+        //     actionerName: "张工",
+        //     startTime: "2018-12-02 10:20:20",
+        //     endTime: "2018-12-02 10:30:00",
+        //     comments: [],
+        //     isApproved: true,
+        //     isCurrentState: true,
+        //     attachments: ""
+        //   },
+        //   {
+        //     show: false,
+        //     id: 1,
+        //     bizStateShow: "已接收",
+        //     actionerName: "马先超",
+        //     startTime: "2017-12-05 09:22:22",
+        //     endTime: "2017-12-05 09:22:22",
+        //     comments: [
+        //       {
+        //         remark: "设备老化，已无法正常运行，需更换设备",
+        //         time: "2017-12-02 12::02:22",
+        //         attachments: [
+        //           {
+        //             url: require("@/assets/images/demo1.jpg")
+        //           }
+        //         ]
+        //       }
+        //     ],
+        //     isApproved: true,
+        //     isCurrentState: false,
+        //     attachments: ""
+        //   },
+        //   {
+        //     show: false,
+        //     id: 1,
+        //     bizStateShow: "已发起",
+        //     actionerName: "超级管理员",
+        //     startTime: "2017-12-02 10:20:20",
+        //     endTime: "2017-12-02 10:30:00",
+        //     comments: [],
+        //     isApproved: true,
+        //     isCurrentState: true,
+        //     attachments: ""
+        //   }
+      ],
+
+      imagesFileList: [],
+      showCommentDialog: false,
+      commentType: "", // 添加批注的类型
+      backSrc: require("@/assets/images/hj-back.png"),
+      showNextStepLoading: false,
+      showLoading: false,
+      stepTextObj: {
+        assigned: this.$t("workOrderManagement.assigned"),
+        received: this.$t("workOrderManagement.received"),
+        resolved: this.$t("workOrderManagement.resolved"),
+        closed: this.$t("workOrderManagement.closed")
+      },
+      showImgDialog: false,
+      imgSrc: "",
+      imgWidth: "auto",
+      imgHeight: "auto",
+      commentText: this.$t("workOrderManagement.comment"),
+      rejectText: this.$t("workOrderManagement.reject"),
+      opinionPlaceholder: this.$t("workOrderManagement.inputResolvedAdvice"),
+      opinionLabel: this.$t("workOrderManagement.advice"),
+      attachmentsLabel: this.$t("workOrderManagement.uploadImage"),
+      click2UploadText: this.$t("workOrderManagement.click2Upload"),
+      uploadTips: this.$t("workOrderManagement.imageFormatLimit"),
+      cancel: this.$t("workOrderManagement.cancel"),
+      ok: this.$t("workOrderManagement.ok"),
+      showDetails: false,
+      toggleText: {
+        show: this.$t("workOrderManagement.viewDetails"),
+        foldUp: this.$t("workOrderManagement.foldUp")
+      },
+      pageLoading: false,
+      workOrderVO: null,
+
+      showWorkOrderDialog: false,
+      eventData: {},
+      workOrderTypeStr: "", //关联工单 维保
+      workOrderDialogTitle: "",
+      commentDialogTitle: "",
+      workOrderUrl: "",
+      relatedInfo: null
+    };
+  },
+  filters: {
+    filterTime(value) {
+      if (!value) {
+        return "";
+      }
+      return moment(value).format("MM-DD HH:mm");
+    }
+  },
+  computed: {
+    receiveUrl() {
+      var taskId = this.stepOptions[0] && this.stepOptions[0].id;
+      return `/workOrders/${this.orderId}/tasks/${taskId}/claim`;
+    },
+    addUrl() {
+      var taskId = this.stepOptions[0] && this.stepOptions[0].id;
+      return `/workOrders/${this.orderId}/tasks/${taskId}/commentAndAttachments`;
+    },
+    approveUrl() {
+      var taskId = this.stepOptions[0] && this.stepOptions[0].id;
+      return `/workOrders/${this.orderId}/tasks/${taskId}/approveClose`;
+    },
+    closeUrl() {
+      var taskId = this.stepOptions[0] && this.stepOptions[0].id;
+      return `/workOrders/${this.orderId}/tasks/${taskId}/applyForClose`;
+    },
+    showHazard() {
+      return this.workOrderType === WORK_ORDER_TYPE_RISK;
+    },
+    showInspection() {
+      return this.workOrderType === WORK_ORDER_TYPE_PATROL;
+    },
+    showMaintenance() {
+      return this.workOrderType === WORK_ORDER_TYPE_MAINTENANCE;
+    },
+    currentStep() {
+      var flowState = (this.workOrderVO && this.workOrderVO.flowStateCode) || 0;
+      return flowState;
+    },
+    nextStepText() {
+      var state = (this.workOrderVO && this.workOrderVO.flowStateCode) || 0;
+      if (state === 1) {
+        return this.$t("workOrderManagement.receive");
+      } else if (state === 3) {
+        return this.$t("workOrderManagement.close");
+      } else {
+        return this.$t("workOrderManagement.finish");
+      }
+    },
+    // workOrderOperateAuth(){
+    //   return this.$store.state.hjSystemAuthObj.workOrderOperateAuth
+    // },
+    basicInfo() {
+      var workOrderVO = this.workOrderVO;
+      var workOrderNumber = "--",
+        workOrderExecutor = "--",
+        workOrderType = "--",
+        executorContact = "--",
+        currentStatus = "--",
+        originator = "--",
+        originatorContact = "--",
+        socialUnit = "--",
+        address = "--",
+        hazardDesc = "--",
+        deviceName = "--",
+        devicePos = "--",
+        hazardLevel = "--",
+        inspectionTitle = "--",
+        inspectionDesc = "--",
+        inspectionStartTime = "--",
+        inspectionEndTime = "--",
+        inspectionResult = "--",
+        maintenanceReason = "--",
+        maintenanceType = "--";
+      if (workOrderVO) {
+        workOrderNumber = workOrderVO.number || "";
+        // workOrderExecutor =
+        // "dsafldjaslfd, dfaslfjdda, dsafdlsajfdklsaj,dasjfdljaslfkdjasl";
+        workOrderExecutor = workOrderVO.executors
+          .map(item => {
+            item = item.name;
+            return item;
+          })
+          .join(",");
+        executorContact = workOrderVO.executors
+          .map(item => {
+            item = item.tel;
+            return item;
+          })
+          .join(",");
+        workOrderType = (workOrderVO.type && workOrderVO.type.desc) || "";
+        currentStatus = (workOrderVO.state && workOrderVO.state.desc) || "";
+        originator =
+          (workOrderVO.startUser && workOrderVO.startUser.name) || "";
+        originatorContact =
+          (workOrderVO.startUser && workOrderVO.startUser.tel) || "";
+        socialUnit =
+          (workOrderVO.socialUnit && workOrderVO.socialUnit.name) || "";
+        address =
+          (workOrderVO.socialUnit && workOrderVO.socialUnit.address) || "";
+        hazardDesc = workOrderVO.description || "--";
+        deviceName = (workOrderVO.device && workOrderVO.device.name) || "";
+        devicePos = (workOrderVO.device && workOrderVO.device.address) || "";
+        hazardLevel =
+          (workOrderVO.riskGrade && workOrderVO.riskGrade.desc) || "";
+        maintenanceReason = workOrderVO.description || "";
+        inspectionDesc = workOrderVO.patrolDescription;
+        inspectionTitle = workOrderVO.patrolTitle;
+      }
+
+      return {
+        workOrderNumber,
+        workOrderExecutor,
+        workOrderType,
+        executorContact,
+        currentStatus,
+        originator,
+        originatorContact,
+        socialUnit,
+        address,
+        hazardDesc,
+        deviceName,
+        devicePos,
+        hazardLevel,
+        inspectionTitle,
+        inspectionDesc,
+        inspectionStartTime,
+        inspectionEndTime,
+        inspectionResult,
+        maintenanceReason,
+        maintenanceType
+      };
+    },
+    // 多于两个处理人就通过tooltip显示
+    isMultiple() {
+      let len = 0;
+      if (this.workOrderVO && this.workOrderVO.executors) {
+        len = this.workOrderVO.executors.length;
+      }
+      return len > 1;
+    },
+    isEmpty() {
+      let linkedWorkOrders = this.relatedInfo.linkedWorkOrders;
+      return !linkedWorkOrders || !linkedWorkOrders.length;
+    },
+    computedRelatedDesc() {
+      let { source } = this.relatedInfo;
+      let name = source.name || "";
+      let time = source.time;
+      return name;
+    },
+    computedRelatedTime() {
+      let { source } = this.relatedInfo;
+      // let name = source.name || '--'
+      let time = source.time || "";
+      return time;
+    },
+    computedRelatedType() {
+      let { source } = this.relatedInfo;
+      // let name = source.name || '--'
+      let type = source.type && source.type.desc;
+      return type;
+    },
+    normalClass() {
+      return "related-body__item__value";
+    },
+    activedClass() {
+      let { source } = this.relatedInfo;
+      let type = source.type && source.type.value;
+      // 来源是工单时，可跳转来源工单详情
+      if (type === 4) {
+        return "related-body__item__value--actived";
+      }
+      return "";
+    }
+    // computedRelatedWorkOrder() {
+    //   return "";
+    // }
+  },
+  methods: {
+    contentTitle(item) {
+      // 默认一个处理人不合理，显示所有处理人信息
+      // var actionerName = item.actionerName;
+      var actionerName = item.actioners
+        .map(item => {
+          item = item.name;
+          return item;
+        })
+        .join(",");
+      // var actionerName = "dasfdjkashfdkasjfkldjasklfdjsakjfdksafldjasklfdjska";
+      var state = item.bizStateShow && item.bizStateShow.desc;
+      return actionerName + " " + state;
+    },
+    showContent(item) {
+      var state = item.bizStateShow && item.bizStateShow.value;
+      // 发起工单 批注、附件
+      return (
+        item.comments && item.comments[0] && state !== WORK_ORDER_STATE_HANDLE
+      );
+    },
+    showContentComment(item) {
+      var state = item.bizStateShow && item.bizStateShow.value;
+      return (
+        state === WORK_ORDER_STATE_HANDLE &&
+        item.comments &&
+        item.comments.length
+      );
+    },
+    computedUrl(url) {
+      var preUrl =
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        "/" +
+        window.location.pathname.split("/")[1];
+      if (url) {
+        if (process.env.NODE_ENV === "production") {
+          url = preUrl + url;
+        } else {
+          url = "." + url;
+        }
+      }
+      return url;
+    },
+    clickImage(url) {
+      var newImage = new window.Image();
+      newImage.src = this.computedUrl(url);
+      newImage.onload = () => {
+        if (newImage.height > window.innerHeight * 0.6) {
+          this.imgHeight = window.innerHeight * 0.6;
+        }
+        if (newImage.width > window.innerWidth * 0.4) {
+          this.imgWidth = window.innerWidth * 0.4;
+        }
+      };
+      this.imgSrc = this.computedUrl(url);
+      this.showImgDialog = true;
+    },
+    // 接收 完成 关闭工单
+    nextStep() {
+      // 接收工单任务
+      if (this.currentStep === 1) {
+        this.showNextStepLoading = true;
+        this.$http({
+          url: this.receiveUrl,
+          method: "post"
+        }).then(response => {
+          var code =
+            response.data && response.data.head && response.data.head.code;
+          if (+code === 0) {
+            this.$message.success(
+              this.$t("workOrderManagement.receiveSuccess")
+            );
+            this.showNextStepLoading = false;
+            this.initOrderState();
+            this.$emit("update-status", true);
+          } else {
+            this.showNextStepLoading = false;
+          }
+        });
+        return;
+      } else if (this.currentStep === 2) {
+        this.commentType = "close";
+        this.commentDialogTitle = this.$t(
+          "workOrderManagement.handleWorkOrder"
+        );
+      } else if (this.currentStep === 3) {
+        this.commentType = "approve";
+        this.commentDialogTitle = this.$t(
+          "workOrderManagement.completeWorkOrder"
+        );
+      }
+      this.showCommentDialog = true;
+      if (this.$refs.addComment) {
+        this.$refs.addComment.resetForm();
+      }
+    },
+    // 添加批注
+    addNewComment() {
+      this.commentDialogTitle = this.$t("workOrderManagement.addComement");
+      this.showCommentDialog = true;
+      this.commentType = "comment";
+      if (this.$refs.addComment) {
+        this.$refs.addComment.resetForm();
+      }
+    },
+    // 驳回处理
+    rejectStep() {
+      this.commentDialogTitle = this.$t("workOrderManagement.rejectOperation");
+      if (this.$refs.addComment) {
+        this.$refs.addComment.resetForm();
+      }
+      this.showCommentDialog = true;
+      this.commentType = "reject";
+    },
+    // 初始化工单详情
+    initOrderState() {
+      this.pageLoading = true;
+      var url = this.queryUrl;
+      // var json = { processInstanceId: this.flowId };
+      this.$http({
+        url,
+        // json,
+        method: "get"
+      })
+        .then(response => {
+          var code =
+            response.data && response.data.head && response.data.head.code;
+          var data = response.data && response.data.data;
+          if (+code === 0) {
+            var data = response.data.data;
+            this.enableOperation =
+              typeof data.canOperate === "undefined" ? false : data.canOperate;
+            data.taskInfo.forEach(item => {
+              item.actionerName =
+                (item.actioners[0] && item.actioners[0].name) || "--";
+            });
+            var stepOptions = data.taskInfo.reverse();
+            var { linkedWorkOrders, source } = data;
+            console.log("stepOptions", stepOptions);
+            this.stepOptions = stepOptions;
+            console.log("this.stepOptions", this.stepOptions);
+            this.workOrderVO = data.workOrderVO;
+            this.relatedInfo = {
+              linkedWorkOrders,
+              source
+            };
+          }
+          this.pageLoading = false;
+        })
+        .catch(err => {
+          this.pageLoading = false;
+        });
+    },
+    click2ShowSourceOrder() {
+      let { source } = this.relatedInfo;
+      let { id, name } = source;
+      this.$emit("click-order", { id, name });
+    },
+    click2ShowRelatedOrder(params) {
+      console.log("params", params);
+      this.$emit("click-order", params);
+    },
+    click2Return() {},
+    cancelAddComment() {
+      this.showCommentDialog = false;
+    },
+    submitNewComment() {
+      this.showLoading = true;
+      if (this.$refs.addComment) {
+        var promise = this.$refs.addComment.submitPromise();
+        promise
+          .then(response => {
+            this.showLoading = false;
+            this.showCommentDialog = false;
+            var code =
+              response.data && response.data.head && response.data.head.code;
+            if (+code === 0) {
+              var message = "";
+              if (this.commentType === "comment") {
+                message = this.labelTextObj.addCommentSuccess;
+              } else if (this.commentType === "close") {
+                message = this.labelTextObj.submitSuccess;
+              } else {
+                message =
+                  this.commentType === "reject"
+                    ? this.labelTextObj.rejectedSuccess
+                    : this.labelTextObj.approvedSuccess;
+              }
+              this.$message.success(message);
+              this.$nextTick(() => {
+                this.initOrderState(); //刷新工单详情数据
+              });
+              this.$emit("update-status", true);
+            }
+          })
+          .catch(err => {
+            this.showLoading = false;
+          });
+      }
+    },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    click2ViewDetails() {
+      this.showDetails = !this.showDetails;
+    },
+    handleCommand(command) {
+      this.workOrderTypeStr = command;
+      let workOrderType = this.$t("hazardManagement.risk");
+      if (command === "risk") {
+        this.workOrderDialogTitle = this.$t("workOrderManagement.addWorkOrder");
+        workOrderType = this.$t("hazardManagement.risk");
+        // 工单postUrl
+        // this.workOrderUrl = "./workOrders";
+      } else {
+        this.workOrderDialogTitle = this.$t(
+          "workOrderManagement.addMaintenance"
+        );
+        workOrderType = this.$t("hazardManagement.maintenance");
+        // 维保postUrl
+        // this.workOrderUrl = `./risks/${sourceId}/maintenanceOrders`;
+      }
+      // 隐患工单标题自动生成 传入隐患工单的基本信息
+      let deviceName = this.workOrderVO.device && this.workOrderVO.device.name;
+      let hazardDesc = this.workOrderVO.description;
+
+      let hazardTitle = `${deviceName}-${hazardDesc}-${workOrderType}`;
+      let { sourceId, sourceTime } = this.workOrderVO;
+      this.eventData = {
+        hazardTitle,
+        sourceTime,
+        sourceId
+      };
+      // 工单id 任务id
+      let id = this.workOrderVO.id;
+      let taskId = this.stepOptions[0] && this.stepOptions[0].id;
+
+      this.workOrderUrl = `./workOrders/${id}/tasks/${taskId}/workOrders`;
+      this.showWorkOrderDialog = true;
+      if (this.$refs.addWorkOrder) {
+        this.$refs.addWorkOrder.resetForm();
+      }
+    },
+    cancelAddWorkOrder() {
+      this.showWorkOrderDialog = false;
+    },
+    submitWorkOrder() {
+      this.showLoading = true;
+      if (this.$refs.addWorkOrder) {
+        var promise = this.$refs.addWorkOrder.submitPromise();
+        promise
+          .then(response => {
+            this.showLoading = false;
+            let code =
+              response.data && response.data.head && response.data.head.code;
+            let message = this.$t("workOrderManagement.addSuccessfully");
+            if (code === 0) {
+              this.$message.success(message);
+              this.showWorkOrderDialog = false;
+              this.initOrderState();
+            }
+          })
+          .catch(err => {
+            this.showLoading = false;
+          });
+      }
+    }
+  },
+  mounted() {
+    this.initOrderState();
+  }
+};
+</script>
+<style lang="less" scoped >
+@import "./index.less";
+</style>

@@ -1,0 +1,8 @@
+@charset 'utf-8';
+@import "./task-management/index.less";
+@import "./work-order-management/index.less";
+@import "./inspection-plan/index.less";
+
+.hj-operation-maintenance-management {
+  padding: 1.85vh 1vw;
+}

@@ -8,10 +8,11 @@
         width="100%"
         :series="bmapSeries"
         :tooltip="chartTooltip"
+        :after-set-option-once="afterSet"
       ></ve-bmap>
     </div>
     <div class="floatimg">
-      <!-- <div class="titleName">HUAJE</div> -->
+      <div class="titleName"></div>
       <div class="back_home imgchangs" @click="backHome">返回首页</div>
       <div class="headline imgchangs">
         <span class="Nameheadline">智慧能源云平台</span>
@@ -27,7 +28,7 @@
       <dv-decoration-3 style="width:250px;height:30px;" />
     </div>
     <div class="seach_one">
-      <el-input placeholder="请输入内容" v-model="keyword" @keyup.native.enter="getsouncalList()">
+      <el-input placeholder="请输入能源站名称" v-model="keyword" @keyup.native.enter="getsouncalList()">
         <el-button slot="append">
           <i class="fa fa-search"></i>
         </el-button>
@@ -35,9 +36,11 @@
     </div>
 
     <div class="main_left">
-      <div style="padding:0px 4px;">
-        <div class="rightradious rightradious_left"></div>
-        <div class="rightradious rightradious_right"></div>
+      <div class="main_back_border imgchangs">
+        <!-- 
+        <div style="padding:0px 4px;">-->
+        <!-- <div class="rightradious rightradious_left"></div>
+        <div class="rightradious rightradious_right"></div>-->
 
         <div class="main_top main_topright">
           <div class="tabtoggle">
@@ -72,58 +75,65 @@
             </span>
           </div>
         </div>
+        <!-- </div> -->
+
+        <div class="SocalUnit" v-for="(item,index) in souncalData" :key="index">
+          <div class="socaltopimg imgchangs"></div>
+          <div class="Socal_Conctent">
+            <div class="Socal_left">
+              <img
+                :src="!item.coverPicUrl?'static/mapimg/default.jpg':`${baseUrl}`+item.coverPicUrl"
+                alt
+                class="imgsoincal"
+              />
+            </div>
+            <div class="Socal_right">
+              <div class="SouncalName" @click="findOneStation(item)">{{item.name}}</div>
+              <div style="margin-bottom:4px">
+                <span
+                  class="soun_radious"
+                  :class="{soun_god:item.status.value==10,soun_general:item.status.value==20,soun_bad:item.status.value==30}"
+                ></span>
+                <span
+                  class="soun_godfont"
+                  :class="{soun_godfont:item.status.value==10,soun_generalfont:item.status.value==20,soun_badfont:item.status.value==30}"
+                >{{item.status.desc}}</span>
+                <span class="soun_time">{{item.status.updateTime}}</span>
+              </div>
+              <div class="sounmes">
+                子站:
+                <span v-for="(itemschirden,indexs) in item.subStationTypes" :key="indexs">
+                  {{itemschirden.type.desc}}
+                  <span v-if="item.subStationTypes.length>1">、</span>
+                </span>
+              </div>
+              <div class="sounmes">设备数量: {{item.deviceCount}}个</div>
+              <el-tooltip class="item" effect="dark" :content="item.address" placement="top">
+                <div class="sounmes">
+                  地址:
+                  {{item.address}}
+                </div>
+              </el-tooltip>
+            </div>
+          </div>
+        </div>
+        <div class="pageturing">
+          <div style="padding-top:10px;text-align:center">
+            <el-pagination
+              background
+              layout="prev, pager, next"
+              :page-size="size"
+              @current-change="pageIndexChange"
+              :total="totalnum"
+            ></el-pagination>
+          </div>
+        </div>
       </div>
 
-      <div class="SocalUnit" v-for="(item,index) in souncalData" :key="index">
-        <div class="socaltopimg imgchangs"></div>
-        <div class="Socal_Conctent">
-          <div class="Socal_left">
-            <img
-              :src="!item.coverPicUrl?'static/mapimg/default.jpg':`${baseUrl}`+item.coverPicUrl"
-              alt
-              class="imgsoincal"
-            />
-          </div>
-          <div class="Socal_right">
-            <div class="SouncalName">{{item.name}}</div>
-            <div style="margin-bottom:4px">
-              <span
-                class="soun_radious"
-                :class="{soun_god:item.status.value==10,soun_general:item.status.value==20,soun_bad:item.status.value==30}"
-              ></span>
-              <span
-                class="soun_godfont"
-                :class="{soun_godfont:item.status.value==10,soun_generalfont:item.status.value==20,soun_badfont:item.status.value==30}"
-              >{{item.status.desc}}</span>
-              <span class="soun_time">{{item.status.updateTime}}</span>
-            </div>
-            <div class="sounmes">
-              子站:
-              <span v-for="(itemschirden,indexs) in item.subStationTypes" :key="indexs">
-                {{itemschirden.type.desc}}
-                <span v-if="item.subStationTypes.length>1">、</span>
-              </span>
-            </div>
-            <div class="sounmes">设备数量: {{item.deviceCount}}个</div>
-            <div class="sounmes">地址: {{item.address}}</div>
-          </div>
-        </div>
-      </div>
-      <div class="pageturing">
-        <div style="padding-top:10px;text-align:center">
-          <el-pagination
-            background
-            layout="prev, pager, next"
-            :page-size="size"
-            @current-change="pageIndexChange"
-            :total="totalnum"
-          ></el-pagination>
-        </div>
-      </div>
-      <div class="soun_foot imgchangs"></div>
+      <!-- <div class="soun_foot imgchangs"></div> -->
     </div>
     <div class="main_center">
-      <div class="tabtoggle" @mouseover="selectStyle">
+      <div class="tabtoggle" @mouseover="move_hover" @mouseleave="mouse_leave">
         <el-tabs v-model="Child_standing" @tab-click="chaid_handleClick">
           <el-tab-pane
             :name="index.toString()"
@@ -163,16 +173,18 @@
             </div>
             <div class="photo">
               <div class="generated">发电功率曲线</div>
-              <ve-line
-                :data="photo_chartData"
-                height="100%"
-                :xAxis="tongxAxistime"
-                :yAxis="tongyAxis"
-                :grid="photo_grid"
-                :colors="tongcolors"
-                :settings="photo_setting"
-                :legend-visible="false"
-              ></ve-line>
+              <div style="height:240px;">
+                <ve-line
+                  :data="photo_chartData"
+                  height="100%"
+                  :xAxis="tongxAxistime"
+                  :yAxis="tongyAxis"
+                  :grid="photo_grid"
+                  :colors="tongcolors"
+                  :settings="photo_setting"
+                  :legend-visible="false"
+                ></ve-line>
+              </div>
             </div>
           </div>
           <div
@@ -203,17 +215,18 @@
             </div>
             <div class="photo">
               <div class="generated" style="margin-bottom:8px">近七天放电充电&收益趋势</div>
-
-              <ve-histogram
-                :data="storedchartData"
-                :settings="storedchartSettings"
-                height="100%"
-                :yAxis="tongyAxis"
-                :grid="photo_grid"
-                :legend="storelegend"
-                :extend="store_extend"
-                :colors="storecolors"
-              ></ve-histogram>
+              <div style="height:240px;">
+                <ve-histogram
+                  :data="storedchartData"
+                  :settings="storedchartSettings"
+                  height="100%"
+                  :yAxis="tongyAxis"
+                  :grid="photo_grid"
+                  :legend="storelegend"
+                  :extend="store_extend"
+                  :colors="storecolors"
+                ></ve-histogram>
+              </div>
             </div>
           </div>
           <div
@@ -292,16 +305,18 @@
             </div>
             <div class="photo">
               <div class="generated" style="margin-bottom:8px;padding:0px">最近15天报警处理趋势图</div>
-              <ve-line
-                :data="fireconcal_chartData"
-                height="100%"
-                :extend="histo_extend"
-                :yAxis="tongyAxis"
-                :grid="photo_grid"
-                :colors="tongcolors"
-                :settings="photo_setting"
-                :legend-visible="false"
-              ></ve-line>
+              <div style="height:240px;">
+                <ve-line
+                  :data="fireconcal_chartData"
+                  height="100%"
+                  :extend="histo_extend"
+                  :yAxis="tongyAxis"
+                  :grid="photo_grid"
+                  :colors="tongcolors"
+                  :settings="photo_setting"
+                  :legend-visible="false"
+                ></ve-line>
+              </div>
             </div>
           </div>
 
@@ -343,9 +358,10 @@
       </div>
     </div>
     <div class="main_right">
-      <div style="padding: 0px 4px">
+      <!-- <div style="padding: 0px 4px">
         <div class="rightradious rightradious_left"></div>
-        <div class="rightradious rightradious_right"></div>
+      <div class="rightradious rightradious_right"></div>-->
+      <div class="main_back_border imgchangs">
         <div class="main_top main_topright">
           <el-col :span="24">
             <el-col :span="12">
@@ -358,79 +374,114 @@
             </el-col>
           </el-col>
         </div>
-      </div>
-      <div class="socaltopimg imgchangs"></div>
-      <div style="padding: 0px 4px;height:45%">
-        <div class="main_rightbottom">
-          <div style="height:35%">
-            <div class="marin_right_title">综合能源站运行健康状态</div>
-            <div style="padding-left: 20px;">
-              <div style="width:90%;height:30px;">
-                <div class="proesstype soun_bad" ref="sounBad"></div>
-                <div class="proesstype soun_general" ref="sounGeneral"></div>
-                <div class="proesstype soun_god" ref="sounGod"></div>
+        <!-- </div> -->
+
+        <div class="socaltopimg imgchangs"></div>
+
+        <div style="height:45%">
+          <div class="main_rightbottom">
+            <div style="height:35%">
+              <div class="marin_right_title">综合能源站运行健康状态</div>
+              <div style="padding-left: 20px;">
+                <div style="width:90%;height:30px;">
+                  <div class="proesstype soun_bad" ref="sounBad"></div>
+                  <div class="proesstype soun_general" ref="sounGeneral"></div>
+                  <div class="proesstype soun_god" ref="sounGod"></div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_bad"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[2].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[2].count}}</div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_general"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[1].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[1].count}}</div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_god"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[0].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[0].count}}</div>
+                </div>
               </div>
-              <div class="typeshow">
-                <span class="type_back soun_bad"></span>
-                <span style="margin-left:10px">{{stationStatusStatistics[2].desc}}</span>
-                <div class="type_show_number">{{stationStatusStatistics[2].count}}</div>
+            </div>
+            <div style="height:240px;;margin-top:10px;height:60%">
+              <div class="rectangle">
+                <span style="margin-left:20px">运维信息统计</span>
               </div>
-              <div class="typeshow">
-                <span class="type_back soun_general"></span>
-                <span style="margin-left:10px">{{stationStatusStatistics[1].desc}}</span>
-                <div class="type_show_number">{{stationStatusStatistics[1].count}}</div>
-              </div>
-              <div class="typeshow">
-                <span class="type_back soun_god"></span>
-                <span style="margin-left:10px">{{stationStatusStatistics[0].desc}}</span>
-                <div class="type_show_number">{{stationStatusStatistics[0].count}}</div>
+              <div class="operations imgchangs">
+                <ve-bar
+                  :data="optionchartData"
+                  height="100%"
+                  :extend="operaextend"
+                  :label="labelvebar"
+                  :legend-visible="false"
+                  :grid="operation_grid"
+                  :textStyle="textcolor"
+                  :xAxis="operationxAxis"
+                  :colors="opercolor"
+                  :settings="opersettings"
+                ></ve-bar>
               </div>
             </div>
           </div>
-          <div style="height:240px;;margin-top:10px;height:60%">
-            <div class="rectangle">
-              <span style="margin-left:20px">运维信息统计</span>
+        </div>
+        <div class="socaltopimg imgchangs"></div>
+        <div style="height:31%">
+          <div class="socal_alrem">
+            <div class="souncal_tital">
+              <div class="alrem_information">报警信息</div>
+              <div class="dispose_no">
+                <span class="alrem_type">未处理</span>
+                <span class="alremNumber">{{alarmData.leftAlarmCount}}</span>
+              </div>
+              <div class="dispose_no">
+                <span class="alrem_type">今日报警</span>
+                <span class="alremNumber">{{alarmData.todayAlarmCount}}</span>
+              </div>
             </div>
-            <div class="operations imgchangs">
-              <ve-bar
-                :data="optionchartData"
-                height="100%"
-                :extend="operaextend"
-                :label="labelvebar"
-                :legend-visible="false"
-                :grid="operation_grid"
-                :textStyle="textcolor"
-                :xAxis="operationxAxis"
-                :colors="opercolor"
-                :settings="opersettings"
-              ></ve-bar>
+            <div style="margin-bottom: 20px;padding:0px 20px;">
+              <dv-decoration-4 :reverse="true" style="width:100%;height:5px;color:red" />
+            </div>
+
+            <div style="padding:0px 20px;height:200px">
+              <div class="realreport">
+                <div class="marquee">
+                  <div class="marquee_box" @mouseover="marquee_hover">
+                    <ul class="marquee_list" :class="{marquee_top:animate}" style="width:100%">
+                      <li v-for="(item, index) in real_timeData" :key="index">
+                        <span style="cursor:pointer;width:100%;height:48px;line-height:48px">
+                          <span class="hiddle_trouble">
+                            {{item.parentStation.name }}
+                            {{'('+item.station.type.desc+')' }}
+                          </span>
+                          <el-tooltip
+                            class="item"
+                            effect="dark"
+                            :content="item.time"
+                            placement="top-start"
+                          >
+                            <span class="timeNow">{{item.time.substr(-9)}}</span>
+                          </el-tooltip>
+                          <el-tooltip
+                            class="item"
+                            effect="dark"
+                            :content="item.detail"
+                            placement="top-start"
+                          >
+                            <span class="real_Mes">{{item.detail}}</span>
+                          </el-tooltip>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="socaltopimg imgchangs"></div>
-      <div style="padding: 0px 4px;height:31%">
-        <div class="socal_alrem">
-          <div class="souncal_tital">
-            <div class="alrem_information">报警信息</div>
-            <div class="dispose_no">
-              <span class="alrem_type">未处理</span>
-              <span class="alremNumber">{{alarmData.leftAlarmCount}}</span>
-            </div>
-            <div class="dispose_no">
-              <span class="alrem_type">今日报警</span>
-              <span class="alremNumber">{{alarmData.todayAlarmCount}}</span>
-            </div>
-          </div>
-          <div style="margin-bottom: 20px;padding:0px 20px;">
-            <dv-decoration-4 :reverse="true" style="width:100%;height:5px;color:red" />
-          </div>
-          <div style="padding:0px 20px;">
-            <dv-scroll-board :config="configData" style="width:100%;height:17vh" />
-          </div>
-        </div>
-      </div>
-      <div class="soun_foot imgchangs"></div>
+      <!-- <div class="soun_foot imgchangs"></div> -->
     </div>
   </el-row>
 </template>
@@ -656,16 +707,13 @@ export default {
           zlevel: 1
         }
       ],
-
       chartTooltip: {
         position: "top",
         show: true,
         borderWidth: 1,
         borderColor: "#448BFF",
+        triggerOn: "click",
         formatter: function(params, ticket, callback) {
-          // let _this = this;
-          // console.log("滑动上面得点");
-          // console.log(param);
           mapDeilnodes(params.data.id).then(res => {
             console.log("---地图--");
             console.log(res);
@@ -684,7 +732,6 @@ export default {
               let chirdenSta = datachirden.join("、");
               //return Station_name;
               //console.log(Status);
-              console.log(subStationTypesData);
               var content =
                 "<div style=';width:380px;height:213px;' >" +
                 `<div   style='border-bottom:1px solid #448BFF;height:40px; line-height:40px;padding-left:20px'  >${Station_name}</div>` +
@@ -725,15 +772,9 @@ export default {
                     </div>
                     <p class=" sounmes floatfont "    >
                          <i  class='fa fa-map-marker fa-2x' style="color:#6BD7FF;margin-right:5px;" ></i>
-                             
-                              ${res.data.data.address}
-                       
+                              ${res.data.data.address}   
                     </p>
-
-
-
                   </div>
-
                   </div>` +
                 "</div>";
               callback(ticket, content);
@@ -817,14 +858,7 @@ export default {
         oddRowBGC: "#11244F",
         evenRowBGC: "#0A1945",
         header: ["能源站名称", "设备", "时间", "描述"],
-        rowNum: 4,
-        data: [
-          ["行1列1", "行1列2", "行1列3", "123"],
-          ["行3列1", "行3列2", "行3列3", "858"],
-          ["行4列1", "行4列2", "行4列3", "822"],
-          ["行5列1", "行5列2", "行5列3", "858696"],
-          ["行6列1", "行6列2", "行6列3", "862"]
-        ]
+        rowNum: 4
       },
       stationStatusStatistics: [
         { desc: "", count: "" },
@@ -869,8 +903,8 @@ export default {
       photo_grid: {
         top: 20,
         bottom: 10,
-        right: 30,
-        left: 40
+        right: 15,
+        left: 20
       },
       tongcolors: ["#5DB5F3"],
       photo_setting: {
@@ -1014,10 +1048,42 @@ export default {
       fireconcal_chartData: {
         rows: [],
         columns: ["time", "value"]
-      }
+      },
+      real_timeData: [],
+      animate: false, //滚动
+      timego: null
     };
   },
+  created() {
+    setInterval(this.showMarquee, 4000);
+  },
   methods: {
+    showMarquee() {
+      //滚动播报.
+      this.animate = true;
+      setTimeout(() => {
+        this.real_timeData.push(this.real_timeData[0]);
+        this.real_timeData.shift();
+        this.animate = false;
+      }, 500);
+    },
+    marquee_hover() {},
+    afterSet: function(echarts) {
+      console.log("--ditu---");
+      // console.log(echarts);
+      // var bmap = echarts
+      //   .getModel()
+      //   .getComponent("bmap")
+      //   .getBMap();
+      // bmap.addControl(new window.BMap.MapTypeControl());
+
+      // var bmap = echarts
+      //   .getModel()
+      //   .getComponent("bmap")
+      //   .getBMap();
+      // bmap.addControl(new BMap.MapTypeControl());
+    },
+
     // afterConfig(options) {
     //   options = { ...this.config };
     //   return options;
@@ -1076,20 +1142,11 @@ export default {
         console.log("---汇总信息--");
         console.log(res);
         let resultData = [];
+
         if (res.data.head.code == 0) {
           this.optionchartData.rows = res.data.data.workOrderStatistics;
-          let condata = res.data.data.realtimeAlarm.alarms;
-          for (var i = 0; i < condata.length; i++) {
-            let data = [];
-            data = [
-              condata[i].station.name,
-              condata[i].device.name,
-              condata[i].time,
-              condata[i].detail
-            ];
-            this.configData.data.push(data);
-          }
-          console.log(resultData);
+          let datanum = [];
+          this.real_timeData = res.data.data.realtimeAlarm.alarms;
           this.stationStatusStatistics = res.data.data.stationStatusStatistics;
           let amount = res.data.data.totalStationCount;
           this.alarmData = res.data.data.realtimeAlarm;
@@ -1114,14 +1171,19 @@ export default {
             }
           });
           console.log("得到的数组");
-          console.log(this.configData.data);
+          //console.log(this.configData.data);
         }
       });
     },
     chaid_handleClick() {
       console.log(this.Child_standing);
     },
+    findOneStation(item) {
+      console.log(item);
+      this.baidusetting.bmap.zoom = 10;
 
+      // this.afterSet();
+    },
     getmapsubStationGroup() {
       mapsubStationGroup().then(res => {
         console.log("轮播图");
@@ -1185,12 +1247,33 @@ export default {
         }
       });
     },
-    selectStyle() {
+    Carousel() {
+      var i = 0;
+      this.timego = setInterval(() => {
+        if (i < this.chirdenDate.length) {
+          this.Child_standing = i++ + "";
+        } else {
+          i = 0;
+        }
+      }, 2000);
+      // this.tiemgo = timego;
+    },
+
+    move_hover() {
+      //移上去
       console.log(333);
-      var i = "100";
-      // clearInterval(this.timego);
+      window.clearInterval(this.timego);
+    },
+    mouse_leave() {
+      //鼠标移开
+      this.Carousel();
     }
   },
+  // created() {
+  //   var _this = this;
+
+  // },
+
   mounted() {
     this.getmapstationMapNodes();
     this.getmapsummarymes();
@@ -1199,17 +1282,8 @@ export default {
     }, 1000);
     this.getsouncalList();
     this.getmapsubStationGroup();
-    //var timego = () => {};
 
-    var i = 0;
-    var timego = setInterval(() => {
-      if (i < this.chirdenDate.length) {
-        this.Child_standing = i++ + "";
-      } else {
-        i = 0;
-      }
-      //
-    }, 2000);
+    this.Carousel();
   }
 };
 </script>
@@ -1239,10 +1313,16 @@ export default {
   line-height: 90px;
 }
 .titleName {
+  background-image: url("../../static/mapimg/huajie_logo.png");
   color: #c7dcde;
   line-height: 60px;
-  font-family: "微软雅黑";
+  // font-family: "微软雅黑";
   display: inline-block;
+  width: 110px;
+  height: 29px;
+  top: calc(50% - 16px);
+  position: absolute;
+  left: 8%;
 }
 .back_home {
   // left: 280px;
@@ -1310,11 +1390,16 @@ export default {
   top: calc(50% - 16px);
   cursor: pointer;
 }
+.main_back_border {
+  height: 100%;
+  background-image: url("../../static/mapimg/map_border.png");
+}
+
 .main_left {
   position: absolute;
   z-index: 1000;
   top: 90px;
-  height: calc(100% - 120px);
+  height: calc(100% - 110px);
   width: 20%;
   background: rgba(21, 33, 91, 0.5);
   left: 10px;
@@ -1331,15 +1416,16 @@ export default {
   background: rgba(21, 33, 91, 0.5);
   font-family: "微软雅黑";
   left: 25%;
-  bottom: 10px;
+  bottom: 20px;
   border-radius: 8px;
   min-width: 898px;
+  // border: 1px solid red;
 }
 .main_right {
   position: absolute;
   z-index: 1000;
   top: 90px;
-  height: calc(100% - 120px);
+  height: calc(100% - 110px);
   width: 20%;
   background: rgba(21, 33, 91, 0.5);
   right: 10px;
@@ -1421,9 +1507,9 @@ export default {
 }
 .Socal_Conctent {
   height: 100%;
-  border: 1px solid #4c9cf7;
-  border-top: 0px;
-  border-bottom: 0px;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
   margin: 0px 3px;
 }
 .Socal_left {
@@ -1457,14 +1543,15 @@ export default {
   font-size: 16px;
   font-family: Microsoft YaHei;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .pageturing {
   height: 6vh;
-  border: 1px solid #4c9cf7;
+  // border: 1px solid #4c9cf7;
   margin: 0px 3px;
-  border-top: 0px;
-  border-bottom: 0px;
+  // border-top: 0px;
+  // border-bottom: 0px;
 }
 .soun_foot {
   background-image: url("../../static/mapimg/Souncalfooter.png");
@@ -1489,10 +1576,11 @@ export default {
   top: 15px;
 }
 .main_topright {
-  border: 1px solid #4c9cf7;
-  border-top: 0px;
-  border-bottom: 0px;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
   height: 15vh;
+  min-height: 121px;
 }
 .rightradious {
   display: inline-block;
@@ -1537,9 +1625,9 @@ export default {
 }
 .main_rightbottom {
   height: 100%;
-  border: 1px solid #4c9cf7;
-  border-top: 0px;
-  border-bottom: 0px;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
 }
 .rectangle {
   background-image: url("../../static/mapimg/rectangle.png");
@@ -1561,9 +1649,9 @@ export default {
 }
 .socal_alrem {
   height: 100%;
-  border: 1px solid #4c9cf7;
-  border-top: 0px;
-  border-bottom: 0px;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
 }
 .souncal_tital {
   height: 60px;
@@ -1631,9 +1719,9 @@ export default {
   text-align: center;
 }
 .photo {
-  width: calc(50% - 66px);
+  width: calc(50% - 8px);
   // border: 1px solid red;
-  height: 240px;
+  // height: 240px;
   display: inline-block;
   padding: 20px;
   vertical-align: top;
@@ -1730,8 +1818,8 @@ export default {
 }
 
 .sounmes {
-  height: 26px;
-  line-height: 26px;
+  height: 28px;
+  line-height: 28px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1883,5 +1971,89 @@ export default {
 .suctom_select > .el-select-dropdown {
   background: #010a31;
   border: 1px solid #010a31;
+}
+</style>
+<style>
+.timeNow {
+  display: inline-block;
+  width: 80px;
+  height: 48px;
+  line-height: 48px;
+}
+.real_Mes {
+  display: inline-block;
+  width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  height: 48px;
+  line-height: 48px;
+}
+.hiddle_trouble {
+  width: 150px;
+  display: inline-block;
+  height: 48px;
+  line-height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.realreport > img {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  box-sizing: border-box;
+}
+.marquee {
+  width: 100%;
+  height: 19vh;
+  align-items: center;
+  display: flex;
+  box-sizing: border-box;
+}
+
+.marquee_title {
+  padding: 0 20px;
+  height: 30px;
+  font-size: 14px;
+  border-right: 1px solid #d8d8d8;
+  align-items: center;
+}
+
+.marquee_box {
+  display: block;
+  position: relative;
+  width: 100%;
+
+  height: 19vh;
+  overflow: hidden;
+}
+
+.marquee_list {
+  display: block;
+  position: absolute;
+  top: 0;
+  /* left: 10%; */
+  width: 100%;
+}
+
+.marquee_top {
+  transition: all 0.5s;
+  margin-top: -30px;
+}
+
+.marquee_list li {
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  /* padding-left: 20px; */
+  list-style: none;
+}
+
+.marquee_list li span {
+  padding: 0 2px;
 }
 </style>

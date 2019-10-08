@@ -1,0 +1,278 @@
+<template>
+  <el-row
+    class="hj-config-station-for-user"
+    :style="{backgroundColor: wrapperBackgroundColor}"
+    :gutter="10"
+  >
+    <el-col :span="6">
+      <user-group-tree
+        style="max-width: 100%;overflow-x: auto;color:#000;background-color: #fff;"
+        :wrapper-width="wrapperWidth"
+        :tree-max-height="treeMaxHeight"
+        @click-node="clickNode"
+      ></user-group-tree>
+    </el-col>
+    <el-col :span="18">
+      <div style="display:flex;padding-top:15px;align-items:center;">
+        <div style="min-width:50px;text-align: right;">{{self.$t("systemSetting.search")}}</div>&nbsp;&nbsp;
+        <el-input
+          v-model="queryString"
+          icon="search"
+          style="width:350px;"
+          size="small"
+          :on-icon-click="handleIconClick"
+          @keyup.native.enter="handleIconClick"
+        ></el-input>
+      </div>
+      <el-row type="flex" justify="space-between" style="margin:15px;">
+        <span>
+          {{self.$t("systemSetting.belongGroup")}}:{{currentNodePath}}
+          <el-checkbox
+            v-model="showChildrenContent"
+          >{{self.$t("systemSetting.showSubUsergroup")}}{{childrenLabel}}</el-checkbox>
+        </span>
+      </el-row>
+      <el-table
+        ref="table"
+        :data="tableLists"
+        border
+        style="min-width:100%;"
+        highlight-current-row
+        @current-change="handleCurrentTableChange"
+        @sort-change="sortChange"
+        @cell-click="cellClick"
+      >
+        <el-table-column
+          :label="self.$t('systemSetting.identifier')"
+          prop="seriesNumber"
+          :width="80"
+        >
+          <template slot-scope="scope">
+            <span>
+              <i v-if="currentRowId==scope.row.id" class="el-icon-circle-check"></i>
+              {{(scope.$index+1)+(currentPage-1)*pageSize}}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column sortable="custom" :label="stationNameLabel" prop="name"></el-table-column>
+        <el-table-column sortable="custom" :label="ownerLabel" prop="ownerName"></el-table-column>
+      </el-table>
+      <div style="margin-top: 15px;">
+        <el-pagination
+          class="pull-right"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 30]"
+          :page-size="pageSize"
+          layout="total, prev, pager, next"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </el-col>
+  </el-row>
+</template>
+<script>
+import "./index.less";
+import UserGroupTree from "../user-group-tree/index";
+import transformValueAndUnit from "@/filters/transformValueAndUnit";
+// import Vue from 'vue'
+
+var vueComponentOptions = {
+  // name: 'ConfigStationForUser',
+  name: "config-station-for-user",
+  componentName: "configStationForUser",
+  mixins: [],
+  components: {
+    UserGroupTree
+  },
+  props: {
+    wrapperBackgroundColor: {
+      type: String,
+      default: "linear-gradient(#2f4666, #6e849d)"
+    },
+    wrapperWidth: {
+      type: String,
+      default: window.innerWidth * 0.08 + "px"
+    },
+    nodePath: {
+      type: String,
+      default: ""
+    },
+    self: {
+      type: Object
+    }
+  },
+  data() {
+    var stationOrderFieldMap = new Map([
+      ["stationName", "name"],
+      ["address", "addr"],
+      ["installDate", "install_date"],
+      ["installCapacity", "install_capacity"],
+      ["ownerName", "owner_name"]
+    ]);
+    return {
+      stationNameLabel: this.self.$t("systemSetting.name"),
+      // installCapacityLabel: this.$t("systemSetting.installedCapacity_abbr"),
+      ratedPowerLabel: this.self.$t("common.ratedPower"),
+      batteryCapacityLabel: this.self.$t("common.batteryCapacity"),
+      ownerLabel: this.self.$t("systemSetting.proprietor"),
+      treeMaxHeight: window.innerHeight - 60 - 38 - 300 + "px",
+      queryString: "",
+      showChildrenContent: true,
+      childrenLabel: this.self.$t("systemSetting.socialUnit"),
+      tableLists: [],
+      selectedList: [],
+      pageSize: 8,
+      currentPage: 1,
+      start: 0,
+      total: 0,
+      currentNodeId: 0,
+      currentNodePath: "",
+      defaultOrderCol: "install_date",
+      orderCol: "install_date",
+      orderType: "desc",
+      stationTableConfig: [
+        {
+          label: this.self.$t("systemSetting.name"),
+          prop: "stationName",
+          sortable: "custom"
+        },
+        // {
+        //   label: '地址',
+        //   prop: 'address',
+        //   sortable: 'custom'
+        // }, {
+        //   label: '装机容量',
+        //   prop: 'installCapacity',
+        //   sortable: 'custom'
+        // },
+        {
+          label: this.self.$t("systemSetting.homePath"),
+          prop: "pathList"
+        }
+      ],
+      stationOrderFieldMap,
+      orderFieldMap: stationOrderFieldMap,
+      currentRowId: NaN,
+      selectedRow: null
+    };
+  },
+  computed: {},
+  watch: {},
+  methods: {
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.currentPage = 1;
+      this.start = 0;
+      this.queryData();
+      console.log(val);
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this.start = this.pageSize * (val - 1);
+      this.queryData();
+      console.log(val);
+    },
+    handleCurrentTableChange(val) {
+      console.log("handleCurrentTableChange", val);
+    },
+    handleSelectionChange(val) {
+      console.log("handleSelectionChange", val);
+      this.selectedList = val;
+    },
+    deleteListItem(item, index) {
+      // alert(index);
+    },
+    sortChange(val) {
+      var { column, prop, order } = val;
+      if (prop || order) {
+        this.orderCol = this.orderFieldMap.get(prop) || "";
+        this.orderType = order == "ascending" ? "asc" : "desc";
+        // asc，默认）或者降序（desc）
+      } else {
+        this.orderCol = this.defaultOrderCol;
+        this.orderType = "desc";
+      }
+      this.queryData();
+    },
+    cellClick(row, column, cell, event) {
+      this.currentRowId = row.id;
+      this.selectedRow = row;
+    },
+    getSelectedRow() {
+      return this.selectedRow;
+    },
+    handleIconClick() {
+      this.queryData();
+    },
+    clickNode(params) {
+      console.log("init params+++++++++++++", params);
+      this.currentNodeId = params.currentNodeData.id;
+      this.currentNodePath = params.currentNodeData.pathName;
+      this.queryData();
+    },
+    editRow(paramsData) {},
+    deleteRow(paramsData) {},
+    queryData() {
+      if (isNaN(this.currentNodeId)) {
+        return;
+      }
+      var url = `./auth/groups/${this.currentNodeId}/stations`;
+      var json = {
+        // id: this.currentNodeId,
+        size: this.pageSize,
+        start: this.start,
+        allFlag: this.showChildrenContent,
+        keyword: this.queryString,
+        orderCol: this.orderCol,
+        orderType: this.orderType
+      };
+      this.$http({
+        url,
+        json
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          var list = (response.data.data && response.data.data.rows) || [];
+          var total =
+            (response.data.data && response.data.data.total) || this.total;
+          if (!isNaN(total)) {
+            this.total = total;
+          }
+          if (list.length) {
+            this.tableLists = list;
+          } else {
+            this.tableLists = [];
+          }
+        } else {
+          this.tableLists = [];
+        }
+      });
+    },
+    hjTransformValueAndUnit(value, baseUnit) {
+      return transformValueAndUnit(
+        value,
+        baseUnit,
+        window.localStorage.hjLanguage
+      );
+    }
+  },
+  filters: {
+    // transformValueAndUnit
+  },
+  created() {},
+  mounted() {
+    // this.queryData();
+  },
+  destroyed() {}
+};
+export default vueComponentOptions;
+// export default Vue.component(vueComponentOptions.name, vueComponentOptions)
+</script>
+<style lang="less">
+@import "./index.less";
+</style>
+
+

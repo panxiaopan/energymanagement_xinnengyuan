@@ -1,0 +1,202 @@
+.hj-task-details-wrapper {
+  height: 100%;
+  .hj-task-detials__top {
+    display: flex;
+    justify-content: center;
+    padding: 1vh 1vw;
+  }
+  .hj-task-details-desc {
+    // text-align: center;
+    display: flex;
+    // flex-direction: column;
+    justify-content: center;
+    // align-items: center;
+    padding: 1vh 0;
+    line-height: 1.8;
+    // font-size:
+  }
+  .hj-task-details-desc__desc {
+    // font-size: 1.5vh;
+    font-weight: bold;
+    color: #31b944;
+  }
+  .hj-task-details-operate {
+    padding: 1vh 5vw;
+    display: flex;
+    // justify-content: space-around;
+    justify-content: center;
+  }
+  .hj-task-details-history {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding-top: 5vh;
+    max-height: 10vh;
+    overflow: hidden;
+  }
+  .hj-task-details-history--showDetails {
+    max-height: inherit;
+    overflow: auto;
+  }
+
+  .hj-task-details-history__viewDetails {
+    position: absolute;
+    z-index: 99;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0,
+      #fff 65%,
+      #fff 100%
+    );
+    // box-shadow: 3px 3px 10px #5a5959;
+    bottom: 0;
+    height: 3vh;
+    width: 100%;
+    display: flex;
+    // text-align: center;
+    justify-content: center;
+    align-items: flex-end;
+    cursor: pointer;
+    font-size: 1.2vh;
+    color: gray;
+  }
+}
+
+.hj-task-details__head {
+  display: flex;
+  align-items: center;
+  padding: 0.5vh 0.5vw;
+  margin: 1vh 0;
+  background: #ffffff;
+  height: 8vh;
+
+  .head__left {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-right: 1px solid #979797;
+    height: 100%;
+    padding-right: 0.5vw;
+    .head__left__item {
+      width: 30%;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+  .head__right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+}
+
+.hj-task-details__body {
+  background: #ffffff;
+  min-height: 55vh;
+}
+
+.hj-task-details__body__basicInfo {
+  padding: 1vh;
+  .basic-head {
+    display: flex;
+    align-items: center;
+    padding: 1vh;
+    margin-bottom: 1vh;
+    border-bottom: 1px solid #646464;
+  }
+  .basic-head__left {
+    font-size: 1.8vh;
+    font-weight: bold;
+  }
+  .basic-head__right {
+    // display: flex;
+    text-align: right;
+  }
+
+  .basic-body {
+    line-height: 2;
+    display: flex;
+    align-items: center;
+  }
+
+  .basic-body__content {
+    padding: 0 0.5vw;
+  }
+  .basic-body__content__item {
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}
+.hj-task-details__body__relatedInfo {
+  padding: 1vh;
+  .related-head {
+    font-size: 1.8vh;
+    font-weight: bold;
+    padding: 1vh;
+    margin-bottom: 1vh;
+    // height: 6vh;
+    border-bottom: 1px solid #646464;
+  }
+  .related-body {
+    line-height: 2;
+    padding: 0 0.5vw;
+    // display: flex;
+    // align-items: center;
+  }
+  .related-body__item {
+    // width: 100%;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
+    // overflow: hidden;
+  }
+  .related-body__item--linked {
+    display: flex;
+    // align
+  }
+  .related-body__item__value__sub,
+  .related-body__item__value--actived {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+.hj-task-details__body__details {
+  position: relative;
+  padding: 1vh;
+  .details-head {
+    font-size: 1.8vh;
+    font-weight: bold;
+    padding: 1vh;
+    margin-bottom: 1vh;
+    // height: 6vh;
+    border-bottom: 1px solid #646464;
+  }
+}
+.hj-task-details-step {
+  padding-top: 1vh;
+  .el-steps {
+    display: flex;
+    justify-content: center;
+  }
+  .el-step__head.is-success {
+    color: #1161c0;
+    border-color: #1161c0;
+  }
+  .el-step__title.is-success {
+    color: #003570;
+  }
+  // .el-step__head.is-finish {
+  //   color: #1161c0;
+  //   border-color: #1161c0;
+  // }
+  // .el-step__title.is-finish {
+  //   color: #003570;
+  // }
+}
+
+.hj-message-box-wrapper {
+  background: #e2e2e2;
+}

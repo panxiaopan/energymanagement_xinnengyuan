@@ -1,0 +1,12 @@
+.hj-inspection-form-wrapper {
+  .el-select {
+    width: 100%;
+  }
+  .form-left {
+    padding: 0 1.5vh;
+    border-right: 1px solid #e2e2e2;
+  }
+  .form-right {
+    padding: 0 1.5vh;
+  }
+}
