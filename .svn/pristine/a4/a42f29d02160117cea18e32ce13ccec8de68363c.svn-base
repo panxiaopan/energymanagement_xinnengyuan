@@ -1,0 +1,1639 @@
+<template>
+  <!-- <div>
+    汇总
+    <span class="ceshi">dwdwdwdwdw</span>
+  </div>-->
+  <el-row class="mian_enery">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big">
+        <el-tab-pane label="视图" name="first"></el-tab-pane>
+        <el-tab-pane label="概述" name="second"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+
+    <el-row v-if="activecurrent=='first' ">
+      <el-col :span="24">
+        <div class="EnergySystem" style="margin-top:20px">
+          <div class="titleName">
+            <div class="titlefont">智慧能源站信息</div>
+          </div>
+          <div class="Devicetotal">
+            <div class="DeviceTotal">全局设备分类统计</div>
+            <div class="DeviceNumber">{{totalDevice}}</div>
+            <div class="Devicepcs">设备总数(个)</div>
+          </div>
+          <div class="progressbar">
+            <div class="DeviceTotal margin20">系统状态</div>
+            <div style="width:260px">
+              <el-progress
+                :text-inside="true"
+                :stroke-width="26"
+                :percentage="Devicepercentage.score"
+                :color="customColorMethod"
+              ></el-progress>
+              <div class="bardesc">{{Devicepercentage.desc}}</div>
+            </div>
+          </div>
+          <div style="height:580px; ">
+            <ve-histogram
+              :data="devicechartData"
+              :settings="devicechartSettings"
+              :extend="devicechartExtend"
+              :yAxis="deviceyAxisOption"
+              :legend="devicelegend_top"
+              height="100%"
+              :grid="devicegrid"
+              :colors="deviceColor"
+              :data-empty="dataEmptyall"
+            ></ve-histogram>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('solarSummary')">
+        <div class="EnergySystem">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/Photovoltaic.png" alt class="boximg" />
+              光伏
+            </div>
+          </div>
+          <div class="photovoltaic">
+            <div class="photovoltaicleft">
+              <div class="boundary">
+                <div class="Devicetotal">
+                  <div class="DeviceTotal margin20">系统状态</div>
+
+                  <div style="width:260px">
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="26"
+                      :percentage="photovoltaicbar.score"
+                      :color="customColorMethod"
+                    ></el-progress>
+                    <div class="bardesc">{{photovoltaicbar.desc}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="photovoltaicright">
+              <div class="DeviceTotal" style="margin:20px 0px 20px 100px">系统信息</div>
+
+              <div class="photovolcapacity" style="margin-left:100px">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/install.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">装机容量({{solarSummary.installedCapacity.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.installedCapacity.value}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">今日电量({{solarSummary.todayKwh.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.todayKwh.value}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">当前功率({{solarSummary.currentActivePower.unit}})</div>
+                    <div class="unitsvalue">{{solarSummary.currentActivePower.value}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:380px">
+            <ve-line
+              :data="CPVchartData"
+              :settings="CPVchartSettings"
+              height="100%"
+              :yAxis="CPVyAxis"
+              :legend-visible="false"
+              :colors="CPVcolors"
+              :xAxis="tonngxAxis"
+              :extend="CPVchartExtend"
+              :grid="CPVgrid"
+              :data-empty="dataEmptysolarSummary"
+            ></ve-line>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('energyStorageSummary')">
+        <div class="storedenergy">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/storedenery.png" alt class="boximg" />
+              储能
+            </div>
+          </div>
+          <div class="photovoltaic">
+            <div class="photovoltaicleft">
+              <div class="boundary">
+                <div class="Devicetotal">
+                  <div class="DeviceTotal margin20">系统状态</div>
+
+                  <div style="width:260px">
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="26"
+                      :percentage="storedenergy.score"
+                      :color="customColorMethod"
+                    ></el-progress>
+                    <div class="bardesc">{{storedenergy.desc}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="photovoltaicright">
+              <div class="DeviceTotal" style="margin:20px 0px 20px 100px">系统信息</div>
+              <div class="photovolcapacity" style="margin-left:100px">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/install.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">装机容量({{energyStorageSummary.batteryCapacity.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.batteryCapacity.value}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">额定功率({{energyStorageSummary.ratedPower.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.ratedPower.value}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="photovolcapacity">
+                <div class="photovolbox">
+                  <div class="photvolboxleft">
+                    <img src="../../assets/imgs/power.png" alt class="boximg" />
+                  </div>
+                  <div class="photvolboxright">
+                    <div class="units">当前功率({{energyStorageSummary.currentActivePower.unit}})</div>
+                    <div class="unitsvalue">{{energyStorageSummary.currentActivePower.value}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="photomessage">运行信息</div>
+          <div class="photomiddle">
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy fristback">
+                  <img src="../../assets/imgs/fristback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.todayChargeKwh.value}}</div>
+                  <div class="units">日充电量({{energyStorageSummary.todayChargeKwh.unit}})</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy secondback">
+                  <img src="../../assets/imgs/secondback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.todayDischargeKwh.value}}</div>
+                  <div class="units">日放电量({{energyStorageSummary.todayDischargeKwh.unit}})</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy thirdnack">
+                  <img src="../../assets/imgs/thirdnack.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.SOC}}</div>
+                  <div class="units">总SOC</div>
+                </div>
+              </div>
+            </div>
+            <div class="middlebox">
+              <div class="photovolbox">
+                <div class="reserve_energy fourthback">
+                  <img src="../../assets/imgs/fourthback.png" alt class="boximg" />
+                </div>
+                <div class="photvolboxright">
+                  <div class="unitsvalue">{{energyStorageSummary.SOH}}</div>
+                  <div class="units">总SOH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="photovfoot">
+            <div class="photomessage">日充放电量趋势图</div>
+            <ve-line
+              :data="photvochartData"
+              height="100%"
+              :xAxis="tonngxAxis"
+              :settings="photvosetting"
+              :yAxis="photyAxis"
+              :colors="photycolors"
+              :grid="phogrid"
+              :legend="phogridlegend"
+              :data-empty="dataEmptyenergyStorageSummary"
+            ></ve-line>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('chargingStationSummary')">
+        <div class="storedenergy">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/chargingstation.png" alt class="boximg" />
+              充电站
+            </div>
+          </div>
+          <el-col :span="24">
+            <el-col :span="14">
+              <div>
+                <div class="energytotal">
+                  <div class="DeviceTotal margin20">系统状态</div>
+
+                  <div style="width:260px">
+                    <el-progress
+                      :text-inside="true"
+                      :stroke-width="26"
+                      :percentage="rechargevar.status.score"
+                      :color="customColorMethod"
+                    ></el-progress>
+                    <div class="bardesc">{{rechargevar.status.desc}}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">系统信息</div>
+              <div class="systemmessage">
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.installedCapacity.value}}</div>
+                    <div class="units">装机功率({{rechargevar.installedCapacity.unit}})</div>
+                  </div>
+                </div>
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.dcChargingPileNumber}}</div>
+                    <div class="units">直流充电桩(个)</div>
+                  </div>
+                </div>
+                <div class="systembox">
+                  <div class="photvolboxright">
+                    <div class="unitsvalue">{{rechargevar.acChargingPileNumber}}</div>
+                    <div class="units">交流充电桩(个)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">运行信息</div>
+              <div class="operationmsssage">
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">实时功率</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.currentActivePower.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.currentActivePower.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation1.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">日充电量</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayChargeKwh.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.todayChargeKwh.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation2.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">日等效小时</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayEquivalentOperatingHours.value}}
+                      <span
+                        style="font-size:10px"
+                      >{{rechargevar.todayEquivalentOperatingHours.unit}}</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation3.png" alt />
+                  </div>
+                </div>
+                <div class="operationbox">
+                  <div class="photvolboxright">
+                    <div class="units">今日车次</div>
+                    <div class="unitsvalue">
+                      {{rechargevar.todayChargeTimes}}
+                      <span style="font-size:10px">次</span>
+                    </div>
+                  </div>
+                  <div class="eleline">
+                    <img src="../../assets/imgs/operation4.png" alt />
+                  </div>
+                </div>
+              </div>
+              <div class="energymessage">当天运行情况</div>
+              <div style="height:420px;">
+                <ve-line
+                  :data="energychartData"
+                  :settings="energychartSettings"
+                  height="100%"
+                  :colors="energcolor"
+                  :grid="recent30grid"
+                  :extend="eneryextend"
+                  :xAxis="font_color"
+                  :data-empty="dataEmptychargingStationSummary"
+                ></ve-line>
+              </div>
+            </el-col>
+            <el-col :span="10">
+              <div class="eneryleft">
+                <div class="lineleft">
+                  <div class="energymessage">充电桩使用状态统计</div>
+                  <div style="height:320px;" class="StatusAccounting">
+                    <ve-pie
+                      :data="enerypiechartData"
+                      :colors="enerypiecolor"
+                      :legend="enerypieextend"
+                      height="100%"
+                      :settings="enerypiechartSettings"
+                    ></ve-pie>
+                  </div>
+
+                  <div class="energymessage">近30天使用统计</div>
+                  <div style="height:450px">
+                    <ve-histogram
+                      :data="recent30chartData"
+                      height="100%"
+                      :yAxis="recent30yAxis"
+                      :colors="recent30color"
+                      :settings="recent30settings"
+                      :legend-visible="false"
+                      :extend="recent30extend"
+                      :grid="recent30grid"
+                    ></ve-histogram>
+                  </div>
+                </div>
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('fireProtectionSummary')">
+        <div class="firebox">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/firecontrol.png" alt class="boximg" />
+              消防
+            </div>
+          </div>
+          <el-col :span="24" style="height:calc(100% - 60px)">
+            <el-col :span="6" style="height:100%;padding: 20px;">
+              <div class="firecontrol">
+                <div class="personcharge">
+                  安全责任人:{{fireProtectionConfig.manResponsibleForFireSecurity.name}}
+                  {{fireProtectionConfig.manResponsibleForFireSecurity.tel}}
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">今日报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.todayAlarmCount}}</div>
+                  </div>
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">待处理报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.leftAlarmCount}}</div>
+                  </div>
+                </div>
+                <div class="firecontrolbox">
+                  <div class="photvolboxright">
+                    <div class="units">历史报警</div>
+                    <div class="unitsvalue">{{fireProtectionConfig.historyAlarmCount}}</div>
+                  </div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="18">
+              <div class="hj-analysis-diagnosis__chartWrapper" style="position:relative">
+                <div class="chart__title">最近七天报警处理趋势图</div>
+                <div style="position: absolute;right:7%;z-index:100000;top:15%">
+                  <el-select
+                    v-model="Hazard_type"
+                    @change="changeHazardType"
+                    placeholder="请选择"
+                    style="width:120px;"
+                    size="mini"
+                  >
+                    <el-option
+                      v-for="(item,index) in Hazardoptions"
+                      :key="index"
+                      :label="item.deviceType"
+                      :value="index"
+                    ></el-option>
+                  </el-select>
+                </div>
+                <div style="height:430px">
+                  <ve-line
+                    :data="HazardchartData"
+                    height="100%"
+                    :settings="Hazardsetting"
+                    :xAxis="xAxisOption"
+                    :grid="Hazard_grid"
+                    :legend="Hazard_legend"
+                    :yAxis="Hazard_yAxis"
+                    :colors="HazardColor"
+                    :extend="joinchartExtend"
+                  ></ve-line>
+                </div>
+                <!-- <vue-chart :options="hazardCountOptions" not-merge auto-resize class="diagnosis__chart"></vue-chart> -->
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-col>
+      <el-col :span="24" v-if="monitorobj.hasOwnProperty('securitySystemSummary')">
+        <div class="safe_protection">
+          <div class="titleName">
+            <div class="titlefont">
+              <img src="../../assets/imgs/camar.png" alt class="boximg" />
+              安防
+            </div>
+          </div>
+          <el-col :span="24">
+            <el-col :span="18">
+              <div class="monitoringpic">
+                <div
+                  class="picurl"
+                  v-for="(item,index) in securitySystemSummary.stickCameras"
+                  :key="index"
+                >
+                  <img :src="item.coverPic" alt style="width:240px;height:160px" />
+                  <div class="covername">{{item.name}}</div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="cameramessage">
+                <div class="cameracount">{{securitySystemSummary.cameraCount}}</div>
+                <div class="camerNumber">摄像头个数</div>
+                <div>
+                  <el-button type="primary" plain round>查看更多</el-button>
+                </div>
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row v-if="activecurrent=='second'&&this.summarizedata.length>0 ">
+      <el-row class="Devicemain" style="padding-top:80px">
+        <div class="mainbox summarizeheight" v-for="(item,index) in summarizedata" :key="index">
+          <div>
+            <div class="boxName summtitle">{{item.stationType.desc}}</div>
+          </div>
+          <hr />
+          <el-col :span="24">
+            <el-col :span="12" class="summtitle">
+              <div style="margin-bottom: 10px;">
+                <span class="basicmesg">基本信息</span>
+              </div>
+              <div class="titletype">
+                <div class="sumgarden"></div>
+                <span>所有者:</span>
+                <span>{{item.owner.name}}</span>
+              </div>
+
+              <span class="titletype">
+                <!-- <span >品牌:</span> -->
+                <div v-for="(items,index) in item.deviceTypeAndBrandNames" :key="index">
+                  <div class="sumgarden"></div>
+                  <span class="deviceTypeclass">{{items.deviceTypeName}}:</span>
+                  <span v-for="(itemchirden,index) in items.brandNames" :key="index">
+                    <span>{{itemchirden}}</span>
+                  </span>
+                </div>
+              </span>
+
+              <div class="titletype">
+                <div class="sumgarden"></div>
+                <span>安装日期:</span>
+                <span>{{item.installedDate}}</span>
+              </div>
+
+              <div class="sumDetails">
+                <div class="subbox" v-for="(itemgrandson,index) in item.statistics" :key="index">
+                  <div class="capacityvalue unitName">{{itemgrandson.name}}/{{itemgrandson.unit}}</div>
+                  <div class="capacityvalue unitvalue">{{itemgrandson.value}}</div>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="12" style="height:280px;">
+              <baidu-map
+                class="bm-view"
+                :zoom="18"
+                :center="{lng:item.longitude,lat:item.latitude}"
+              >
+                <bm-marker :position="{lng:item.longitude,lat:item.latitude}">
+                  <bm-navigation anchor="BMAP_ANCHOR_TOP_RIGHT"></bm-navigation>
+                </bm-marker>
+              </baidu-map>
+            </el-col>
+          </el-col>
+        </div>
+        <div class="mainbox summarizeheight" v-if="!this.firefright">
+          <div>
+            <div class="boxName summtitle">消防</div>
+          </div>
+          <hr />
+          <el-col :span="24">
+            <el-col :span="12" class="summtitle">
+              <div style="margin-bottom: 10px;">
+                <span class="basicmesg">基本信息</span>
+              </div>
+              <div class="titletype" v-for="(item,index) in firefright.statistics" :key="index">
+                <div class="sumgarden"></div>
+                <span>{{item.name}} /</span>
+                <span>{{item.unit}}</span>
+                <span class="sumgarvalue">{{item.value}}</span>
+              </div>
+            </el-col>
+            <el-col :span="12">
+              <div class="firekind">
+                消防设施种类:
+                <span
+                  v-for="(item,index) in firefright.fireFacilityTypes"
+                  :key="index"
+                >{{item.name}}、</span>
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+      </el-row>
+    </el-row>
+    <el-row
+      style="height:100%;width:100%;text-align:center"
+      v-if="this.summarizedata.length==0&&activecurrent=='second'"
+    >
+      <div style="margin-top:100px;font-size:24px;">没有添加子站!暂无概述</div>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+import "v-charts/lib/style.css";
+import { getstationssummary, getoverview } from "@/api/api";
+export default {
+  data() {
+    return {
+      // center:{},
+      //用来检测对象中是否含有属性
+      dataEmptyall: false, //总汇
+      dataEmptysolarSummary: false, //光伏
+      dataEmptyenergyStorageSummary: false, //储能
+      dataEmptychargingStationSummary: false, //充电站
+      monitorobj: {},
+      //安防
+      securitySystemSummary: {
+        stickCameras: {}
+      },
+
+      //消防
+      Hazard_type: "", //隐患类型
+      Hazardoptions: [], //隐患类型数组
+      hiddenval: "", //隐患愿意统计
+      fireProtectionConfig: {
+        manResponsibleForFireSecurity: {}
+      },
+
+      rechargevar: {
+        status: {},
+        installedCapacity: {}, //装机功率
+        dcChargingPileNumber: "", //直流
+        acChargingPileNumber: "", //交流
+        currentActivePower: {}, //实时功率
+        todayChargeKwh: {},
+        todayEquivalentOperatingHours: {},
+        todayChargeTimes: ""
+      }, //充电站
+      storedenergy: {}, //储能进度
+      Devicepercentage: {}, //总汇进度
+      photovoltaicbar: {}, //光伏进度
+      activecurrent: "first",
+      stationName: "",
+      totalDevice: 0,
+      deviceamount: [], //各个设备的总数,
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      devicelegend_top: {
+        top: 60
+        // width: 140,
+        // right: 70,
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        bottom: 40,
+        top: 180,
+        right: 70,
+        left: 50
+      },
+
+      CPVchartData: {
+        //光伏
+        columns: ["time", "value"],
+        rows: []
+      },
+      CPVchartSettings: {
+        area: true,
+        legendName: {
+          value: "发电量"
+        },
+        labelMap: {
+          value: "发电量"
+        }
+      },
+      CPVcolors: ["#2925C2"],
+      CPVyAxis: {
+        //设置Y 轴
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      tonngxAxis: {
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10);
+            return str_before;
+          },
+          show: true,
+          textStyle: {
+            color: "#b1b1b1"
+          }
+        }
+      },
+      font_color: {
+        type: "category",
+        show: true,
+        axisLabel: {
+          textStyle: {
+            color: "#b1b1b1"
+          }
+        }
+      },
+      CPVchartExtend: {
+        //显示x轴的颜色
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      CPVgrid: {
+        bottom: 30,
+        // top: 80,
+        right: 70,
+        left: 50
+      },
+      solarSummary: {
+        //光伏装机容量
+        currentActivePower: {},
+        installedCapacity: {},
+        todayKwh: {}
+      },
+      energyStorageSummary: {
+        //储能装机容量
+        batteryCapacity: {},
+        currentActivePower: {},
+        ratedPower: {},
+        todayChargeKwh: {},
+        todayDischargeKwh: {}
+      },
+      photvochartData: {
+        //储能
+        columns: ["time", "charge", "discharge"],
+        rows: []
+      },
+      photvosetting: {
+        legendName: {
+          charge: "日充电量",
+          discharge: "日放电量"
+        },
+        labelMap: {
+          charge: "日充电量",
+          discharge: "日放电量"
+        }
+      },
+      photyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      photycolors: ["#7505FF", "#4C84FF"],
+      phogrid: {
+        top: 100,
+        bottom: 30,
+        left: 54,
+        right: 70
+      },
+      phogridlegend: {
+        top: 20,
+        xAxis: {
+          axisLine: {
+            show: true
+            // lineStyle: { color: "#b1b1b1" } //
+          }
+        }
+      },
+      energychartData: {
+        columns: ["time", "power", "usage"],
+        rows: []
+      },
+      energychartSettings: {
+        showLine: ["usage"],
+        axisSite: { right: ["usage"] },
+        yAxisType: ["KMB", "percent"],
+        yAxisName: ["", "使用率"],
+        legendName: {
+          usage: "使用率",
+          power: "功率"
+        },
+        labelMap: {
+          usage: "使用率",
+          power: "功率"
+        }
+      },
+      energyyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+
+      eneryextend: {
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              console.log("加油=========站");
+              console.log(value);
+              var str_before = value.substring(10);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            },
+            textStyle: {
+              color: "#b1b1b1"
+            }
+          }
+        },
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+          }
+        },
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      energcolor: ["#8584F1", "#019CD5"],
+      enerypiechartData: {
+        columns: ["desc", "count"],
+        rows: []
+      },
+      enerypiecolor: ["#019CD5", "#78E0E1", "#9796F1", "#9DB6D1"],
+      enerypieextend: {
+        top: 30,
+        width: 80,
+        left: 40
+      },
+      enerypiechartSettings: {
+        radius: 80,
+        offsetY: 140
+      },
+      recent30chartData: {
+        columns: ["time", "value"],
+        rows: []
+      },
+      recent30xAxis: {
+        type: "category"
+        // splitLine: {},
+        // axisTick: {},
+      },
+      recent30extend: {
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              var str_before = value.substring(0, 10);
+              return str_before;
+            },
+            textStyle: {
+              color: "#b1b1b1"
+            }
+          }
+        }
+      },
+      recent30yAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "比率",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      recent30color: ["#7383E7"],
+      recent30settings: {
+        yAxisType: ["percent"],
+        labelMap: {
+          value: "使用率"
+        }
+      },
+      recent30grid: {
+        left: 40,
+        right: 40
+      },
+      HazardchartData: {
+        //隐患趋势图
+        columns: ["time", "riskDevcieCount", "riskCount", "handledCount"],
+        rows: []
+      },
+      Hazardsetting: {
+        offsetY: 20,
+        labelMap: {
+          riskCount: "报警数",
+          handledCount: "已处理",
+          riskDevcieCount: "报警设备数"
+        }
+      },
+      Hazard_grid: {
+        top: 100,
+        // bottom: 80,
+        right: 50,
+        left: 80
+      },
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(5, 10);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      Hazard_legend: {
+        top: 10,
+        // right:200,
+        left: 80
+      },
+      Hazard_yAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      HazardColor: ["red", "#FCC820", "#00CC92"],
+      joinchartExtend: {
+        barWidth: "25px",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //
+          }
+        }
+      },
+      summarizedata: [],
+      firefright: {} //消防
+    };
+  },
+  methods: {
+    customColorMethod(percentage) {
+      //颜色控制进度条
+      if (percentage < 60) {
+        return "#FF8A8A";
+      } else if (percentage < 80) {
+        return "#6CB3DB";
+      } else {
+        return "#8BE9A1";
+      }
+    },
+    changeHazardType(value) {
+      //选择不同隐患类型的设备的时候
+      console.log("-=====");
+      console.log(value);
+      this.HazardchartData.rows = this.Hazardoptions[value].trends;
+    },
+
+    handleClick() {
+      console.log(this.activecurrent);
+    },
+    getstationlist() {
+      //获取总汇数据
+      var stationId = this.$route.params.id;
+      getstationssummary(stationId).then(res => {
+        console.log("==总汇===");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.stationName = res.data.data.stationConfigOverview.name;
+          sessionStorage.setItem("station", this.stationName);
+          let data = res.data.data.deviceStatusWithCountAndTypes;
+          if (data.length == 0) {
+            console.log("jinlaipanduan");
+            this.dataEmptyall = true; //没有数组的时候
+          }
+          for (let i in data) {
+            let temp = {};
+            let devitotal = {};
+            let devicenum = 0;
+            for (let n of data[i].deviceStatusWithCounts) {
+              temp[n["desc"]] = n.count;
+              temp["类型"] = data[i].type;
+              devicenum += n.count;
+              devitotal["type"] = data[i].type;
+              devitotal["total"] = devicenum;
+            }
+            this.devicechartData.rows.push(temp);
+            // console.log("==总汇666666666===");
+            // console.log(this.devicechartData.rows);
+
+            this.deviceamount.push(devitotal);
+          }
+
+          this.Devicepercentage = res.data.data.status; //总汇的进度
+
+          this.monitorobj = res.data.data.subsystemSummary;
+          if (this.monitorobj.hasOwnProperty("solarSummary")) {
+            //光伏
+            this.CPVchartData.rows =
+              res.data.data.subsystemSummary.solarSummary.todayActivePowers.logs;
+            if (this.CPVchartData.rows.length == 0) {
+              this.dataEmptysolarSummary = true;
+            }
+
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+            this.solarSummary = res.data.data.subsystemSummary.solarSummary; //光伏
+            this.CPVyAxis.name =
+              "功率/" +
+              res.data.data.subsystemSummary.solarSummary.todayActivePowers
+                .unit;
+            this.photovoltaicbar =
+              res.data.data.subsystemSummary.solarSummary.status;
+          }
+          if (this.monitorobj.hasOwnProperty("energyStorageSummary")) {
+            //储能
+            this.energyStorageSummary =
+              res.data.data.subsystemSummary.energyStorageSummary; //储能
+            this.photvochartData.rows =
+              res.data.data.subsystemSummary.energyStorageSummary.todayChargePowerInfo.logs; //储能折线图
+            if (this.photvochartData.rows.length == 0) {
+              //没有点的时候显示暂无数据
+              this.dataEmptyenergyStorageSummary = true;
+            }
+            this.photyAxis.name =
+              "电量/" +
+              res.data.data.subsystemSummary.energyStorageSummary
+                .todayChargePowerInfo.units[0];
+            this.storedenergy =
+              res.data.data.subsystemSummary.energyStorageSummary.status;
+          }
+          if (this.monitorobj.hasOwnProperty("chargingStationSummary")) {
+            //充电站
+            this.rechargevar =
+              res.data.data.subsystemSummary.chargingStationSummary;
+            this.energychartData.rows =
+              res.data.data.subsystemSummary.chargingStationSummary.todayOperationCondition.logs;
+
+            if (this.energychartData.rows.length == 0) {
+              this.dataEmptychargingStationSummary = true;
+            }
+
+            this.energychartSettings.yAxisName[0] =
+              "功率/" +
+              res.data.data.subsystemSummary.chargingStationSummary
+                .todayOperationCondition.units[0];
+
+            this.enerypiechartData.rows =
+              res.data.data.subsystemSummary.chargingStationSummary.chargingPileStatusWithCounts;
+            this.recent30chartData.rows =
+              res.data.data.subsystemSummary.chargingStationSummary.recent30DayUsageRates;
+          }
+
+          if (this.monitorobj.hasOwnProperty("fireProtectionSummary")) {
+            //消防
+            this.fireProtectionConfig =
+              res.data.data.subsystemSummary.fireProtectionSummary;
+            this.Hazardoptions = this.fireProtectionConfig.riskTrend;
+            this.HazardchartData.rows = this.Hazardoptions[0].trends;
+            this.Hazard_type = this.Hazardoptions[0].deviceType; //默认第一个
+          }
+
+          if (this.monitorobj.hasOwnProperty("securitySystemSummary")) {
+            //安防
+            this.securitySystemSummary =
+              res.data.data.subsystemSummary.securitySystemSummary;
+          }
+        }
+      });
+      // console.log(getstationssummary);
+    },
+    getDetail() {
+      getoverview(this.$route.params.id).then(res => {
+        console.log("-详情--");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          console.log("xiangqingyemian");
+          this.summarizedata = res.data.data.subStationOverviews;
+          console.log("长度");
+          console.log(this.summarizedata.length);
+
+          if (res.data.data.hasOwnProperty("fireProtection")) {
+            //监测是有含有属性
+            this.firefright = res.data.data.fireProtection;
+          }
+        }
+      });
+    }
+  },
+  mounted() {
+    this.getstationlist();
+    this.getDetail();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.mian_enery {
+  // height: calc(100% - 60px);
+}
+.firebox {
+  border-radius: 5px;
+  height: 540px;
+  margin: 0px 24px 24px 24px;
+  box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+  background: #fff;
+  position: relative;
+}
+.EnergySystem {
+  // border: 1px solid #ededed;
+  border-radius: 5px;
+  height: 650px;
+  margin: 0px 24px 24px 24px;
+  box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+  background: #fff;
+  position: relative;
+}
+.storedenergy {
+  // border: 1px solid #ededed;
+  border-radius: 5px;
+  height: 960px;
+  margin: 0px 24px 24px 24px;
+  box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+  background: #fff;
+  position: relative;
+}
+.energytotal {
+  margin: 20px 0px 0px 54px;
+}
+.Devicetotal {
+  position: absolute;
+  top: 80px;
+  left: 54px;
+}
+.DeviceTotal {
+  font-size: 16px;
+  font-family: "微软雅黑";
+  font-weight: 800;
+  color: #181343;
+}
+.Devicepcs {
+  // padding-top: 10px;
+  font-family: "微软雅黑";
+  font-size: 14px;
+  color: #636f8a;
+  height: 40px;
+  line-height: 40px;
+}
+
+.photovoltaicleft {
+  width: 25%;
+  //border-right: 1px solid #dadde2;
+  height: 100%;
+  display: inline-block;
+}
+.photovoltaicright {
+  display: inline-block;
+  // border: 1px solid red;
+  width: 74%;
+  height: 100%;
+  // line-height: 150px;
+  vertical-align: top;
+  // text-align: center;
+}
+.photovolcapacity {
+  // border: 1px solid #efefef;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  width: 240px;
+  height: 100px;
+  text-align: center;
+  border-radius: 5px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0px 20px 0px 20px;
+  line-height: 100px;
+}
+
+.titleName {
+  height: 60px;
+  background: #f5f5fa;
+  line-height: 60px;
+}
+.titlefont {
+  font-family: "Microsoft YaHei";
+  font-weight: bold;
+  color: #181343;
+  // font-weight: 800;
+  font-size: 20px;
+  padding-left: 20px;
+}
+
+.photovoltaic {
+  height: 200px;
+  border-bottom: 1px solid #dadde2;
+  margin: 0px 20px;
+}
+.photovolbox {
+  // border: 1px solid red;
+  height: 100px;
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 100px;
+  width: 210px;
+  .photvolboxleft {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    background: #7383e7;
+    vertical-align: middle;
+    border-radius: 5px;
+    line-height: 60px;
+  }
+}
+.boximg {
+  vertical-align: middle;
+}
+.boundary {
+  border-right: 1px solid #dadde2;
+  height: 140px;
+  margin-top: 30px;
+}
+.photvolboxright {
+  display: inline-block;
+  width: 120px;
+  height: 60px;
+  //border: 1px solid red;
+  vertical-align: middle;
+  padding-left: 14px;
+  text-align: left;
+  .units {
+    height: 20px;
+    line-height: 20px;
+    font-family: "微软雅黑";
+    color: #636f8a;
+  }
+  .unitsvalue {
+    height: 40px;
+    line-height: 40px;
+    font-weight: 800;
+    font-size: 24px;
+    font-family: "微软雅黑";
+    width: 120px;
+    overflow: hidden;
+    color: #181343;
+  }
+}
+.photomiddle {
+  border-bottom: 1px solid #dadde2;
+  height: 200px;
+  // width: 100%;
+  // line-height: 200px;
+  margin: 0px 20px;
+  padding-left: 80px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  .middlebox {
+    width: 240px;
+    border-right: 1px solid #dadde2;
+    height: 120px;
+    line-height: 120px;
+    text-align: center;
+    display: inline-block;
+  }
+  .reserve_energy {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    vertical-align: middle;
+    border-radius: 30px;
+    line-height: 60px;
+  }
+  .fristback {
+    background: #fff5d5;
+  }
+  .secondback {
+    background: #ffe0e4;
+  }
+  .thirdnack {
+    background: #e5efff;
+  }
+  .fourthback {
+    background: #e1fde3;
+  }
+}
+.photomessage {
+  position: absolute;
+  padding: 20px 0px 0px 54px;
+  font-family: "微软雅黑";
+  font-size: 14px;
+  font-weight: 700;
+  color: #181343;
+}
+.photovfoot {
+  height: 480px;
+  //border: 1px solid red;
+}
+.progressbar {
+  //float: right;
+  position: absolute;
+  z-index: 100000000000;
+  // padding: 20px 40px 0px 0px;
+  right: 40px;
+  top: 80px;
+  border-left: 1px solid #dadde2;
+  width: 400px;
+  padding-left: 50px;
+}
+.bardesc {
+  width: 260px;
+  text-align: center;
+  margin-top: 10px;
+  font-family: "微软雅黑";
+  color: #181343;
+}
+.energymessage {
+  padding-left: 54px;
+  padding-top: 20px;
+  font-size: 16px;
+  font-family: "微软雅黑";
+  font-weight: 800;
+}
+.systemmessage {
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 54px;
+}
+.systembox {
+  // border: 1px solid red;
+  width: 280px;
+  height: 100px;
+  line-height: 100px;
+}
+.operationmsssage {
+  height: 140px;
+  // border: 1px solid red;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px 54px;
+}
+.operationbox {
+  width: 192px;
+  height: 92px;
+  border: 1px solid #efefef;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  border-radius: 5px;
+  text-align: center;
+  line-height: 92px;
+  min-width: 192px;
+}
+.eleline {
+  display: inline-block;
+  height: 20px;
+  width: 50px;
+  vertical-align: middle;
+  line-height: 20px;
+  margin-top: -20px;
+}
+.eneryleft {
+  height: 700px;
+  // border: 1px solid;
+}
+.lineleft {
+  border-left: 1px solid #dadde2;
+  height: 800px;
+  display: inline-block;
+  width: 100%;
+  margin-top: 50px;
+}
+.firecontrol {
+  border-right: 1px solid #dadde2;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  //justify-content: center;
+}
+.firecontrolbox {
+  width: 142px;
+  height: 82px;
+  border: 1px solid #efefef;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  // flex-direction: row-reverse;
+  margin: 15px;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 82px;
+}
+.chart__title {
+  height: 60px;
+  line-height: 60px;
+  padding-left: 80px;
+  font-size: 18px;
+  font-family: "微软雅黑";
+  font-weight: 800;
+  color: #181343;
+}
+.safe_protection {
+  margin: 0px 24px 24px 24px;
+  box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+  background: #fff;
+  position: relative;
+  border-radius: 5px;
+  height: 360px;
+  // margin: 0px 20px 20px 20px;
+  position: relative;
+}
+.monitoringpic {
+  margin-left: 54px;
+  height: 300px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  overflow: hidden;
+  .picurl {
+    width: 240px;
+    height: 200px;
+    margin: 30px;
+    .covername {
+      text-align: center;
+      font-size: 16px;
+      color: #636f8a;
+    }
+  }
+}
+.cameramessage {
+  height: 300px;
+  // border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.cameracount {
+  height: 60px;
+  line-height: 60px;
+  font-size: 30px;
+  font-weight: 800;
+  font-family: "微软雅黑";
+  color: #181343;
+}
+.camerNumber {
+  line-height: 40px;
+  font-family: "微软雅黑";
+  font-size: 14px;
+  margin-bottom: 40px;
+  color: #636f8a;
+}
+.summarizeheight {
+  height: 400px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.summarizetitle {
+  padding: 20px 20px 0px 20px;
+}
+.basicmesg {
+  font-size: 14px;
+  font-family: "MicrosoftYaHei-Bold";
+  font-weight: bold;
+}
+.summtitle {
+  padding-left: 40px;
+}
+.titletype {
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  font-family: "MicrosoftYaHei";
+  font-weight: 400;
+}
+.sumgarden {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: #6f8ddb;
+}
+.sumDetails {
+  height: 200px;
+  padding-top: 20px;
+  // border: 1px solid red;
+}
+.subbox {
+  height: 80px;
+  display: inline-block;
+  width: 48%;
+  vertical-align: top;
+  // border: 1px solid;
+}
+.capacityvalue {
+  height: 40px;
+  line-height: 40px;
+}
+.unitName {
+  color: #636f8a;
+  font-family: "MicrosoftYaHei";
+  font-size: 14px;
+  font-weight: 400;
+}
+.unitvalue {
+  font-size: 24px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #181343;
+}
+.deviceTypeclass {
+  display: inline-block;
+  // padding-left: 20px;
+}
+// .deviceTypeclass:first-of-type {
+//   display: inline-block;
+//   padding-left: 0px;
+// }
+.bm-view {
+  width: 100%;
+  height: 100%;
+}
+.sumgarvalue {
+  // display: inline-block;
+  float: right;
+  margin-right: 100px;
+  width: 100px;
+  font-size: 16px;
+  color: #181343;
+  font-family: "MicrosoftYaHei";
+  font-weight: bold;
+}
+.firekind {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #636f8a;
+}
+.personcharge {
+  color: #636f8a;
+  font-family: "MicrosoftYaHei";
+  margin-bottom: 60px;
+}
+.StatusAccounting {
+  margin: 0px 20px;
+  border-bottom: 1px solid #dadde2;
+}
+</style>
+<style>
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+</style>

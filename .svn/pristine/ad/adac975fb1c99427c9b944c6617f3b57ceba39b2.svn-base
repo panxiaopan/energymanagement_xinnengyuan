@@ -1,0 +1,264 @@
+<template>
+  <!-- <div>配电房</div> -->
+  <el-row style="height:100%;min-width:1460px">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" size="big">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-col :span="24">
+      <el-col :span="16" style="height:490px;padding:20px 20px 0px 20px ">
+        <div class="mainbox">
+          <div style="padding:20px">
+            <div class="boxName">电站信息</div>
+            <div class="typeradiousgood" v-if="status.value===10"></div>
+            <div class="typeradiousgeneral" v-if="status.value===20"></div>
+            <div class="typeradiousbad" v-if="status.value===30"></div>
+            <span class="typedesc">{{status.desc}}</span>
+            <span class="typedesc">{{status.updateTime}}</span>
+          </div>
+
+          <div class="humileft">
+            <div class="humiditydisblock" v-for="(item,index) in humitureData " :key="index">
+              <span>
+                <span>{{item.name}}:</span>
+                <span v-show="item.value">{{item.value}}</span>
+                <span>{{item.unit}}</span>
+              </span>
+            </div>
+          </div>
+          <div class="humiright">
+            <div
+              class="photvolboxright transright"
+              v-for="(item,index) in transformerData "
+              :key="index"
+            >
+              <div class="units">{{item.name+'('+item.unit+')'}}</div>
+              <div class="unitsvalue">{{item.value}}</div>
+            </div>
+          </div>
+          <div>
+            <div class="padding20">
+              <span class="boxName">电量统计信息</span>
+            </div>
+            <div class="earnmiddle" style="width:80%;margin-top:10px">
+              <div class="earningstoday" v-for="(item,index) in BatteryStats" :key="index">
+                <div class="earningsimgtop">
+                  <img src="static/imgs/storedblue.png" alt class="boximg" />
+                </div>
+                <div class="unitName nametop left20">
+                  <span>{{item.name+'('+item.unit+')'}}</span>
+                </div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="padding20">
+              <span class="boxName">功率统计信息</span>
+            </div>
+            <div class="earnbottom" style="width:65%">
+              <div class="operationmessage" v-for="(item,index) in Statisticalpower" :key="index">
+                <div class="unitName nametop left20">
+                  {{item.name}}
+                  <span v-if="item.unit!=='' ">{{'('+item.unit+')'}}</span>
+                </div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8" style="height:490px;padding:20px 20px 0px 0px">
+        <div class="mainbox">
+          <div class="Statmessage mainbox">
+            <div style="padding:20px;position:relative">
+              <div class="boxName">设备状态统计</div>
+              <div class="Devicetotal">
+                <div class="DeviceNumber">{{totalDevice}}</div>
+                <div class="Devicepcs">设备总数(个)</div>
+              </div>
+              <div style="height:420px">
+                <ve-histogram
+                  :data="devicechartData"
+                  :settings="devicechartSettings"
+                  :extend="devicechartExtend"
+                  :yAxis="deviceyAxisOption"
+                  :legend="devicelegend_top"
+                  height="100%"
+                  :grid="devicegrid"
+                  :colors="deviceColor"
+                ></ve-histogram>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-col>
+    <el-col :span="24">
+      <el-col :span="12"></el-col>
+      <el-col :span="12"></el-col>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { getsubstation } from "@/api/api";
+export default {
+  data() {
+    return {
+      activecurrent: "first",
+      status: {}, //配电房的状态
+      humitureData: [], //温湿度
+      transformerData: [],
+      BatteryStats: [],
+      Statisticalpower: [],
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 0,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      totalDevice: ""
+
+      //       Earningsdataimg: [
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedblue.png",
+      //   "static/imgs/storedblue.png"
+      // ],
+    };
+  },
+  methods: {
+    getswichroom() {
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("配电房");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.status = res.data.data.status;
+            this.humitureData = res.data.data.environmentData;
+            this.transformerData = res.data.data.statistics.slice(0, 2);
+            this.BatteryStats = res.data.data.statistics.slice(6, 11);
+
+            this.Statisticalpower = res.data.data.statistics.slice(2, 6);
+            console.log(this.Statisticalpower);
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+          }
+        }
+      );
+    }
+  },
+  mounted() {
+    this.getswichroom();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.humiditydisblock {
+  display: inline-block;
+  margin-right: 20px;
+  padding-left: 20px;
+
+  // margin-top: 40px;
+}
+.humileft {
+  display: inline-block;
+  width: 50%;
+  border-right: 1px solid rgba(182, 187, 198, 1);
+  height: 60px;
+  line-height: 60px;
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #636f8a;
+}
+.humiright {
+  display: inline-block;
+  width: 48%;
+}
+.transright {
+  margin-right: 60px;
+}
+.operationmessage {
+  width: 159px;
+  height: 60px;
+  border-right: 1px solid #b6bbc6;
+}
+.operationmessage:last-of-type {
+  border: none;
+}
+</style>

@@ -1,0 +1,291 @@
+.el-aside {
+  // height: calc(100% - 60px);
+  background: #fff;
+
+  .el-menu {
+    //height: calc(100% - 60px);
+    height: 100%;
+  }
+}
+
+.header_logo {
+  //border: 1px solid red;
+  display: inline-block;
+  width: 10%;
+  height: 60px;
+  position: absolute;
+  left: 50px;
+}
+
+//一会更换
+.el-main {
+  // background: #f0f3fc;
+  padding: 0px;
+  // margin: 20px;
+  //overflow: hidden;
+}
+
+.el-container {
+  height: 100%;
+
+  .el-header,
+  .el-footer {
+    background-color: #fff;
+    text-align: center;
+    padding: 0px;
+    border-bottom: 1px solid #B6BBC6;
+  }
+}
+
+.usenameshow {
+  float: right;
+  z-index: 1000;
+  line-height: 60px;
+  right: 50px;
+}
+
+.top_enry {
+  height: 60px;
+  background: #fff;
+}
+
+.el-menu.el-menu--horizontal {
+  border: none
+}
+
+.el-menu-demo {
+  display: inline-block;
+}
+
+.nametop {
+  color: #636f8a;
+  font-family: "微软雅黑";
+}
+
+.namebottom {
+  color: #181343;
+  font-family: "微软雅黑";
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.unitName {
+  height: 30px;
+  line-height: 30px;
+}
+
+/* 工单详情dialog */
+body .hj-custom-dialog-wrapper--taskDetails {
+  background: #e2e2e2;
+  min-width: 720px;
+}
+
+body .hj-custom-dialog-wrapper--taskDetails .el-dialog__body {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.mainbox {
+  height: 100%;
+  // border: 1px solid #ededed;
+  // box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  //min-height: 682px;
+  //margin-top: 20px;
+}
+
+.boxName {
+  font-family: "微软雅黑";
+  color: #181343;
+  font-size: 16px;
+  font-weight: 800;
+  display: inline-block;
+}
+
+.padding20 {
+  padding: 20px;
+}
+
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+
+.typeradiousgeneral {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #fad893;
+  vertical-align: middle;
+  margin-left: 20px;
+}
+
+.typeradiousbad {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #ff8a8a;
+  vertical-align: middle;
+  margin-left: 20px;
+}
+
+.typeradiousgood {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #8be9a1;
+  vertical-align: middle;
+  margin-left: 20px;
+}
+
+.typedesc {
+  font-family: "微软雅黑";
+  font-size: 14px;
+  color: "#636F8A";
+  padding-left: 10px;
+}
+
+.boximg {
+  vertical-align: middle;
+}
+
+.Devicetotal {
+  position: absolute;
+  top: 46px;
+  left: 54px;
+}
+
+.storedDevicetotal {
+  position: absolute;
+  top: 12px;
+  left: 76px;
+}
+
+.DeviceNumber {
+  padding-top: 10px;
+  font-family: "微软雅黑";
+  font-size: 20px;
+  font-weight: 800;
+  color: #181343;
+}
+
+.DeviceTotal {
+  font-size: 16px;
+  font-family: "微软雅黑";
+  font-weight: 800;
+  // margin-bottom: 20px;
+
+
+}
+
+.Devicepcs {
+  // padding-top: 10px;
+  font-family: "微软雅黑";
+  font-size: 14px;
+  color: #636f8a;
+}
+
+.margin20 {
+  margin-bottom: 20px;
+}
+
+.mainboxfour {
+  border: 1px solid #ededed;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  background: #fff;
+  border-radius: 5px;
+  min-height: 682px;
+  height: 100%;
+}
+
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+
+.Devicemain {
+  height: 100%;
+  // border: 1px solid blue;
+  padding: 60px 20px 0px 20px;
+}
+
+.earnmiddle {
+  height: 128px;
+  // border: 1px solid red;
+  display: flex;
+  // justify-items: center;
+  justify-content: space-around;
+}
+
+.earningstoday {
+  border: 1px solid #efefef;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  border-radius: 5px;
+  display: inline-block;
+  vertical-align: middle;
+  width: 135px;
+  height: 128px;
+}
+
+.left20 {
+  padding-left: 20px;
+}
+
+.earningsimgtop {
+  height: 45px;
+  // border: 1px solid;
+  line-height: 45px;
+  text-align: center;
+}
+
+.earnbottom {
+  height: 60px;
+  // border: 1px solid red;
+  display: flex;
+  justify-content: space-around;
+}
+
+.shCollagen {
+  height: 100%;
+}
+
+.photvolboxright {
+  display: inline-block;
+  width: 120px;
+  height: 60px;
+  //border: 1px solid red;
+  vertical-align: middle;
+  padding-left: 14px;
+  text-align: left;
+
+  .units {
+    height: 20px;
+    line-height: 20px;
+    font-family: "微软雅黑";
+    color: #636f8a;
+  }
+
+  .unitsvalue {
+    height: 40px;
+    line-height: 40px;
+    font-weight: 800;
+    font-size: 24px;
+    font-family: "微软雅黑";
+    width: 120px;
+    overflow: hidden;
+    color: #181343;
+  }
+}
+
+.menu_Name {
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+}
+
+.menu_icon {
+  margin-right: 8px;
+}

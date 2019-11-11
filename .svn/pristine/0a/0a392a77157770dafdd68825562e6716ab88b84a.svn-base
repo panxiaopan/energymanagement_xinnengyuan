@@ -1,0 +1,2116 @@
+<template>
+  <!-- <div>地图主页</div> -->
+  <el-row class="mapmain">
+    <div style="height:100%;height:100%;">
+      <ve-bmap
+        :settings="baidusetting"
+        height="100%"
+        width="100%"
+        :series="bmapSeries"
+        :tooltip="chartTooltip"
+        :after-set-option="setoptioncharts"
+      ></ve-bmap>
+    </div>
+    <div class="floatimg">
+      <div class="titleName"></div>
+      <div class="back_home imgchangs" @click="backHome">返回首页</div>
+      <div class="headline imgchangs">
+        <span class="Nameheadline">智慧能源云平台</span>
+      </div>
+      <div class="datetime imgchangs">
+        <span class="nowtime">{{ nowtime }}</span>
+      </div>
+      <div class="retreatForm imgchangs" @click="exitout">
+        <span class="nowtime">退出</span>
+      </div>
+    </div>
+    <div class="dv_decoration">
+      <dv-decoration-3 style="width:250px;height:30px;" />
+    </div>
+    <div class="seach_one">
+      <el-input placeholder="请输入能源站名称" v-model="keyword" @keyup.native.enter="getsouncalList()">
+        <el-button slot="append">
+          <i class="fa fa-search"></i>
+        </el-button>
+      </el-input>
+    </div>
+
+    <div class="main_left">
+      <div class="main_back_border imgchangs">
+        <!-- 
+        <div style="padding:0px 4px;">-->
+        <!-- <div class="rightradious rightradious_left"></div>
+        <div class="rightradious rightradious_right"></div>-->
+
+        <div class="main_top main_topright">
+          <div class="tabtoggle">
+            <el-tabs v-model="TabactiveName" @tab-click="TabhandleClick">
+              <el-tab-pane label="能源站列表" name="first"></el-tab-pane>
+              <el-tab-pane label="收藏" name="second"></el-tab-pane>
+              <el-tab-pane label="历史" name="third"></el-tab-pane>
+            </el-tabs>
+          </div>
+          <div class="type_Select">
+            <span class="sp_order">排序字段</span>
+            <div class="spselect optionsele">
+              <el-select
+                v-model="orderCol"
+                placeholder="请选择"
+                size="mini"
+                popper-class="suctom_select"
+                @change="changeorder"
+              >
+                <el-option
+                  v-for="item in typeoptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                  class="hazardoption"
+                ></el-option>
+              </el-select>
+            </div>
+            <span class="sorticon" @click="sortclick">
+              <i v-if="orderType=='desc' " class="el-icon-bottom toggleicon"></i>
+              <i v-else class="el-icon-top toggleicon"></i>
+            </span>
+          </div>
+        </div>
+        <!-- </div> -->
+
+        <div class="SocalUnit" v-for="(item,index) in souncalData" :key="index">
+          <div class="socaltopimg imgchangs"></div>
+          <div class="Socal_Conctent">
+            <div class="Socal_left">
+              <img
+                :src="!item.coverPicUrl?'static/mapimg/default.jpg':`${baseUrl}`+item.coverPicUrl"
+                alt
+                class="imgsoincal"
+              />
+            </div>
+            <div class="Socal_right">
+              <div class="SouncalName" @click="findOneStation(item)">{{item.name}}</div>
+              <div style="margin-bottom:4px">
+                <span
+                  class="soun_radious"
+                  :class="{soun_god:item.status.value==10,soun_general:item.status.value==20,soun_bad:item.status.value==30}"
+                ></span>
+                <span
+                  class="soun_godfont"
+                  :class="{soun_godfont:item.status.value==10,soun_generalfont:item.status.value==20,soun_badfont:item.status.value==30}"
+                >{{item.status.desc}}</span>
+                <span class="soun_time">{{item.status.updateTime}}</span>
+              </div>
+              <div class="sounmes">
+                子站:
+                <span v-for="(itemschirden,indexs) in item.subStationTypes" :key="indexs">
+                  {{itemschirden.type.desc}}
+                  <span v-if="item.subStationTypes.length>1">、</span>
+                </span>
+              </div>
+              <div class="sounmes">设备数量: {{item.deviceCount}}个</div>
+              <el-tooltip class="item" effect="dark" :content="item.address" placement="top">
+                <div class="sounmes">
+                  地址:
+                  {{item.address}}
+                </div>
+              </el-tooltip>
+            </div>
+          </div>
+        </div>
+        <div class="pageturing">
+          <div style="padding-top:10px;text-align:center">
+            <el-pagination
+              background
+              layout="prev, pager, next"
+              :page-size="size"
+              @current-change="pageIndexChange"
+              :total="totalnum"
+            ></el-pagination>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="soun_foot imgchangs"></div> -->
+    </div>
+    <div class="main_center">
+      <div class="tabtoggle" @mouseover="move_hover" @mouseleave="mouse_leave">
+        <el-tabs v-model="Child_standing" @tab-click="chaid_handleClick">
+          <el-tab-pane
+            :name="index.toString()"
+            v-for="(item,index) in chirdenDate "
+            :key="index"
+            :label="item.stationType.desc"
+          ></el-tab-pane>
+        </el-tabs>
+      </div>
+      <div style="height:280px;overflow:hidden ">
+        <div v-for="(item,index) in chirdenDate" :key="index">
+          <div
+            v-if="chirdenDate[index].stationType.value===10&&chirdenDate[Number(Child_standing)].stationType.value===10"
+          >
+            <div class="photo">
+              <div
+                class="photo_tile headline_name"
+              >{{item.stationType.desc}}电站{{"("+item.stationCount+"个)"}}</div>
+              <div style="width:100%;">
+                <div
+                  class="parameter_blok imgchangs photo_elec"
+                  v-for="(itemchirden,index) in item.statistics"
+                  :key="index"
+                >
+                  <div style="padding-left:15px">
+                    <div class="parameter_unit unit_height">
+                      {{itemchirden.name}}
+                      {{'('+itemchirden.unit+')'}}
+                    </div>
+                    <div class="parameter_value">{{itemchirden.value}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="Division">
+              <dv-decoration-4 style="width:5px;height:100%;" />
+            </div>
+            <div class="photo">
+              <div class="generated">发电功率曲线</div>
+              <div style="height:240px;">
+                <ve-line
+                  :data="photo_chartData"
+                  height="100%"
+                  :xAxis="tongxAxistime"
+                  :yAxis="tongyAxis"
+                  :grid="photo_grid"
+                  :colors="tongcolors"
+                  :settings="photo_setting"
+                  :legend-visible="false"
+                  :data-empty="dataEmpty"
+                ></ve-line>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="chirdenDate[index].stationType.value===20&&chirdenDate[Number(Child_standing)].stationType.value===20"
+          >
+            <div class="photo">
+              <div
+                class="photo_tile headline_name"
+              >{{item.stationType.desc}}电站{{"("+item.stationCount+"个)"}}</div>
+              <div style="width:100%;">
+                <div
+                  class="parameter_blok imgchangs photo_elec"
+                  v-for="(itemchirden,index) in item.statistics"
+                  :key="index"
+                >
+                  <div style="padding-left:15px">
+                    <div class="parameter_unit unit_height">
+                      {{itemchirden.name}}
+                      {{'('+itemchirden.unit+')'}}
+                    </div>
+                    <div class="parameter_value">{{itemchirden.value}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="Division">
+              <dv-decoration-4 style="width:5px;height:100%;" />
+            </div>
+            <div class="photo">
+              <div class="generated" style="margin-bottom:8px">近七天放电充电&收益趋势</div>
+              <div style="height:240px;">
+                <ve-histogram
+                  :data="storedchartData"
+                  :settings="storedchartSettings"
+                  height="100%"
+                  :grid="photo_grid"
+                  :legend="storelegend"
+                  :extend="store_extend"
+                  :colors="storecolors"
+                ></ve-histogram>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="chirdenDate[index].stationType.value===30&&chirdenDate[Number(Child_standing)].stationType.value===30"
+          >
+            <el-row>
+              <el-col :span="24">
+                <el-col :span="4" class="recharge">
+                  <div
+                    class="photo_tile headline_name"
+                  >{{item.stationType.desc}}{{"("+item.stationCount+"个)"}}</div>
+                  <div v-for="(itemchirden,index) in item.statistics" :key="index">
+                    <div style="padding-left:15px;margin-top:20px">
+                      <div class="parameter_unit charge_unitHeight">
+                        {{itemchirden.name}}
+                        {{'('+itemchirden.unit+')'}}
+                      </div>
+                      <div class="parameter_value">{{itemchirden.value}}</div>
+                    </div>
+                  </div>
+                </el-col>
+                <el-col :span="10" class="recharge">
+                  <div class="generated" style="margin-bottom:8px;padding:0px">当天运营情况</div>
+                  <ve-line
+                    :data="chargechartData"
+                    height="100%"
+                    :colors="charge_colors"
+                    :extend="charge_extend"
+                    :grid="charge_grid"
+                    :settings="charge_setting"
+                    :legend="charge_legend"
+                  ></ve-line>
+                </el-col>
+                <el-col :span="10" class="recharge">
+                  <div class="generated" style="margin-bottom:8px;padding:0px">最近15天充电桩平均使用率</div>
+                  <ve-histogram
+                    :data="charge_chartData"
+                    height="100%"
+                    :grid="charge_grid"
+                    :extend="histo_extend"
+                    :settings="histogramsetting"
+                    :legend-visible="false"
+                    :yAxis="tongyAxis"
+                  ></ve-histogram>
+                </el-col>
+              </el-col>
+            </el-row>
+          </div>
+
+          <div
+            v-if="chirdenDate[index].stationType.value===40&&chirdenDate[Number(Child_standing)].stationType.value===40"
+          >
+            <div class="photo" style="min-width:429px">
+              <div
+                class="photo_tile headline_name"
+              >{{item.stationType.desc}}电站{{"("+item.stationCount+"个)"}}</div>
+              <div style="height:80px;line-height:80px">
+                <dv-decoration-3 style="width:250px;height:30px;" />
+              </div>
+              <div
+                class="parameter_blok imgchangs fireConrol"
+                v-for="(itemchirden,index) in item.statistics"
+                :key="index"
+              >
+                <div style="padding-left:15px;margin-top:20px">
+                  <div class="parameter_unit charge_unitHeight">
+                    {{itemchirden.name}}
+                    {{'('+itemchirden.unit+')'}}
+                  </div>
+                  <div class="parameter_value">{{itemchirden.value}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="Division">
+              <dv-decoration-4 style="width:2px;height:100%;" />
+            </div>
+            <div class="photo">
+              <div class="generated" style="margin-bottom:8px;padding:0px">最近15天报警处理趋势图</div>
+              <div style="height:240px;">
+                <ve-line
+                  :data="fireconcal_chartData"
+                  height="100%"
+                  :extend="histo_extend"
+                  :yAxis="tongyAxis"
+                  :grid="photo_grid"
+                  :colors="tongcolors"
+                  :settings="photo_setting"
+                  :legend-visible="false"
+                ></ve-line>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="chirdenDate[index].stationType.value===50&&chirdenDate[Number(Child_standing)].stationType.value===50"
+          >
+            <el-row>
+              <el-col :span="10" class="recharge">
+                <div
+                  class="photo_tile headline_name"
+                >{{item.stationType.desc}}电站{{"("+item.stationCount+"个)"}}</div>
+                <div style="height:80px;line-height:80px">
+                  <dv-decoration-3 style="width:250px;height:30px;" />
+                </div>
+                <el-col :span="24">
+                  <el-col :span="12" v-for="(itemchid,index) in item.statistics " :key="index">
+                    <div class="enery_mes">{{itemchid.name}}(个)</div>
+                    <div class="enery_back imgchangs">{{itemchid.value}}</div>
+                  </el-col>
+                  <!-- <el-col :span="12">
+                    <div class="enery_mes">视频报警数(个)</div>
+                    <div class="enery_back imgchangs">20</div>
+                  </el-col>-->
+                </el-col>
+              </el-col>
+              <el-col :span="14" class="recharge flexmonimg">
+                <div
+                  v-for="(itemchild,index) in  item.stickCameras "
+                  :key="index"
+                  class="monimgbox"
+                >
+                  <img :src="itemchild.coverPic" :alt="itemchild.name" class="monitoring_img" />
+                  <div>{{itemchild.name}}</div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="main_right">
+      <!-- <div style="padding: 0px 4px">
+        <div class="rightradious rightradious_left"></div>
+      <div class="rightradious rightradious_right"></div>-->
+      <div class="main_back_border imgchangs">
+        <div class="main_top main_topright">
+          <el-col :span="24">
+            <el-col :span="12">
+              <div class="enery_mes">能源站总数(个)</div>
+              <div class="enery_back imgchangs">{{enery_amount}}</div>
+            </el-col>
+            <el-col :span="12">
+              <div class="enery_mes">历史报警数(个)</div>
+              <div class="enery_back imgchangs">{{alarmData.historyAlarmCount}}</div>
+            </el-col>
+          </el-col>
+        </div>
+        <!-- </div> -->
+
+        <div class="socaltopimg imgchangs"></div>
+
+        <div style="height:45%">
+          <div class="main_rightbottom">
+            <div style="height:35%">
+              <div class="marin_right_title">综合能源站运行健康状态</div>
+              <div style="padding-left: 20px;">
+                <div style="width:90%;height:30px;">
+                  <div class="proesstype soun_bad" ref="sounBad"></div>
+                  <div class="proesstype soun_general" ref="sounGeneral"></div>
+                  <div class="proesstype soun_god" ref="sounGod"></div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_bad"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[2].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[2].count}}</div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_general"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[1].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[1].count}}</div>
+                </div>
+                <div class="typeshow">
+                  <span class="type_back soun_god"></span>
+                  <span style="margin-left:10px">{{stationStatusStatistics[0].desc}}</span>
+                  <div class="type_show_number">{{stationStatusStatistics[0].count}}</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:240px;;margin-top:10px;height:60%">
+              <div class="rectangle">
+                <span style="margin-left:20px">运维信息统计</span>
+              </div>
+              <div class="operations imgchangs">
+                <ve-bar
+                  :data="optionchartData"
+                  height="100%"
+                  :extend="operaextend"
+                  :label="labelvebar"
+                  :legend-visible="false"
+                  :grid="operation_grid"
+                  :textStyle="textcolor"
+                  :xAxis="operationxAxis"
+                  :colors="opercolor"
+                  :settings="opersettings"
+                ></ve-bar>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="socaltopimg imgchangs"></div>
+        <div style="height:31%">
+          <div class="socal_alrem">
+            <div class="souncal_tital">
+              <div class="alrem_information">报警信息</div>
+              <div class="dispose_no">
+                <span class="alrem_type">未处理</span>
+                <span class="alremNumber">{{alarmData.leftAlarmCount}}</span>
+              </div>
+              <div class="dispose_no">
+                <span class="alrem_type">今日报警</span>
+                <span class="alremNumber">{{alarmData.todayAlarmCount}}</span>
+              </div>
+            </div>
+            <div style="margin-bottom: 20px;padding:0px 20px;">
+              <dv-decoration-4 :reverse="true" style="width:100%;height:5px;color:red" />
+            </div>
+
+            <div style="padding:0px 20px;height:200px">
+              <div class="realreport">
+                <div class="marquee">
+                  <div class="marquee_box" @mouseover="marquee_hover">
+                    <ul class="marquee_list" :class="{marquee_top:animate}" style="width:100%">
+                      <li v-for="(item, index) in real_timeData" :key="index">
+                        <span style="cursor:pointer;width:100%;height:48px;line-height:48px">
+                          <span class="hiddle_trouble">
+                            {{item.parentStation.name }}
+                            {{'('+item.station.type.desc+')' }}
+                          </span>
+                          <el-tooltip
+                            class="item"
+                            effect="dark"
+                            :content="item.time"
+                            placement="top-start"
+                          >
+                            <span class="timeNow">{{item.time.substr(-9)}}</span>
+                          </el-tooltip>
+                          <el-tooltip
+                            class="item"
+                            effect="dark"
+                            :content="item.detail"
+                            placement="top-start"
+                          >
+                            <span class="real_Mes">{{item.detail}}</span>
+                          </el-tooltip>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="soun_foot imgchangs"></div> -->
+    </div>
+  </el-row>
+</template>
+<script>
+import { timeFormanow } from "@/assets/js/common";
+import {
+  getSations,
+  getmapsummary,
+  mapsubStationGroup,
+  mapstationMapNodes,
+  mapDeilnodes
+} from "@/api/api";
+import { baseUrl } from "../../static/baseurl";
+import { clearInterval } from "timers";
+export default {
+  data() {
+    return {
+      // Station_name: "",
+      dataEmpty: true,
+      baidusetting: {
+        key: "UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize",
+        bmap: {
+          center: [120, 30],
+          zoom: 5,
+          roam: true,
+          mapStyle: {
+            styleJson: [
+              {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: {
+                  color: "#2B5892" // 水的颜色 2B5892 0C224E'
+                }
+              },
+              {
+                featureType: "land",
+                elementType: "geometry",
+                stylers: {
+                  color: "#03092F" //调整土地颜色  03092F 004981
+                }
+              },
+              {
+                featureType: "building", //调整建筑物颜色
+                elementType: "geometry",
+                stylers: {
+                  color: "#1a5787"
+                }
+              },
+              {
+                featureType: "railway",
+                elementType: "geometry",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "highway", //调整高速道路颜色
+                elementType: "geometry",
+                stylers: {
+                  color: "#03292F" // 03092F 004981
+                }
+              },
+              {
+                featureType: "highway", //调整高速名字是否可视
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "building", //调整建筑物标签是否可视
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "arterial", //调整一些干道颜色
+                elementType: "geometry",
+                stylers: {
+                  color: "#03292F" //03292F 004981
+                }
+              },
+              {
+                featureType: "arterial",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "green",
+                elementType: "geometry",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "subway", //调整地铁颜色
+                elementType: "geometry.stroke",
+                stylers: {
+                  color: "#03292F" // 03292F 003051
+                }
+              },
+              {
+                featureType: "subway",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "railway",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "all", //调整所有的标签的边缘颜色
+                elementType: "labels.text.stroke",
+                stylers: {
+                  color: "rgba(255,255,255,1)"
+                }
+              },
+              {
+                featureType: "all", //调整所有标签的填充颜色
+                elementType: "labels.text.fill",
+                stylers: {
+                  color: "#2B5892" // 03292F 28D1BE
+                }
+              },
+              {
+                featureType: "manmade",
+                elementType: "geometry",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "manmade",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "local",
+                elementType: "geometry",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "local",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "subway",
+                elementType: "geometry",
+                stylers: {
+                  lightness: -65
+                }
+              },
+              {
+                featureType: "railway",
+                elementType: "all",
+                stylers: {
+                  lightness: -40
+                }
+              },
+              {
+                featureType: "boundary",
+                elementType: "geometry",
+                stylers: {
+                  color: "#064f85", // 03292F
+                  weight: "1",
+                  lightness: -29
+                }
+              },
+              {
+                featureType: "boundary",
+                elementType: "geometry.fill",
+                stylers: {
+                  color: "#029fd4" // 03292F
+                }
+              }
+            ]
+          }
+        }
+      },
+      bmapSeries: [
+        {
+          name: "能源站",
+          type: "effectScatter",
+          coordinateSystem: "bmap",
+          data: [
+            // { name: "海门", value: [125.03, 46.58] },
+            // { name: "大庆", value: [114.31, 30.52] }
+          ],
+          symbolSize: 20,
+          showEffectOn: "render",
+          rippleEffect: {
+            brushType: "stroke"
+          },
+          label: {
+            normal: {
+              show: false
+            },
+            emphasis: {
+              show: false
+            }
+          },
+          itemStyle: {
+            normal: {
+              // color: "#F4E925",
+              shadowBlur: 15,
+              shadowColor: "#05C3F9"
+            }
+          },
+          zlevel: 1
+        }
+      ],
+      chartTooltip: {
+        position: "top",
+        show: true,
+        borderWidth: 1,
+        borderColor: "#448BFF",
+        triggerOn: "click",
+        formatter: function(params, ticket, callback) {
+          mapDeilnodes(params.data.id).then(res => {
+            console.log("---地图--");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              // let StaonName=res.
+              var Station_address = res.data.data.address;
+              var Station_name = res.data.data.name;
+              var Status = res.data.data.status;
+              var installedDate = res.data.data.installedDate;
+              var imgcoverurl = res.data.data.coverPicUrl;
+              var subStationTypesData = res.data.data.subStationTypes;
+              let datachirden = [];
+              subStationTypesData.forEach(item => {
+                datachirden.push(item.type.desc);
+              });
+              let chirdenSta = datachirden.join("、");
+              //return Station_name;
+              //console.log(Status);
+              var content =
+                "<div style=';width:380px;height:213px;' >" +
+                `<div   style='border-bottom:1px solid #448BFF;height:40px; line-height:40px;padding-left:20px'  >${Station_name}</div>` +
+                `<div class='total_tyape'>
+                      <span   class="soun_radious ${
+                        Status.value == 30
+                          ? "soun_bad"
+                          : Status.value == 10
+                          ? "soun_god"
+                          : "soun_general"
+                      }" ></span>
+                      <span   class="soun_godfont ${
+                        Status.value == 30
+                          ? "soun_badfont"
+                          : Status.value == 10
+                          ? "soun_godfont"
+                          : "soun_generalfont"
+                      }" >
+                        ${Status.desc}
+                      </span>
+                      <span class="soun_time">${Status.updateTime}</span>
+                 </div>` +
+                `<div   style="height:120px;">
+                     <div style="width:40%;display:inline-block">
+                          <img  src="${
+                            !imgcoverurl
+                              ? "static/mapimg/default.jpg"
+                              : baseUrl + imgcoverurl
+                          }"   class="float_coverimg" />
+                    </div>
+                  <div  style ="width:60%;display:inline-block;vertical-align:top"   >
+                    <div class="sounmes" >
+                      子站:
+                        ${chirdenSta} 
+                    </div>
+                    <div   class="equipmentnum"  >
+                        设备数量: ${res.data.data.deviceCount}     
+                    </div>
+                    <p class=" sounmes floatfont "    >
+                         <i  class='fa fa-map-marker fa-2x' style="color:#6BD7FF;margin-right:5px;" ></i>
+                              ${res.data.data.address}   
+                    </p>
+                  </div>
+                  </div>` +
+                "</div>";
+              callback(ticket, content);
+            }
+          });
+          return "loading";
+        },
+        backgroundColor: "rgba(0,61,113,0.6)",
+        textStyle: {
+          fontSize: 12
+        }
+        //extraCssText: "box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);" // 自定义的 CSS 样式
+      },
+
+      baseUrl,
+      keyword: "",
+      orderCol: "",
+      orderType: "desc",
+      start: 0,
+      size: 4,
+      totalnum: 0,
+      typeoptions: [
+        {
+          value: "installedDate",
+          label: "安装日期"
+        },
+        {
+          value: "currentStatus",
+          label: "当前状态"
+        },
+        {
+          value: "deviceCount",
+          label: "设备数量"
+        }
+      ],
+      TabactiveName: "first",
+      nowtime: timeFormanow(new Date()),
+      timeFormanow,
+      zoom: 9,
+      souncalData: [],
+      Child_standing: "",
+      optionchartData: {
+        columns: ["desc", "count"],
+        rows: []
+      },
+      labelvebar: {
+        normal: {
+          position: "right",
+          show: true
+        }
+      },
+      operaextend: {
+        series: {
+          label: { show: true, position: "right" },
+          barWidth: 20
+        }
+      },
+      operation_grid: {
+        left: 50,
+        right: 80,
+        bottom: 10,
+        top: 20
+      },
+      textcolor: {
+        color: "#fff"
+      },
+      operationxAxis: {
+        splitLine: {
+          show: false
+        },
+        show: false
+      },
+      opercolor: ["#3699FF"],
+      opersettings: {
+        labelMap: {
+          count: "数量"
+        }
+      },
+      configData: {
+        headerBGC: "#071E6A",
+        oddRowBGC: "#11244F",
+        evenRowBGC: "#0A1945",
+        header: ["能源站名称", "设备", "时间", "描述"],
+        rowNum: 4
+      },
+      stationStatusStatistics: [
+        { desc: "", count: "" },
+        { desc: "", count: "" },
+        { desc: "", count: "" }
+      ],
+      chirdenDate: [], //子站元素
+      photo_chartData: {
+        rows: [],
+        columns: ["time", "value"]
+      }, //光伏曲线图
+      tongxAxistime: {
+        type: "category",
+        axisLabel: {
+          show: true,
+          textStyle: {
+            color: "#DCE1FF"
+          },
+          formatter: function(value) {
+            var str_before = value.substring(10, 16);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      tongyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#5785EB" } //y轴坐标的显示颜色
+        },
+        name: "",
+        right: 15,
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#102B63"],
+            opacity: 0.4
+          }
+        }
+      },
+      alarmData: {}, //报警里面的数据
+      enery_amount: 0, //能源站总数
+      photo_grid: {
+        top: 30,
+        bottom: 10,
+        right: 15,
+        left: 20
+      },
+      tongcolors: ["#5DB5F3"],
+      photo_setting: {
+        area: true,
+        opacity: 0.4,
+        labelMap: {
+          value: "值"
+        }
+      },
+      storedchartData: {
+        rows: [],
+        columns: ["time", "chargeKwh", "dischargeKwh", "income"]
+      },
+      storedchartSettings: {
+        axisSite: { right: ["dischargeKwh"] },
+        // axisSite: { right: ["收益"] },
+        //yAxisType: ["KMB", "percent"],
+        yAxisName: [],
+
+        showLine: ["income"],
+
+        labelMap: {
+          chargeKwh: "充电",
+          dischargeKwh: "放电",
+          income: "收益"
+        }
+      },
+      storelegend: {
+        //right: 60,
+        // width: 400,
+        textStyle: {
+          color: "#1D86FF"
+        }
+      },
+      store_extend: {
+        xAxis: {
+          type: "category",
+          lineStyle: { color: "#5785EB" }, //X轴坐标的显示颜色
+          axisLabel: {
+            show: true,
+            textStyle: {
+              color: "#5785EB"
+            },
+            formatter: function(value) {
+              var str_before = value.substring(5, 10);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        },
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#5785EB" } //y轴坐标的显示颜色
+          },
+          splitLine: {
+            show: false
+          }
+        }
+      },
+      storecolors: ["#00D6FB", "#FF3976", "#E8EA3E"],
+      chargechartData: {
+        rows: [],
+        columns: ["time", "power", "usage"]
+      },
+      charge_setting: {
+        // showLine: ["usage"],
+        axisSite: { right: ["usage"] },
+        yAxisType: ["", "percent"],
+        yAxisName: [],
+        legendName: {
+          usage: "使用率",
+          power: "功率"
+        },
+        labelMap: {
+          usage: "使用率",
+          power: "功率"
+        }
+      },
+      charge_colors: ["#FF39A9", "#00BDD5"],
+      charge_grid: {
+        left: 5,
+        bottom: 5,
+        top: 30,
+        right: 5
+      },
+      charge_extend: {
+        xAxis: {
+          type: "category",
+          axisLabel: {
+            show: true,
+            textStyle: {
+              color: "#5785EB"
+            },
+            formatter: function(value) {
+              var str_before = value.substring(10, 16);
+              return str_before;
+            }
+          }
+        },
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#5785EB" } //y轴坐标的显示颜色
+          },
+          splitLine: {
+            show: false
+          }
+        }
+      },
+      charge_legend: {
+        textStyle: {
+          color: "#1D86FF"
+        },
+        top: -5
+      },
+      charge_chartData: {
+        rows: [],
+        columns: ["time", "value"]
+      },
+      histo_extend: {
+        xAxis: {
+          type: "category",
+          axisLabel: {
+            show: true,
+            textStyle: {
+              color: "#5785EB"
+            },
+            formatter: function(value) {
+              var str_before = value.substring(5, 10);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        }
+      },
+      histogramsetting: {
+        // axisSite: { left: ['下单率'] },
+        axisSite: { left: ["value"] },
+        // yAxisType: ["percent"],
+        // yAxisName: ["使用率"],
+        labelMap: {
+          value: "使用率"
+        }
+      },
+      fireconcal_chartData: {
+        rows: [],
+        columns: ["time", "value"]
+      },
+      real_timeData: [],
+      animate: false, //滚动
+      timego: null
+    };
+  },
+  created() {
+    setInterval(this.showMarquee, 4000);
+  },
+  watch: {
+    //监控单位
+    Child_standing(newName, oldName) {
+      console.log("jianting");
+      console.log(newName);
+      let itemindex = Number(newName);
+
+      switch (newName) {
+        case "0":
+          this.tongyAxis.name =
+            "单位/" + this.chirdenDate[itemindex].todayPowers.unit;
+          break;
+        case "1":
+          // this.tongyAxis.name = "单位/"+this.chirdenDate[itemindex].;
+          this.tongyAxis.name = "";
+          this.storedchartSettings.yAxisName = [
+            "单位/" +
+              this.chirdenDate[itemindex].recent7DaysChargeAndIncomes.units[1],
+            "单位/" +
+              this.chirdenDate[itemindex].recent7DaysChargeAndIncomes.units[2]
+          ];
+          break;
+        case "2":
+          this.tongyAxis.name = "单位/%";
+          this.charge_setting.yAxisName = [
+            "单位/" + this.chirdenDate[itemindex].powerAndUsages.units[0],
+            "单位/" + this.chirdenDate[itemindex].powerAndUsages.units[1]
+          ];
+          break;
+        case "3":
+          this.tongyAxis.name = "";
+          break;
+        default:
+          break;
+      }
+    }
+    // immediate: true,
+    // deep: true
+    // console.log("监控当前点击");
+    // console.log(this.Child_standing);
+    // let item = Number(this.Child_standing);
+  },
+  methods: {
+    showMarquee() {
+      //滚动播报.
+      this.animate = true;
+      setTimeout(() => {
+        this.real_timeData.push(this.real_timeData[0]);
+        this.real_timeData.shift();
+        this.animate = false;
+      }, 500);
+    },
+    marquee_hover() {},
+
+    setOption(option) {
+      console.log("配置");
+      console.log(option);
+    },
+    backHome() {
+      this.$router.push("/realTimeMain");
+    },
+    exitout() {
+      this.$router.push("/login");
+    },
+    TabhandleClick() {
+      console.log();
+      // this.getsouncalList();
+    },
+    changeorder() {
+      this.getsouncalList();
+    },
+    sortclick() {
+      if (this.orderType == "desc") {
+        this.orderType = "asc";
+      } else {
+        this.orderType = "desc";
+      }
+      this.getsouncalList();
+    },
+    getsouncalList() {
+      var params = {
+        keyword: this.keyword,
+        orderCol: this.orderCol,
+        orderType: this.orderType,
+        start: this.start,
+        size: this.size
+      };
+      getSations(params).then(res => {
+        console.log("社会单位");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.souncalData = res.data.data.rows;
+          if (this.start == 0) {
+            this.totalnum = res.data.data.total;
+          }
+        }
+      });
+    },
+    pageIndexChange(index) {
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getsouncalList();
+    },
+    getmapsummarymes() {
+      getmapsummary().then(res => {
+        console.log("---汇总信息--");
+        console.log(res);
+        let resultData = [];
+
+        if (res.data.head.code == 0) {
+          this.optionchartData.rows = res.data.data.workOrderStatistics;
+          let datanum = [];
+          this.real_timeData = res.data.data.realtimeAlarm.alarms;
+          this.stationStatusStatistics = res.data.data.stationStatusStatistics;
+          let amount = res.data.data.totalStationCount;
+          this.alarmData = res.data.data.realtimeAlarm;
+          this.enery_amount = res.data.data.totalStationCount;
+          res.data.data.stationStatusStatistics.forEach(item => {
+            console.log(item);
+            switch (item.value) {
+              case 30:
+                this.$refs.sounBad.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+                break;
+              case 20:
+                this.$refs.sounGeneral.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+                break;
+              case 10:
+                this.$refs.sounGod.style.width =
+                  "calc(" + (item.count / amount) * 100 + "% - 20px" + ")";
+                break;
+              default:
+                break;
+            }
+          });
+          console.log("得到的数组");
+          //console.log(this.configData.data);
+        }
+      });
+    },
+    chaid_handleClick() {
+      console.log(this.Child_standing);
+    },
+    findOneStation(item) {
+      console.log(item);
+      // this.baidusetting.bmap.zoom = 10;
+      // this.baidusetting.bmap.center = [20, 100];
+      // this.afterSet();
+      console.log("所有点");
+      // console.log(this.bmapSeries[0].data);
+      this.bmapSeries[0].data.forEach((itemdata, index) => {
+        if (item.id === itemdata.id) {
+          this.bmapSeries[0].data[index].symbolSize = 40;
+        } else {
+          this.bmapSeries[0].data[index].symbolSize = 20;
+        }
+      });
+      console.log(this.bmapSeries[0].data);
+    },
+    getmapsubStationGroup() {
+      mapsubStationGroup().then(res => {
+        console.log("轮播图");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.chirdenDate = res.data.data;
+          res.data.data.forEach(item => {
+            switch (item.stationType.value) {
+              case 10:
+                this.photo_chartData.rows = item.todayPowers.logs;
+                // this.tongyAxis.name = "Kw";
+                break;
+              case 20:
+                this.storedchartData.rows =
+                  item.recent7DaysChargeAndIncomes.logs;
+                //this.tongyAxis.name = "KM";
+                break;
+              case 30:
+                this.chargechartData.rows = item.powerAndUsages.logs;
+                this.charge_chartData.rows = item.recent15DaysUsages.logs;
+                // this.tongyAxis.name = "ww";
+                break;
+              case 40:
+                this.fireconcal_chartData.rows = item.recent15DaysAlarmCounts;
+                break;
+            }
+          });
+        }
+      });
+    },
+    setoptioncharts(chartObj) {
+      console.log("--chartobj-");
+      console.log(chartObj);
+      var self = this;
+      // chartObj.setOption({
+      //   bmapSeries: [
+      //     {
+      //       data: []
+      //     }
+      //   ]
+      // });
+    },
+
+    getmapstationMapNodes() {
+      mapstationMapNodes().then(res => {
+        console.log("地图上的点");
+        console.log(res);
+
+        if (res.data.head.code == 0) {
+          let datastaion = res.data.data;
+          datastaion.forEach((item, index) => {
+            console.log(item);
+            this.bmapSeries[0].data.push({
+              name: item.status.value,
+              id: item.id,
+              value: [item.longitude, item.latitude],
+              symbolSize: 20
+            });
+
+            this.bmapSeries[0].itemStyle = {
+              normal: {
+                // shadowBlur: 15,
+                // shadowColor: "#05C3F9",
+                color: params => {
+                  switch (params.data.name) {
+                    case 30:
+                      // console.log("0000000");
+                      return "#eb1e1e";
+                    case 10:
+                      return "#23f166";
+                    case 20:
+                      return "#3699ff";
+                  }
+                }
+              }
+            };
+          });
+        }
+      });
+    },
+    Carousel() {
+      var i = 0;
+
+      this.timego = setInterval(() => {
+        if (i < this.chirdenDate.length) {
+          this.Child_standing = i++ + "";
+        } else {
+          i = 0;
+        }
+      }, 2000);
+    },
+
+    move_hover() {
+      //移上去
+      console.log(333);
+      window.clearInterval(this.timego);
+    },
+    mouse_leave() {
+      //鼠标移开
+      this.Carousel();
+    }
+  },
+  // created() {
+  //   var _this = this;
+
+  // },
+
+  mounted() {
+    this.getmapstationMapNodes();
+    this.getmapsummarymes();
+    var ti = setInterval(() => {
+      this.nowtime = this.timeFormanow(new Date());
+    }, 1000);
+    this.getsouncalList();
+    this.getmapsubStationGroup();
+
+    this.Carousel();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.mapmain {
+  width: 100%;
+  height: 100%;
+  min-width: 1846px;
+  // border: 1px solid;
+  min-height: 960px;
+  .map {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.floatimg {
+  position: absolute;
+  //color: red;
+  z-index: 1000;
+  top: 0px;
+  width: 100%;
+  left: 0px;
+  height: 90px;
+  //border: 1px solid red;
+  line-height: 90px;
+}
+.titleName {
+  background-image: url("../../static/mapimg/huajie_logo.png");
+  color: #c7dcde;
+  line-height: 60px;
+  // font-family: "微软雅黑";
+  display: inline-block;
+  width: 110px;
+  height: 29px;
+  top: calc(50% - 16px);
+  position: absolute;
+  left: 8%;
+}
+.back_home {
+  // left: 280px;
+  display: inline-block;
+  color: #dce1ff;
+  font-size: 14px;
+  text-align: center;
+  line-height: 36px;
+  width: 120px;
+  height: 32px;
+  background-image: url("../../static/mapimg/back_home.png");
+  cursor: pointer;
+  position: absolute;
+  top: calc(50% - 16px);
+  left: 20%;
+}
+.imgchangs {
+  background-size: 100% 100%;
+  background-position: 0% 0%;
+  background-repeat: no-repeat;
+  // position: relative;
+  vertical-align: middle;
+}
+.headline {
+  display: inline-block;
+  background-image: url("../../static/mapimg/headline.png");
+  // width: 745px;
+  width: 40%;
+  height: 90px;
+  line-height: 80px;
+  position: relative;
+  left: 30%;
+  text-align: center;
+}
+.Nameheadline {
+  color: #c3faff;
+  font-family: "微软雅黑";
+  font-size: 34px;
+  position: relative;
+}
+.datetime {
+  display: inline-block;
+  background-image: url("../../static/mapimg/date.png");
+  width: 218px;
+  height: 32px;
+  right: 14%;
+  position: absolute;
+  top: calc(50% - 16px);
+  line-height: 37px;
+  text-align: center;
+}
+.nowtime {
+  color: #dce1ff;
+  font-family: "微软雅黑";
+}
+.retreatForm {
+  width: 120px;
+  height: 32px;
+  display: inline-block;
+  position: absolute;
+  background-image: url("../../static/mapimg/exit.png");
+  right: 4%;
+  line-height: 32px;
+  text-align: center;
+  top: calc(50% - 16px);
+  cursor: pointer;
+}
+.main_back_border {
+  height: 100%;
+  background-image: url("../../static/mapimg/map_border.png");
+}
+
+.main_left {
+  position: absolute;
+  z-index: 1000;
+  top: 90px;
+  height: calc(100% - 110px);
+  width: 20%;
+  background: rgba(21, 33, 91, 0.5);
+  left: 10px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  min-width: 410px;
+}
+.main_center {
+  position: absolute;
+  z-index: 1000;
+  height: 330px;
+  width: 50%;
+  background: rgba(21, 33, 91, 0.5);
+  font-family: "微软雅黑";
+  left: 25%;
+  bottom: 20px;
+  border-radius: 8px;
+  min-width: 898px;
+  // border: 1px solid red;
+}
+.main_right {
+  position: absolute;
+  z-index: 1000;
+  top: 90px;
+  height: calc(100% - 110px);
+  width: 20%;
+  background: rgba(21, 33, 91, 0.5);
+  right: 10px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  // background-image: url("../../static/mapimg/sideright.png");
+  // display: inline-block;
+  min-width: 410px;
+}
+
+.seach_one {
+  position: absolute;
+  z-index: 1000;
+  left: 30%;
+  // border: 1px solid red;
+  height: 30px;
+  top: 160px;
+  width: 340px;
+}
+.tabtoggle {
+  width: 100%;
+  background: rgba(50, 91, 211, 0.4);
+  z-index: 10000000;
+  color: #fff;
+}
+.dv_decoration {
+  top: 90px;
+  left: calc(50% - 125px);
+  position: absolute;
+  z-index: 1000;
+}
+.sp_order {
+  color: #fff;
+  font-family: "微软雅黑";
+  // margin-left: 20px;
+  margin-right: 8px;
+}
+.spselect {
+  width: 168px;
+  display: inline-block;
+}
+.type_Select {
+  margin-top: 40px;
+}
+.hazardoption {
+  //width: 148px;
+  // background: #010a31;
+  color: #00d3e9;
+}
+.sorticon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: #1f3784;
+  vertical-align: middle;
+  margin-left: 10px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+}
+.toggleicon {
+  vertical-align: middle;
+}
+.main_top {
+  height: 127px;
+  // border: 1px solid red;
+  padding: 5px 23px 0px 23px;
+}
+.socaltopimg {
+  background-image: url("../../static/mapimg/souncaltop.png");
+  //width: 100%;
+  height: 10px;
+}
+.SocalUnit {
+  width: 100%;
+  height: 18%;
+}
+.Socal_Conctent {
+  height: 100%;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
+  margin: 0px 3px;
+}
+.Socal_left {
+  width: 30%;
+  display: inline-block;
+  // border: 1px solid red;
+  height: 100%;
+  text-align: center;
+  vertical-align: top;
+}
+.imgsoincal {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  margin-top: 12px;
+}
+.Socal_right {
+  width: 68%;
+  // border: 1px solid red;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  color: #fff;
+  font-family: Microsoft YaHei;
+}
+
+.SouncalName {
+  //margin-top: 10px;
+  height: 34px;
+  line-height: 34px;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pageturing {
+  height: 6vh;
+  // border: 1px solid #4c9cf7;
+  margin: 0px 3px;
+  // border-top: 0px;
+  // border-bottom: 0px;
+}
+.soun_foot {
+  background-image: url("../../static/mapimg/Souncalfooter.png");
+  height: 10px;
+}
+.side {
+  display: inline-block;
+  background-image: url("../../static/mapimg/side.png");
+  width: 10px;
+  // height: 100%;
+  position: absolute;
+  left: 8px;
+  height: 127px;
+}
+.sideright {
+  display: inline-block;
+  background-image: url("../../static/mapimg/side.png");
+  width: 10px;
+  height: 127px;
+  position: absolute;
+  right: 9px;
+  top: 15px;
+}
+.main_topright {
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
+  height: 15vh;
+  min-height: 121px;
+}
+.rightradious {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  border: 1px solid #4c9cf7;
+}
+.rightradious_right {
+  float: right;
+  position: relative;
+  right: -4px;
+  top: 6px;
+}
+.rightradious_left {
+  position: relative;
+  top: 3px;
+  left: -4px;
+}
+.enery_back {
+  width: 132px;
+  height: 62px;
+  background-image: url("../../static/mapimg/enerystation.png");
+  font-size: 24px;
+  font-family: "微软雅黑";
+  color: #dce1ff;
+  text-align: center;
+  line-height: 62px;
+}
+.enery_mes {
+  color: #dce1ff;
+  font-family: "微软雅黑";
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.marin_right_title {
+  color: #dce1ff;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  padding: 10px 0px 10px 20px;
+}
+.main_rightbottom {
+  height: 100%;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
+}
+.rectangle {
+  background-image: url("../../static/mapimg/rectangle.png");
+  width: 204px;
+  height: 39px;
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  margin-left: 20px;
+  line-height: 39px;
+  margin-bottom: 8px;
+}
+.operations {
+  background-image: url("../../static/mapimg/operation.png");
+  // width: 371px;
+  height: 75%;
+  margin: 0px 20px 0px 20px;
+  position: relative;
+}
+.socal_alrem {
+  height: 100%;
+  // border: 1px solid #4c9cf7;
+  // border-top: 0px;
+  // border-bottom: 0px;
+}
+.souncal_tital {
+  height: 60px;
+  line-height: 60px;
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #fff;
+}
+.alrem_information {
+  height: 40px;
+  display: inline-block;
+  width: 120px;
+  border-right: 1px solid #0f2671;
+  line-height: 40px;
+  text-align: center;
+}
+.dispose_no {
+  display: inline-block;
+  margin-left: 10px;
+}
+.alremNumber {
+  font-size: 20px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  margin-left: 10px;
+  vertical-align: sub;
+}
+.alrem_type {
+  color: #1d86ff;
+}
+.alrem_message {
+  height: 48px;
+  background: #071e6a;
+  color: #1d86ff;
+}
+.proesstype {
+  display: inline-block;
+  height: 12px;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+}
+.typeshow {
+  display: inline-block;
+  // height: 40px;
+  // border: 1px solid;
+  width: 30%;
+  vertical-align: middle;
+  color: #1d86ff;
+}
+.type_back {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+.type_show_number {
+  font-size: 20px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #fff;
+  height: 40px;
+  line-height: 40px;
+  width: 60px;
+  text-align: center;
+}
+.photo {
+  width: calc(50% - 8px);
+  // border: 1px solid red;
+  // height: 240px;
+  display: inline-block;
+  padding: 20px;
+  vertical-align: top;
+  // min-width: 440px;
+}
+.headline_name {
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #fff;
+  margin-left: 20px;
+  // vertical-align: top;
+}
+.parameter_blok {
+  display: inline-block;
+  width: 124px;
+  height: 88px;
+  background-image: url("../../static/mapimg/parameter.png");
+}
+.parameter_unit {
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #1d86ff;
+}
+.parameter_value {
+  font-size: 24px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: #fff;
+}
+.photo_elec {
+  margin: 20px 50px 10px 20px;
+}
+.unit_height {
+  height: 44px;
+  line-height: 44px;
+}
+.Division {
+  display: inline-block;
+  height: 260px;
+  padding: 20px 0px;
+}
+.generated {
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #dce1ff;
+  padding-left: 40px;
+}
+.recharge {
+  //border: 1px solid red;
+  height: 280px;
+  padding: 20px;
+}
+.charge_unitHeight {
+  height: 20px;
+  line-height: 20px;
+}
+.fireConrol {
+  margin-right: 20px;
+}
+.monitoring_img {
+  width: 120px;
+  height: 120px;
+}
+.monimgbox {
+  display: inline-block;
+}
+.flexmonimg {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #dce1ff;
+}
+</style>
+<style >
+.floatfont {
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  word-wrap: break-word;
+  word-break: normal;
+}
+
+.equipmentnum {
+  display: inline-block;
+  font-family: Microsoft YaHei;
+  vertical-align: top;
+  height: 40px;
+}
+
+.sounmes {
+  height: 28px;
+  line-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+  font-family: Microsoft YaHei;
+}
+.float_coverimg {
+  width: 125px;
+  height: 108px;
+  margin-left: 20px;
+  margin-right: 10px;
+}
+.soun_godfont {
+  color: #23f166;
+  margin-left: 10px;
+}
+
+.soun_generalfont {
+  color: #3699ff;
+}
+
+.soun_badfont {
+  color: #eb1e1e;
+}
+
+.soun_time {
+  margin-left: 20px;
+  color: #1d86ff;
+}
+.soun_general {
+  background: #3699ff;
+  vertical-align: middle;
+}
+.soun_radious {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  /* border: 1px solid; */
+}
+.soun_bad {
+  background: #eb1e1e;
+  vertical-align: middle;
+}
+.soun_god {
+  background: #23f166;
+  vertical-align: middle;
+}
+.total_tyape {
+  height: 40px;
+  line-height: 40px;
+  /* color: red; */
+  padding-left: 20px;
+}
+.fireConrol:last-of-type {
+  margin-right: 0px !important;
+}
+.seach_one .el-input__inner {
+  background-color: #010d30;
+  border: 1px solid #1161c0;
+  color: #fff;
+}
+.seach_one .fa-search {
+  color: #1161c0;
+}
+.seach_one .el-input-group__append {
+  background: #010d30;
+  border: 1px solid #1161c0;
+  border-left: 0px;
+}
+
+.el-select-dropdown {
+  border: none;
+}
+.BMap_cpyCtrl {
+  display: none;
+}
+.anchorBL {
+  display: none;
+}
+.tabtoggle .el-tabs__item {
+  color: #fff;
+}
+.tabtoggle .el-tabs__header {
+  margin: 0px;
+}
+.tabtoggle .is-active {
+  color: #00eaff;
+}
+.tabtoggle .el-tabs__active-bar {
+  background-color: #00eaff;
+}
+.tabtoggle .el-tabs__nav-scroll {
+  padding-left: 50px;
+}
+.tabtoggle .el-tabs__nav-wrap::after {
+  background-color: rgba(50, 91, 211, 0.4);
+}
+.spselect input {
+  background: rgba(31, 55, 132, 1);
+  border: none;
+}
+.spselect .el-select-dropdown__list {
+  background: rgba(31, 55, 132, 1);
+}
+.suctom_select .el-select-dropdown__list {
+  background-color: #010a31;
+}
+.suctom_select .el-select-dropdown__item:hover {
+  background: #0f3360;
+}
+.suctom_select .el-select-dropdown__item.hover {
+  background: #0f3360;
+}
+.suctom_select span {
+  margin-left: 15px;
+}
+
+.suctom_select .el-popper[x-placement^="bottom"] .popper__arrow::after {
+  border-bottom-color: #0f3360;
+}
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+.optionsele > .el-popper {
+  background: #010a31 !important;
+}
+.optionsele .el-input__inner {
+  background: #010a31;
+  color: #00d3e9;
+  border: 1px solid #00d3e9;
+}
+.optionsele .el-input__suffix-inner .el-input__icon {
+  color: #00d3e9;
+}
+.optionsele .el-scrollbar {
+  background: #010a31 !important;
+}
+.optionsele .el-popper {
+  border: none;
+}
+.optionsele > .el-select-dropdown__list {
+  background: #010a31 !important;
+}
+
+.optionsele .el-select .el-scrollbar__view {
+  background: #010a31;
+}
+.suctom_select > .el-select-dropdown {
+  background: #010a31;
+  border: 1px solid #010a31;
+}
+</style>
+<style>
+.timeNow {
+  display: inline-block;
+  width: 80px;
+  height: 48px;
+  line-height: 48px;
+}
+.real_Mes {
+  display: inline-block;
+  width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  height: 48px;
+  line-height: 48px;
+}
+.hiddle_trouble {
+  width: 150px;
+  display: inline-block;
+  height: 48px;
+  line-height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.realreport > img {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  box-sizing: border-box;
+}
+.marquee {
+  width: 100%;
+  height: 19vh;
+  align-items: center;
+  display: flex;
+  box-sizing: border-box;
+}
+
+.marquee_title {
+  padding: 0 20px;
+  height: 30px;
+  font-size: 14px;
+  border-right: 1px solid #d8d8d8;
+  align-items: center;
+}
+
+.marquee_box {
+  display: block;
+  position: relative;
+  width: 100%;
+
+  height: 19vh;
+  overflow: hidden;
+}
+
+.marquee_list {
+  display: block;
+  position: absolute;
+  top: 0;
+  /* left: 10%; */
+  width: 100%;
+}
+
+.marquee_top {
+  transition: all 0.5s;
+  margin-top: -30px;
+}
+
+.marquee_list li {
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  /* padding-left: 20px; */
+  list-style: none;
+}
+
+.marquee_list li span {
+  padding: 0 2px;
+}
+</style>

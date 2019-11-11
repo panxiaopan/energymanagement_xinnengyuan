@@ -1,0 +1,580 @@
+<template>
+  <el-col :span="24" class="mainbox">
+    <el-col :span="8" class="deviceleftlist">
+      <div class="devicelist">
+        <div style="padding:20px">
+          <el-input placeholder="请输入设备名称" v-model="deviceName" class="input-with-select">
+            <el-button slot="append" icon="el-icon-search" @click="seachDevice"></el-button>
+          </el-input>
+          <div class="equipmentType">设备类型</div>
+          <!-- <span v-if="ischaring">充电站</span> -->
+          <el-select
+            v-model="deviceType"
+            placeholder="请选择设备类型"
+            style="width:100%"
+            @change="changedevicetype"
+          >
+            <el-option
+              v-for="item in deviceoptions"
+              :key="item.value"
+              :label="item.name"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+
+          <div style="min-height:400px;">
+            <div class="deviceselect" v-for="(item ,index) in device_list" :key="index">
+              <el-radio-group
+                v-model="currentradio"
+                @change="changeradio"
+                style="width:100%;height:100%"
+              >
+                <el-radio :label="index">
+                  <div style="padding: 0 10px">
+                    <span class="currentdeviceName">{{item.name}}</span>
+                    <span style="float:right">
+                      <span class="devicetype devicebreakdown" v-if="item.status.value==40"></span>
+                      <span class="devicetype devicealrem" v-if="item.status.value==30"></span>
+                      <span class="devicetype deviceoffline" v-if="item.status.value==20"></span>
+                      <span class="devicetype devicenormal" v-if="item.status.value==10"></span>
+                      {{item.status.desc}}
+                    </span>
+                    <div style="height:30px;line-height:30px; margin-top: 4px;">
+                      <span v-if="item.numberOfChargingPlugs">
+                        <span>{{item.chargingPileType.desc}}</span>
+                        <div style="float: right;">
+                          枪数量
+                          {{item.numberOfChargingPlugs}}
+                        </div>
+                      </span>
+                    </div>
+                  </div>
+
+                  <span style="margin-left:10px">
+                    <i class="el-icon-location"></i>
+                  </span>
+                  <span>{{item.address}}</span>
+                </el-radio>
+              </el-radio-group>
+            </div>
+          </div>
+          <el-col :span="24" style="margin-top:20px">
+            <page-compent :pageSize="size" :pagetotal="paggtatol" @fanye="pageIndexChange"></page-compent>
+          </el-col>
+        </div>
+      </div>
+    </el-col>
+    <el-col :span="16" style="height:100%;padding:20px 0px;overflow:hidden">
+      <div style="height:100%">
+        <div class="equipmentType">设备信息</div>
+
+        <div class="device_detail" v-if="device_list[currentradio]">
+          <span>设备状态:{{device_list[currentradio].status.desc}}</span>
+          <span class="devicesty">设备更新时间:{{device_list[currentradio].status.updateTime}}</span>
+        </div>
+
+        <div class="device_detail" v-if="device_list[currentradio]">
+          <span>设备品牌:{{device_list[currentradio].brandName}}</span>
+          <span class="devicesty">设备型号:{{device_list[currentradio].modelName}}</span>
+        </div>
+        <div v-if="ischaring&&this.guntabdata.length>0">
+          <el-tabs v-model="handarm" @tab-click="handlehandarm">
+            <el-tab-pane
+              v-for="(item,index) in guntabdata"
+              :key="index"
+              :label="item.device.name"
+              :name="String(index)"
+            ></el-tab-pane>
+            <!-- <el-tab-pane label="B枪" name="B"></el-tab-pane> -->
+          </el-tabs>
+        </div>
+        <div style="margin-top:40px">
+          <el-table :data="devicetableDatamesage" height="550" border style="width: 90%">
+            <el-table-column prop="measureName" label="测点名称"></el-table-column>
+            <el-table-column prop="value" label="数值"></el-table-column>
+            <el-table-column prop="unit" label="单位"></el-table-column>
+            <el-table-column label="查看历史">
+              <template slot-scope="scope">
+                <i
+                  class="fa fa-eye lookover"
+                  aria-hidden="true"
+                  @click="checkinformation(scope.row)"
+                ></i>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </el-col>
+    <el-dialog :title="pointname" :visible.sync="DevicedialogVisible" width="40%">
+      <div style="float:right;margin-right:60px">
+        <span style="margin-right:60px">
+          <el-radio-group v-model="revenuedatatime" size="medium" @change="revenuechange">
+            <el-radio-button label="日"></el-radio-button>
+            <el-radio-button label="周"></el-radio-button>
+          </el-radio-group>
+        </span>
+
+        <el-button icon="el-icon-arrow-left" circle @click="revenuleft"></el-button>
+        <el-date-picker
+          v-model="valuedevicetime"
+          :type="datetimechange"
+          format="yyyy-MM-dd"
+          :picker-options="devicepickerOptions"
+          placeholder="选择日期"
+        ></el-date-picker>
+        <el-button icon="el-icon-arrow-right" circle @click="revenright"></el-button>
+        <!-- <el-button icon="el-icon-arrow-right" circle></el-button> -->
+      </div>
+      <div style="margin-top:60px">
+        <ve-line
+          :data="singlechartData"
+          :legend-visible="false"
+          :xAxis="singaxisLabel"
+          :settings="singsettings"
+          :yAxis="singsyAxis"
+          :grid="singsgrid"
+          :data-empty="dataEmpty"
+        ></ve-line>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="DevicedialogVisible = false" size="mini">关 闭</el-button>
+      </span>
+    </el-dialog>
+  </el-col>
+</template>
+
+<script>
+import pageCompent from "@/components/pagination"; //分页
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+import {
+  getdevice,
+  getdeviceTypes,
+  getdevicesrealtime,
+  getdeviceIddataId,
+  getchargingrealtime
+} from "@/api/api";
+export default {
+  components: {
+    pageCompent
+  },
+  props: {
+    type: Boolean,
+    ischaring: false
+  },
+  data() {
+    return {
+      dataEmpty: false,
+      revenuedatatime: "日",
+      datetimechange: "date",
+      handarm: "0",
+      currentradio: 0, //默认选中第一个
+      start: 0, //起始记录数，默认为0
+      size: 4, //每页记录数，默认为10
+      paggtatol: null, //总条数/
+      deviceType: "",
+      deviceName: "", //设备名称
+      deviceoptions: [], //设备类型选择
+      valuedevicetime: new Date(), //设备时间
+      pointname: "", //点中的名字
+      currentindex: "", //电机的单个设备
+      DevicedialogVisible: false, //设备弹框
+      device_list: [], //设备列表
+      devicepickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      singlechartData: {
+        columns: ["time", "value"],
+        rows: []
+      },
+      singaxisLabel: {
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            // console.log(value)
+            var str_before = value.split(" ")[0];
+            var str_after = value.split(" ")[1];
+            return str_after + "\n" + str_before;
+          }
+        }
+      },
+      singsettings: {
+        labelMap: {
+          value: "值"
+        }
+      },
+      singsgrid: {
+        left: 60
+      },
+      singsyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      devicetableDatamesage: [],
+      guntabdata: [], //获取充电枪的数量
+      valuedevicetimedata: [] //
+    };
+  },
+  methods: {
+    getdevicetype() {
+      //设备类型
+      getdeviceTypes(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("设备类型");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.deviceoptions = res.data.data;
+          }
+        }
+      );
+    },
+    pageIndexChange(index) {
+      console.log(index);
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getdevicelist();
+      //分页
+    },
+    getdevicelist() {
+      //获取子站的设备列表\
+      var parms = {
+        start: this.start,
+        size: this.size,
+        keyword: this.deviceName,
+        deviceType: this.deviceType
+      };
+      getdevice(this.$route.params.id, this.$route.params.subid, parms).then(
+        res => {
+          console.log("=设备==");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.device_list = res.data.data.rows;
+            if (this.start == 0) {
+              //因为就第一次的时候总数是对的,,
+              //页面值过来了一次
+              this.paggtatol = res.data.data.total;
+            }
+          }
+        }
+      );
+    },
+    seachDevice() {
+      //关键词查找
+      this.getdevicelist();
+    },
+
+    changeradio() {
+      console.log("当前选中");
+      console.log(this.currentradio);
+      //
+      // console.log()
+      this.$nextTick(() => {
+        this.getdevicedDeil();
+      });
+    },
+    changedevicetype() {
+      //设备类型
+      //console.log(this.deviceType);
+      this.getdevicelist();
+      setTimeout(() => {
+        this.getdevicedDeil();
+      }, 400);
+      // console.log("数组");
+      // console.log(this.device_list);
+      // console.log(this.device_list[this.currentradio].id);
+    },
+    getdevicedDeil() {
+      //实时数据
+      // let realtime = this.ischaring ? getchargingrealtime : getdevicesrealtime;
+
+      getdevicesrealtime(this.device_list[this.currentradio].id).then(res => {
+        console.log("实时数据");
+        console.log(res);
+        this.guntabdata = [];
+        if (res.data.head.code == 0) {
+          if (this.ischaring) {
+            if (res.data.data.childDeviceIdNameAndDatas.length > 0) {
+              //充电枪页面有充电枪的设备
+              this.devicetableDatamesage =
+                res.data.data.childDeviceIdNameAndDatas[0].realtimeDatas;
+              this.guntabdata = res.data.data.childDeviceIdNameAndDatas;
+            } else {
+              this.devicetableDatamesage = res.data.data.deviceRealtimeData;
+            }
+          } else {
+            this.devicetableDatamesage = res.data.data.deviceRealtimeData;
+          }
+        }
+      });
+    },
+    revenuechange() {
+      console.log(this.revenuedatatime);
+
+      //this.datetimechange=''
+      if (this.revenuedatatime == "周") {
+        this.datetimechange = "week";
+      } else {
+        this.datetimechange = "date";
+      }
+    },
+    revenuleft() {
+      this.battaryaddEventDate("miuns");
+    },
+    revenright() {
+      this.battaryaddEventDate("add");
+    },
+    battaryaddEventDate(addType = "add") {
+      //移过来的! 可以抽空优化
+      var type = this.datetimechange;
+      let datatime = new Date();
+      switch (type) {
+        case "date":
+          var datetime = moment(this.valuedevicetime).add(
+            addType === "add" ? 1 : -1,
+            "days"
+          );
+
+          var lefttime = moment(this.valuedevicetime).add(
+            addType === "add" ? 1 : -2,
+            "days"
+          );
+
+          let newtime = moment(datetime).format("YYYY-MM-DD");
+
+          let lefttimedate = moment(lefttime).format("YYYY-MM-DD");
+
+          if (addType === "add") {
+            if (new Date(newtime) > datatime) {
+              this.$message.error("日期大于当天,从新选择");
+              return;
+            } else {
+              console.log("old");
+              console.log(this.valuedevicetime);
+              let old = this.valuedevicetime;
+              this.valuedevicetime = newtime;
+
+              console.log("i9i+++++++++9i9");
+              console.log(old, this.valuedevicetime);
+              this.valuedevicetimedata = [old, this.valuedevicetime];
+            }
+          } else {
+            this.valuedevicetime = newtime;
+
+            console.log("i9i-------------9i9");
+            console.log(this.valuedevicetime);
+            this.valuedevicetimedata = [lefttimedate, this.valuedevicetime];
+            console.log(this.valuedevicetimedata);
+          }
+          break;
+        case "week":
+          var datetimeweek = moment(this.valuedevicetime).add(
+            addType === "add" ? 1 : -1,
+            "weeks"
+          );
+
+          let leftweek = moment(this.valuedevicetime).add(
+            addType === "add" ? 1 : -2,
+            "weeks"
+          );
+
+          let leftweekold = moment(leftweek).format("YYYY-MM-DD");
+
+          let newtimeweek = moment(datetimeweek).format("YYYY-MM-DD");
+          console.log("周");
+          if (addType === "add") {
+            if (new Date(newtimeweek) > datatime) {
+              this.$message.error("日期大于当周,从新选择");
+              return;
+            } else {
+              console.log("old");
+              console.log(this.valuedevicetime);
+              let old = this.valuedevicetime;
+              this.valuedevicetime = newtimeweek;
+
+              console.log("i9i+++++++++9i9");
+              console.log(old, this.valuedevicetime);
+              this.valuedevicetimedata = [old, this.valuedevicetime];
+            }
+          } else {
+            this.valuedevicetime = newtimeweek;
+
+            console.log("i9i-------------9i9");
+            console.log(this.valuedevicetime);
+            this.valuedevicetimedata = [leftweekold, this.valuedevicetime];
+            console.log(this.valuedevicetimedata);
+          }
+
+          console.log(newtimeweek);
+      }
+      //this.getenergycharts();
+      this.getsingdevicedetail();
+    },
+
+    checkinformation(index) {
+      //查看设备信息
+      // this.valuedevicetime = [
+      //   timeFormastart(new Date()),
+      //   timeFormanow(new Date())
+      // ];
+
+      let datatime = this.valuedevicetime.getTime() - 86400000;
+      // console.log(this.valuedevicetime.getTime() - 86400000);
+      this.valuedevicetimedata = [
+        timeFormatdata(datatime),
+        timeFormatdata(this.valuedevicetime)
+      ];
+
+      console.log(this.valuedevicetimedata);
+      this.pointname = index.measureName;
+      this.currentindex = index.dataId;
+      this.DevicedialogVisible = true;
+      this.getsingdevicedetail();
+    },
+    getsingdevicedetail() {
+      console.log("----666---");
+      console.log(this.valuedevicetime);
+
+      var parms = {
+        startTime: this.valuedevicetimedata[0],
+        endTime: this.valuedevicetimedata[1]
+      };
+      getdeviceIddataId(
+        this.device_list[this.currentradio].id,
+        this.currentindex,
+        parms
+      ).then(res => {
+        console.log("------单个设备");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          //this.loading = false;
+          if (res.data.data.logs.length == 0) {
+            this.dataEmpty = true;
+          } else {
+            this.dataEmpty = false;
+          }
+          this.singlechartData.rows = res.data.data.logs;
+          this.singsyAxis.name = "单位/" + res.data.data.unit;
+        }
+      });
+    },
+    changedevice_time() {
+      //改变时间
+      this.getsingdevicedetail();
+      console.log(this.valuedevicetime);
+    },
+    handlehandarm() {
+      //切换AB枪
+      // console.log(this.handarm);
+      let num = Number(this.handarm);
+      console.log(num);
+      this.devicetableDatamesage = this.guntabdata[num].realtimeDatas;
+    }
+  },
+  mounted() {
+    this.getdevicetype();
+    this.getdevicelist();
+    console.log(this.device_list);
+    setTimeout(() => {
+      this.getdevicedDeil();
+    }, 800);
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.devicelist {
+  height: 100%;
+  border: 1px solid #ededed;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.deviceleftlist {
+  height: 100%;
+  padding: 20px 70px 20px 20px;
+}
+.device_detail {
+  height: 30px;
+  line-height: 30px;
+  width: 40%;
+  font-size: 14px;
+  font-family: "微软雅黑";
+  color: #606266;
+  .devicesty {
+    float: right;
+    width: 60%;
+  }
+}
+.equipmentType {
+  font-family: "微软雅黑";
+  font-size: 14px;
+  color: #181343;
+  height: 40px;
+  line-height: 40px;
+  font-weight: 800;
+}
+.currentdeviceName {
+  font-family: "微软雅黑";
+  font-size: 16px;
+  font-weight: 800;
+}
+.devicetype {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.devicealrem {
+  background: #f85e36;
+}
+.deviceoffline {
+  background: #799bc0;
+}
+.devicenormal {
+  background: #84be62;
+}
+.devicebreakdown {
+  background: #ffbb1e;
+}
+.deviceselect {
+  height: 100px;
+  line-height: 100px;
+  margin-top: 20px;
+  // border: 1px solid;
+}
+.lookover {
+  cursor: pointer;
+}
+</style>
+<style>
+.deviceselect .el-radio__inner {
+  display: none;
+}
+.deviceselect .el-radio {
+  width: 100%;
+  height: 100%;
+  /* vertical-align: middle;
+  line-height: 80px; */
+  vertical-align: top;
+}
+.deviceselect .is-checked {
+  background: aliceblue;
+}
+</style>
+

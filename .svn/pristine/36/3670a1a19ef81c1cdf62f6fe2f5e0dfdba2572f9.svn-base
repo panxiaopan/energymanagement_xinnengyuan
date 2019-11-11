@@ -1,0 +1,559 @@
+<template>
+  <div class="hj-user-group-tree" :style="{minWidth:wrapperWidth}">
+    <div class="user-group-title">
+      <span>用户组</span>
+    </div>
+    <el-tree
+      class="hj-user-group-tree-body"
+      ref="userTreeList"
+      :data="userTreeList"
+      :props="defaultProps"
+      :highlight-current="true"
+      @node-click="handleNodeClick"
+      node-key="id"
+      :default-expanded-keys="defaultExpandedKeys"
+      :style="{maxHeight:treeMaxHeight,minHeight:treeMaxHeight}"
+      :render-content="renderContent"
+    ></el-tree>
+  </div>
+</template>
+
+<script>
+import "./index.less";
+import { MessageBox } from "element-ui";
+import CreateUserGroup from "./create-user-group";
+import { createNamespacedHelpers } from "vuex";
+const { mapMutations } = createNamespacedHelpers("systemSetting");
+export default {
+  name: "userGroupTree",
+  componentName: "userGroupTree",
+  mixins: [],
+  components: {
+    CreateUserGroup
+  },
+  props: {
+    wrapperWidth: {
+      type: String,
+      default: window.innerWidth * 0.1795 + "px"
+    },
+    authEdit: {
+      type: Boolean,
+      default: false
+    },
+    authDelete: {
+      type: Boolean,
+      default: false
+    },
+    color: {
+      type: String,
+      default: "#fff"
+    },
+    bgLinearColor: {
+      type: String,
+      default: "linear-gradient(#2F4666, #6E849D)"
+    },
+    isShowAddIcon: {
+      type: Boolean,
+      default: false
+    },
+    treeMaxHeight: {
+      type: String,
+      default: "90%"
+    },
+    assistTextColor: {
+      type: String,
+      default: "#fff"
+    },
+    activeId: {
+      type: [String, Number],
+      default: 1
+    },
+    queryTreeUrl: {
+      type: String,
+      default: "/auth/groups/tree"
+    }
+  },
+  data() {
+    // var treeMaxHeight = window.innerHeight - 60 - 30 - 23 + 'px'
+    var treeMap = {};
+    return {
+      treeMap,
+      // currentNodeKey: 0,
+      defaultExpandedKeys: [1],
+      count: 0,
+      showChildrenContent: false,
+      defaultProps: {
+        label: "name",
+        children: "subTrees",
+        id: "id",
+        path: "path",
+        subType: "subType",
+        groupType: "groupType",
+        pathName: "pathName",
+        pathAlias: "pathAlias"
+      },
+      userTreeList: []
+    };
+  },
+  computed: {
+    addUserGroupShowGroupAuth() {
+      return this.$store.state.hjSystemAuthObj.addUserGroupShowGroupAuth;
+    }
+  },
+  watch: {},
+  methods: {
+    ...mapMutations(["updateUserTreeList"]),
+    MessageBox: MessageBox,
+    append(store, data, form, instance, done) {
+      console.log("store", store, "data", data);
+      // this.open(store, data)
+      var url = `/auth/groups/${data.id}/subGroups`;
+      var json = {
+        // groupId: data.id,
+        ...form
+        // groupName: form.groupName,
+        // groupType: form.type
+      };
+      this.$http({
+        json,
+        url,
+        method: "post"
+      })
+        .then(response => {
+          let code =
+            response.data && response.data.head && response.data.head.code;
+          if (+code === 0) {
+            var treeItem = {
+              [this.defaultProps.id]: response.data.data,
+              [this.defaultProps.label]: form.groupName,
+              [this.defaultProps.children]: [],
+              pathName: data.pathName + "/" + form.groupName,
+              groupType: form.type,
+              pathAlias: data.pathAlias + "_" + response.data.data
+            };
+            if (!data.subTrees) {
+              data.subTrees = [treeItem];
+            } else {
+              data.subTrees.push(treeItem);
+            }
+            console.log("data", data);
+            store.nodesMap[data.id].expanded = true;
+            // store.currentNode.expanded=true
+            console.log("response store", store);
+            store.append(treeItem, data);
+            this.$nextTick(() => {
+              this.updateStroeAndSetCurrentState(response.data.data, treeItem);
+            });
+            setTimeout(() => {
+              instance.confirmButtonLoading = false;
+              done();
+            }, 300);
+          } else {
+            setTimeout(() => {
+              instance.confirmButtonLoading = false;
+              done();
+            }, 300);
+          }
+        })
+        .catch(err => {
+          setTimeout(() => {
+            instance.confirmButtonLoading = false;
+            done();
+          }, 300);
+        });
+      // store.append({ [this.defaultProps.id]: this.userTreeList.length, [this.defaultProps.label]: value, [this.defaultPropschildren]: [] }, data);
+    },
+    open(e, store, data) {
+      e.stopPropagation();
+      // 邮箱正则表达式 inputPattern:/[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/
+      if (this.$refs.createUserGroup) {
+        this.$refs.createUserGroup.resetForm();
+      }
+      var message = h => {
+        return (
+          <create-user-group
+            auth-show-group={this.addUserGroupShowGroupAuth.auth}
+            ref="createUserGroup"
+            self={this}
+          />
+        );
+      };
+      this.MessageBox({
+        title: this.$t("systemSetting.addUserGroup"),
+        message: message(this.$createElement),
+        // message: message(Vue.$createElement),
+        showCancelButton: true,
+        closeOnClickModal: false,
+        confirmButtonText: this.$t("systemSetting.ok"),
+        cancelButtonText: this.$t("systemSetting.cancel"),
+        customClass: "hj-custom-message-box--userRightsManagement",
+        // callback:(action,instance)=>{
+        //   this.$refs.createUserGroup.resetForm()
+        //   console.log('action')
+        //   console.log('instance', instance)
+        // },
+        beforeClose: (action, instance, done) => {
+          if (action === "confirm") {
+            if (
+              this.$refs.createUserGroup &&
+              this.$refs.createUserGroup.submitForm()
+            ) {
+              instance.confirmButtonLoading = true;
+              instance.confirmButtonText = this.$t("systemSetting.excuting");
+              var from = this.$refs.createUserGroup.form;
+              this.append(store, data, from, instance, done);
+            } else {
+              return;
+            }
+            // instance.confirmButtonLoading = true;
+            // instance.confirmButtonText = '执行中...';
+            // if(this.$refs.bindUser){
+            //     row.ownerName = this.$refs.bindUser.getSelectedItem().name
+            // }
+            // this.bindStationToUser(row,this.$refs.bindUser.getSelectedItem(),instance,done)
+
+            // setTimeout(() => {
+            //   done();
+            //   setTimeout(() => {
+            //     instance.confirmButtonLoading = false;
+            //   }, 300);
+            // }, 1000);
+          } else {
+            instance.confirmButtonLoading = false;
+            done();
+          }
+        }
+      }).then(action => {
+        // this.$message({
+        //   type: 'info',
+        //   message: 'action: ' + action
+        // });
+      });
+    },
+    confirmRemove(e, store, data) {
+      e.stopPropagation();
+      this.$confirm(this.$t("systemSetting.confirmDeleteGroup"), {
+        title: this.$t("systemSetting.deleteGroup")
+      }).then(() => {
+        this.remove(e, store, data);
+      });
+    },
+    remove(e, store, data) {
+      if (store.nodesMap[data.id].parent.key === undefined) {
+        this.$message.error(this.$t("systemSetting.cannotRemoveRoot"));
+        return;
+      }
+      var url = `/auth/groups/${data.id}`;
+      // var json = {
+      //   params: {
+      //     groupId: data.id
+      //   }
+      // };
+
+      console.log("userTreeList", this.userTreeList);
+      console.log("before remove", "store", store, "data", data);
+      this.$http({
+        url,
+        // json,
+        method: "delete"
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          console.log(response);
+          // store.currentNode.parent.key // 根节点时, parent.key不存在, 且parent.data是数组形式而不是对象
+          var deleteNode = store.nodesMap[data.id];
+          var parentNode = deleteNode.parent;
+          var parentData = parentNode.data;
+          if (deleteNode.parent.key) {
+            var inParentIndex = null;
+            parentData.subTrees.forEach((item, index) => {
+              if (item.id == data.id) {
+                inParentIndex = index;
+                return true;
+              } else {
+                return false;
+              }
+            });
+            parentData.subTrees.splice(inParentIndex, 1);
+          } else {
+            this.$message.error(this.$t("systemSetting.cannotRemoveRoot"));
+          }
+          store.remove(data);
+
+          this.$nextTick(() => {
+            if (parentNode.key) {
+              console.log("not root");
+              console.log("parentNode", parentNode, parentData);
+              parentNode.expanded = true;
+              this.updateStroeAndSetCurrentState(parentNode.key, parentData);
+            } else {
+              console.log("root");
+              var rootNode = store.nodesMap[this.userTreeList[0].id];
+              rootNode.expanded = true;
+              var rootNodeData = rootNode.data;
+              this.updateStroeAndSetCurrentState(
+                this.userTreeList[0].id,
+                rootNode.data
+              );
+            }
+          });
+        }
+      });
+    },
+
+    renderContent(h, { node, data, store }) {
+      console.log(
+        "node,data, store",
+        node,
+        data,
+        store,
+        node.data.id,
+        this.userTreeList[0].id
+      );
+
+      // if (this.isShowAddIcon) {
+      if (node.data.id == this.userTreeList[0].id) {
+        return (
+          <div class="hj-custom-tree-node">
+            <span>
+              <el-tooltip
+                content={node.data[this.defaultProps.label]}
+                placement="top"
+                effect="light"
+                open-delay={1000}
+              >
+                <span style="display:inline-block;vertical-align:middle;max-width:100px;width:100px;overflow: hidden; white-space: nowrap;text-overflow: ellipsis;">
+                  {node.data[this.defaultProps.label]}
+                </span>
+              </el-tooltip>
+            </span>
+            <span
+              v-show={this.authEdit}
+              style="padding-left:10px;padding-right: 10px"
+            >
+              <el-button
+                size="mini"
+                circle
+                on-click={e => this.open(e, store, data)}
+              >
+                <i class="el-icon-plus" />
+              </el-button>
+            </span>
+          </div>
+        );
+      } else {
+        return (
+          <div class="hj-custom-tree-node">
+            <span>
+              <el-tooltip
+                content={node.data[this.defaultProps.label]}
+                placement="top"
+                effect="light"
+                open-delay={1000}
+              >
+                <span style="display:inline-block;vertical-align:middle;max-width:100px;width:100px;overflow: hidden; white-space: nowrap;text-overflow: ellipsis;">
+                  {node.data[this.defaultProps.label]}
+                </span>
+              </el-tooltip>
+            </span>
+            <span style="padding-left:10px;padding-right: 10px">
+              <el-button
+                v-show={this.authEdit}
+                size="mini"
+                circle
+                on-click={e => this.open(e, store, data)}
+              >
+                <i class="el-icon-plus" />
+              </el-button>
+              <el-button
+                v-show={this.authDelete}
+                size="mini"
+                circle
+                on-click={e => this.confirmRemove(e, store, data)}
+              >
+                <i class="el-icon-delete" />
+              </el-button>
+            </span>
+          </div>
+        );
+      }
+      // } else {
+      //   return (
+      //     <div class="hj-custom-tree-node">
+      //       <span>
+      //         <span>{node.data[this.defaultProps.label]}</span>
+      //       </span>
+      //     </div>
+      //   );
+      // }
+      console.log("nodeTree", node);
+    },
+    handleNodeClick(currentNodeData, currentNode, vm) {
+      this.$emit("click-node", {
+        nodeId: currentNode.data.id,
+        currentNodeData,
+        currentNode
+      });
+
+      console.log("currentNodeData", currentNodeData);
+      console.log("currentNode", currentNode);
+      console.log("vm", vm);
+      console.log("getComputedStyle", window.getComputedStyle(vm.$el, ""));
+      var getComputedStyle = window.getComputedStyle(vm.$el, "");
+
+      console.log("getComputedStyle width", getComputedStyle.width);
+      // 滚动条的宽度19px  // 加号按钮和删除按钮包括padding 78px // 上下箭头宽度 为 25px;// 100px固定标签宽度
+      // console.log('this.$refs.userTreeList.store.nodesMap', this.$refs.userTreeList.store.nodesMap)
+    },
+    setTestData() {
+      var testArr = [];
+      Array.apply(null, {
+        length: 5
+      }).forEach((item, index) => {
+        testArr.push({
+          name: "name",
+          subTrees: [
+            {
+              name: "name",
+              subTrees: [],
+              id: "id",
+              parentId: "parentId",
+              path: "path",
+              subType: "subType",
+              type: "type",
+              nodeKey: this.count++
+            }
+          ],
+          id: "id",
+          parentId: "parentId",
+          path: "path",
+          subType: "subType",
+          type: "type",
+          nodeKey: this.count++
+        });
+      });
+      this.userTreeList = testArr;
+    },
+    updateStroeAndSetCurrentState(nodeId, currentNodeData, currentNode) {
+      // this.$refs.userTreeList.setCurrentNode()
+      console.log(
+        "nodeId, currentNodeData, currentNode",
+        nodeId,
+        currentNodeData,
+        currentNode
+      );
+      this.$emit("click-node", { nodeId, currentNodeData, currentNode });
+      // }, 500);
+      // this.$emit("click-node", { currentNodeData, currentNode: null });
+    },
+    // setCurrentNode(nodeId) {
+    //   var nodesMap = this.$refs.userTreeList.store.nodesMap;
+    //   console.log(isNaN(+nodeId));
+    //   console.log(!!nodesMap[nodeId + ""]);
+    //   if (isNaN(+nodeId) || !nodesMap[nodeId + ""]) {
+    //     console.log("请输入正确的nodeId", nodeId);
+    //     return;
+    //   }
+    //   var currentNode = nodesMap[+nodeId];
+    //   var currentNodeData = currentNode.data;
+    //   // this.currentNodeKey = +nodeId;
+    //   this.setParentNodeExpanded(currentNode);
+    //   // alert("aa");
+    //   this.$emit("click-node", { currentNode, currentNodeData });
+    //   //逐层展开，
+    // },
+    setParentNodeExpanded(currentNode) {
+      currentNode.expanded = true;
+      var parentNode = currentNode.parent;
+      if (parentNode.key) {
+        this.setParentNodeExpanded(parentNode);
+      } else {
+        return;
+      }
+    },
+    processData(response, that, json) {
+      console.log("userGroupTree.vuedsada", response.data.data);
+      // debugger;
+      // var rootArr = []
+      let {
+        name,
+        subTrees,
+        id,
+        pathName,
+        pathAlias,
+        groupType
+      } = response.data.data;
+      let data = response.data.data;
+      this.userTreeList = new Array(data);
+      let mapFunc = function(dataList) {
+        if (
+          typeof dataList.subTrees !== "undefined" &&
+          dataList.subTrees.length === 0
+        ) {
+          delete dataList.subTrees;
+        }
+        if (
+          typeof dataList.subTrees !== "undefined" &&
+          dataList.subTrees.length > 0
+        ) {
+          // let subTrees = dataList.subTrees
+          dataList.subTrees = dataList.subTrees.map(item => {
+            return mapFunc(item);
+          });
+        }
+        return dataList;
+      };
+      this.userTreeList = this.userTreeList.map(item => {
+        return mapFunc(item);
+      });
+      console.log("this.userTreeList+++++++++++", this.userTreeList);
+      // 弹窗messagebox 无法通过this.$store更新状态
+      if (this.updateUserTreeList && this.$store) {
+        // console.log("updateUserTreeList", this.updateUserTreeList, this.$store);
+        this.updateUserTreeList(this.userTreeList);
+      }
+
+      this.$nextTick(() => {
+        var nodesMap = this.$refs.userTreeList.store.nodesMap;
+        var activeNode = this.$refs.userTreeList.getNode(+this.activeId);
+        console.log("+this.activeId", +this.activeId, activeNode);
+        this.defaultExpandedKeys = [+this.activeId];
+        // 默认选中
+        // this.$refs.userTreeList.setCurrentNode(activeNode);
+        this.$refs.userTreeList.setCurrentKey(+this.activeId);
+        this.$emit("click-node", {
+          nodeId: +this.activeId,
+          currentNodeData: activeNode.data,
+          currentNode: activeNode
+        });
+      });
+    },
+    processFailedFun(response) {},
+    queryData() {
+      var url = this.queryTreeUrl;
+      // var json = {};
+      this.$http({
+        // json,
+        url
+      }).then(response => {
+        let code =
+          response.data && response.data.head && response.data.head.code;
+        if (+code === 0) {
+          this.processData(response);
+        }
+      });
+    }
+  },
+  mounted() {
+    console.log("this.activeId++++++++++", this.activeId);
+    this.queryData();
+  },
+  destroyed() {}
+};
+</script>
+<style   lang="less">
+@import "./index.less";
+</style>
+
+

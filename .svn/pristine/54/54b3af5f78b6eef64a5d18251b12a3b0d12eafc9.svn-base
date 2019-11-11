@@ -1,0 +1,443 @@
+<template>
+  <!-- <div>配电房</div> -->
+  <el-row style="height:100%;min-width:1460px">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" size="big">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-col :span="24">
+      <el-col :span="16" style="height:490px;padding:20px 20px 0px 20px">
+        <div class="mainbox">
+          <div style="padding:20px">
+            <div class="boxName">电站信息</div>
+            <div class="typeradiousgood" v-if="status.value===10"></div>
+            <div class="typeradiousgeneral" v-if="status.value===20"></div>
+            <div class="typeradiousbad" v-if="status.value===30"></div>
+            <span class="typedesc">{{status.desc}}</span>
+            <span class="typedesc">{{status.updateTime}}</span>
+          </div>
+
+          <div class="humileft">
+            <div class="humiditydisblock" v-for="(item,index) in humitureData " :key="index">
+              <span>
+                <span>{{item.name}}:</span>
+                <span v-show="item.value">{{item.value}}</span>
+                <span>{{item.unit}}</span>
+              </span>
+            </div>
+          </div>
+          <div class="humiright">
+            <div
+              class="photvolboxright transright"
+              v-for="(item,index) in transformerData "
+              :key="index"
+            >
+              <div class="units">{{item.name+'('+item.unit+')'}}</div>
+              <div class="unitsvalue">{{item.value}}</div>
+            </div>
+          </div>
+          <div>
+            <div class="padding20">
+              <span class="boxName">电量统计信息</span>
+            </div>
+            <div class="earnmiddle" style="width:80%;margin-top:10px">
+              <div class="earningstoday" v-for="(item,index) in BatteryStats" :key="index">
+                <div class="earningsimgtop">
+                  <img src="static/imgs/storedblue.png" alt class="boximg" />
+                </div>
+                <div class="unitName nametop left20">
+                  <span>{{item.name+'('+item.unit+')'}}</span>
+                </div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="padding20">
+              <span class="boxName">功率统计信息</span>
+            </div>
+            <div class="earnbottom" style="width:65%">
+              <div class="operationmessage" v-for="(item,index) in Statisticalpower" :key="index">
+                <div class="unitName nametop left20">
+                  {{item.name}}
+                  <span v-if="item.unit!=='' ">{{'('+item.unit+')'}}</span>
+                </div>
+                <div class="unitName namebottom left20">{{item.value}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8" style="height:490px;padding:20px 20px 0px 0px">
+        <div class="mainbox">
+          <div class="Statmessage mainbox">
+            <div style="padding:20px;position:relative">
+              <div class="boxName">设备状态统计</div>
+              <div class="Devicetotal">
+                <div class="DeviceNumber">{{totalDevice}}</div>
+                <div class="Devicepcs">设备总数(个)</div>
+              </div>
+              <div style="height:420px">
+                <ve-histogram
+                  :data="devicechartData"
+                  :settings="devicechartSettings"
+                  :extend="devicechartExtend"
+                  :yAxis="deviceyAxisOption"
+                  :legend="devicelegend_top"
+                  height="100%"
+                  :grid="devicegrid"
+                  :colors="deviceColor"
+                ></ve-histogram>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-col>
+    <el-col :span="24">
+      <el-col :span="12" style="height:580px;padding:20px 20px 0px 20px">
+        <div class="mainbox">
+          <div class="padding20">
+            <span class="boxName">用电负荷变化趋势</span>
+          </div>
+          <div style="float: right; margin-right: 30px;">
+            <el-button icon="el-icon-arrow-left" circle @click="powderleft"></el-button>
+            <el-date-picker
+              v-model="powertime"
+              align="right"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+              :picker-options=" powerpickerOptions"
+              @change="changepower"
+            ></el-date-picker>
+            <el-button icon="el-icon-arrow-right" circle @click="powderright"></el-button>
+          </div>
+          <div style="height:420px;margin-top: 60px;padding:0px 20px;">
+            <ve-line
+              :data="powerchartData"
+              height="100%"
+              :settings="powerchartSettings"
+              :xAxis="xAxisOption"
+              :colors="powercolor"
+              :yAxis="poweryAxis"
+              :grid="powergrid"
+              :legend="powerlegend"
+            ></ve-line>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="12" style="height:580px;padding:20px 20px 0px 0px">
+        <div class="mainbox">
+          <div class="padding20">
+            <span class="boxName">用电量荷变化趋势</span>
+          </div>
+        </div>
+      </el-col>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { getsubstation, switchpower } from "@/api/api";
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+export default {
+  data() {
+    return {
+      activecurrent: "first",
+      status: {}, //配电房的状态
+      humitureData: [], //温湿度
+      transformerData: [],
+      BatteryStats: [],
+      Statisticalpower: [],
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 0,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      totalDevice: "",
+      powertime: timeFormatdata(new Date()), //功率时间
+      powerpickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "今天",
+            onClick(picker) {
+              picker.$emit("pick", new Date());
+            }
+          },
+          {
+            text: "昨天",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24);
+              picker.$emit("pick", date);
+            }
+          },
+          {
+            text: "一周前",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", date);
+            }
+          }
+        ]
+      },
+
+      powerchartData: {
+        columns: ["time", "activePower", "reactivePower", "installedCapacity"],
+        rows: []
+      },
+      powergrid: {
+        bottom: 10
+      },
+      powerlegend: {
+        legend: 50
+      },
+      powerchartSettings: {
+        labelMap: {
+          activePower: "有功功率",
+          reactivePower: "无功功率",
+          installedCapacity: "装机容量"
+        },
+        legendName: {
+          有功功率: "有功功率(KW)",
+          无功功率: "有功功率(KW)",
+          装机容量: "装机容量(kw)"
+        }
+      },
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 20);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      powercolor: ["#1B77FC", "#9A5AFB", "#56D07E"],
+      poweryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      powerunits: [] //功率单
+
+      //       Earningsdataimg: [
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedblue.png",
+      //   "static/imgs/storedblue.png"
+      // ],
+    };
+  },
+  methods: {
+    getswichroom() {
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("配电房");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.status = res.data.data.status;
+            this.humitureData = res.data.data.environmentData;
+            this.transformerData = res.data.data.statistics.slice(0, 2);
+            this.BatteryStats = res.data.data.statistics.slice(6, 11);
+
+            this.Statisticalpower = res.data.data.statistics.slice(2, 6);
+            console.log(this.Statisticalpower);
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+          }
+        }
+      );
+    },
+    powderleft() {
+      this.addEventdata("miuns");
+    },
+    powderright() {
+      this.addEventdata("add");
+    },
+    addEventdata(addType = "add") {
+      let datatime = new Date();
+      var datetimes = moment(this.powertime).add(
+        addType === "add" ? 1 : -1,
+        "days"
+      );
+      let newtime = moment(datetimes).format("YYYY-MM-DD");
+
+      if (addType === "add") {
+        if (new Date(newtime) > datatime) {
+          this.$message.error("日期大于当天,从新选择");
+          return;
+        } else {
+          this.powertime = newtime;
+        }
+      } else {
+        this.powertime = newtime;
+      }
+      // this.getenergyStoragepowers();
+      this.getswitchpowerchart();
+    },
+    changepower() {
+      this.getswitchpowerchart();
+    },
+
+    getswitchpowerchart() {
+      var parms = {
+        date: this.powertime
+      };
+      switchpower(this.$route.params.subid, parms).then(res => {
+        console.log("用电功率");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.powerchartData.rows = res.data.data.logs;
+          //this.powerunits = res.data.data.units;
+          // this.powerchartSettings.legendName.activePower =
+          //   "有功功率" + "(" + res.data.data.units[0] + ")";
+          // this.powerchartSettings.legendName.无功功率 =
+          //   "无功功率" + "(" + res.data.data.units[1] + ")";
+          // this.powerchartSettings.legendName.装机容量 =
+          //   "无功功率" + "(" + res.data.data.units[2] + ")";
+        }
+      });
+    }
+  },
+  mounted() {
+    console.log(this.$route.params);
+    this.getswichroom();
+    this.getswitchpowerchart();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.humiditydisblock {
+  display: inline-block;
+  margin-right: 20px;
+  padding-left: 20px;
+
+  // margin-top: 40px;
+}
+.humileft {
+  display: inline-block;
+  width: 50%;
+  border-right: 1px solid rgba(182, 187, 198, 1);
+  height: 60px;
+  line-height: 60px;
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #636f8a;
+}
+.humiright {
+  display: inline-block;
+  width: 48%;
+  padding-left: 60px;
+}
+.transright {
+  margin-right: 60px;
+}
+.operationmessage {
+  width: 159px;
+  height: 60px;
+  border-right: 1px solid #b6bbc6;
+}
+.operationmessage:last-of-type {
+  border: none;
+}
+</style>
