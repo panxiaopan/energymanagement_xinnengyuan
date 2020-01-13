@@ -1,0 +1,429 @@
+import {
+  baseUrl
+} from "../../static/baseurl";
+import axios from "axios";
+import qs from "qs";
+
+axios.defaults.baseURL = baseUrl; //接口变量..  引用过来编译的时候不会变,
+
+axios.interceptors.request.use(
+  config => {
+    //const token = sessionStorage.getItem('token')
+    //  let data = config.data
+    if (config.method == "post"||config.method == "put") {
+      let data = config.data;
+      console.log("拦截");
+      console.log(config.url)
+      if(config.url=='./logos'){
+          return
+      }
+      console.log(data);
+      config.data = qs.stringify({
+        ...config.data
+        // token: token
+      }, {
+        arrayFormat: 'repeat', // arrayFormat: 'repeat' //提交数组数据时 数据名中括号不含序号
+      });
+
+      return config;
+
+    } else if (config.method === "get" || config.method === "delete") {
+      config.params = {
+        //token: token,
+        ...config.params
+      };
+    }
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
+
+//登录接口
+export const userlogin = parms => {
+  return axios.post("/session", parms);
+};
+//判断别人从链接的位置是不是能进去  /ienergy-web/account/permissionCodes
+
+
+export const accountpermissionCodes = () => {
+  return axios.get(`/account/permissionTree`);
+};
+
+//获取地图重点位置
+
+export const mapconfigcustom = () => {
+  return axios.get(`/map/config/customInitLocation`);
+};
+
+//退出清空信息
+export const sessionlogout = () => {
+  return axios.post("session/logout");
+};
+//忘记密码重置
+export const forgetpassword = parms => {
+  return axios.post("session/telCode", parms);
+};
+//实时监控获取社会单位
+export const getstations = parms => {
+  return axios.get("/stations", {
+    params: parms
+  });
+};
+//获取能源站的汇总信息
+export const getstationssummary = stationId => {
+  return axios.get(`/stations/${stationId}/summary`);
+};
+//获取能源子站点类型信息
+export const getstationsidNameType = stationId => {
+  return axios.get(`/stations/${stationId}/subNodes/idNameType`);
+};
+//获取子站汇总信息
+export const getsubstation = (stationId, subStationId) => {
+  return axios.get(`stations/${stationId}/subNodes/${subStationId}/summary`);
+};
+//获取光伏子站日功率
+export const getsolardata = (subStationId, parms) => {
+  return axios.get(`stations/solar/${subStationId}/powers`, {
+    params: parms
+  });
+};
+//获取光伏子站发电信息
+export const getsolaryearmonth = (subStationId, year, month) => {
+  return axios.get(`stations/solar/${subStationId}/energys/${year}/${month}`);
+};
+//查询子站的设备列表
+export const getdevice = (stationId, subStationId, parms) => {
+  return axios.get(`stations/${stationId}/subNodes/${subStationId}/devices`, {
+    params: parms
+  });
+};
+//获取子站的设备类型列表
+export const getdeviceTypes = (stationId, subStationId) => {
+  return axios.get(
+    `stations/${stationId}/subNodes/${subStationId}/deviceTypes`
+  );
+};
+//查询单个设备的实时数据列表
+export const getdevicesrealtime = deviceId => {
+  return axios.get(`stations/devices/${deviceId}/realtime`);
+};
+//查询单个测点的历史记录
+export const getdeviceIddataId = (deviceId, dataId, parms) => {
+  return axios.get(`stations/devices/${deviceId}/history/dataIds/${dataId}`, {
+    params: parms
+  });
+};
+//获取子站的报警列表
+export const getsubNodesalarms = (stationId, subStationId, parms) => {
+  return axios.get(`stations/${stationId}/subNodes/${subStationId}/alarms`, {
+    params: parms
+  });
+};
+//查询子站报警信息统计
+export const getalarmStatistics = (stationId, subStationId) => {
+  return axios.get(
+    `stations/${stationId}/subNodes/${subStationId}/alarmStatistics`
+  );
+};
+//获取子站下的设备ID和名称列表
+export const getdevicesidName = (subStationId, parms) => {
+  return axios.get(`stations/subNodes/${subStationId}/devices/idName`, {
+    params: parms
+  });
+};
+//人工上报报警记录
+export const alarmsreportArtificially = parms => {
+  return axios.post("alarms/reportArtificially", parms, );
+};
+//运维人员列表
+export const getauthmaintainers = parms => {
+  return axios.get(`/auth/users/maintainers`, {
+    params: parms
+  });
+};
+//发起工单
+export const addworkOrders = parms => {
+  return axios.post("/workOrders", parms);
+};
+//查看报警详情
+export const getalarmsDeil = (id, parms) => {
+  return axios.get(`alarms/${id}`, {
+    params: parms
+  });
+};
+//处理隐患,填写处理意见
+export const riskshandlingOpinions = (id, parms) => {
+  return axios.post(`/alarms/${id}/handlingOpinions`, parms);
+};
+//查询工单列表
+export const getworkOrderslist = parms => {
+  return axios.get(`/workOrders`, {
+    params: parms
+  });
+};
+//查看工单详情
+export const getflowDetail = id => {
+  return axios.get(`/workOrders/${id}/flowDetail`);
+};
+//获取储能子站的功率信息
+export const energyStoragepowers = (subStationId, parms) => {
+  return axios.get(`stations/energyStorage/${subStationId}/powers`, {
+    params: parms
+  });
+};
+//获取储能子站的充放电量列表
+export const getenergyStorageenergys = (subStationId, year, month) => {
+  return axios.get(`/stations/energyStorage/${subStationId}/energys/${year}/${month}`);
+};
+//获取储能子站的收益信息
+export const getearnings = (subStationId, year, month, day) => {
+  return axios.get(`/stations/energyStorage/${subStationId}/incomes/${year}/${month}/${day}`);
+};
+//获取安防子站的摄像头列表
+export const getcamera = (subStationId, parms) => {
+  return axios.get(`/stations/securitySystem/${subStationId}/cameras`, {
+    params: parms
+  });
+};
+//获取能源站摄像头token
+export const getcameraAccessToken = (cameraId) => {
+  return axios.get(`/cameras/${cameraId}/cameraAccessToken`);
+};
+//获取能源站的概述
+export const getoverview = (stationId) => {
+  return axios.get(`/stations/${stationId}/overview`);
+};
+//获取充电子站的功率和使用率信息
+export const getpowerAndUsages = (subStationId, parms) => {
+  return axios.get(`/stations/chargeStation/${subStationId}/powerAndUsages`, {
+    params: parms
+  });
+};
+
+//获取充电子站的充电量和等效小时数列表
+export const getchargeKwhAndHours = (subStationId, year, month) => {
+  return axios.get(`/stations/chargeStation/${subStationId}/chargeKwhAndHours/${year}/${month}`);
+};
+//查询充电桩设备的实时数据列表
+export const getchargingrealtime = deviceId => {
+  return axios.get(`/stations/devices/chargingPiles/${deviceId}/realtime`);
+};
+//获取智慧能源电站列表
+export const getSations = (parms) => {
+  return axios.get(`/stations`, {
+    params: parms
+  });
+};
+//地图汇总页面
+export const getmapsummary = () => {
+  return axios.get("/map/summary");
+};
+//获取能源子站个数
+export const mapsubStationGroup = () => {
+  return axios.get("/map/subStationGroup/carousel");
+};
+//获取地图上的电站列表
+export const mapstationMapNodes = () => {
+  return axios.get("/map/stationMapNodes");
+};
+//获取地图上的电站的节点详情,
+export const mapDeilnodes = (stationId) => {
+  return axios.get(`/map/stationMapNodes/${stationId}`)
+}
+//总的报警列表
+export const alarmList = (parms) => {
+  return axios.get('/alarms', {
+    params: parms
+  })
+}
+//总的报警信息
+export const alarmcount = () => {
+  return axios.get('/alarms/alarmStatistics')
+}
+//查询能源站的id 和名称,子站类型
+export const stationidNametype = (parms) => {
+  return axios.get('/stations/idNameAndSubTypes', {
+    params: parms
+  })
+}
+//报警列表,人工报警
+export const reportalrem = (parms) => {
+  return axios.post('/alarms/reportArtificially', parms, )
+}
+//获取能耗子站的功率信息
+export const switchpower = (subStationId, parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/${subStationId}/powers`, {
+    params: parms
+  })
+}
+//用电量变化
+export const powerDistribution = (subStationId, year, month, parms) => {
+  let url = `/stations/energyConsumptionManagement/${subStationId}/energys`
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  return axios.get(url, {
+    params: parms
+  })
+}
+//获取能耗管理子站的电量分析下的配置节点
+export const enerymanage = (parms) => {
+  return axios.get('/stations/energyConsumptionManagement/analysis/nodeConfigTree', {
+    params: parms
+  })
+}
+//获取能耗管理子站的电量分析统计数据
+
+export const nergyConsumchart = (year, month, parms) => {
+  let url = '/stations/energyConsumptionManagement/analysis/energyStatistics'
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  console.log('nergyConsumchart', year, month, parms, url)
+  return axios.get(url, {
+    params: parms
+  })
+}
+//获取能耗管理子站的电量分析运行参数
+export const eneryarguments = (parms) => {
+  return axios.get('/stations/energyConsumptionManagement/analysis/runData', {
+    params: parms
+  })
+}
+//获取能耗管理子站温度探测器列表
+export const temperatureDetectors = (subStationId, parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/${subStationId}/temperatureDetectors`, {
+    params: parms
+  })
+}
+//获取电站配置信息列表
+export const enerylist = (parms) => {
+  return axios.get('/stations/config', {
+    params: parms
+  })
+}
+//删除能源站
+export const deleteenery = (stationId, parms) => {
+  return axios.delete(`/stations/${stationId}`, {
+    params: parms
+  })
+}
+//获取能源管理子站的节点配置树
+export const treenodeconfig = (parms) => {
+  return axios.get('/stations/energyConsumptionManagement/analysis/nodeConfigTree', {
+    params: parms
+  })
+}
+//获取能耗管理子站的节点负荷数据
+export const eneryConsuntion = (parms, year, month, day) => {
+  let url = '/stations/energyConsumptionManagement/analysis/load'
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  if(day) url = url + `/${day}`
+  return axios.get(url, {
+    params: parms
+  })
+}
+//获取能耗管理子站的需量分析数据
+export const demandanalysis = (parms) => {
+  return axios.get('/stations/energyConsumptionManagement/analysis/demand', {
+    params: parms
+  })
+}
+//省市联动接口
+
+export const provincecity = (parentId) => {
+  return axios.get(`/common/areas/parentId/${parentId}`)
+}
+//根据最后一级 的去找前年几级的
+
+export const townCodestree = (parms) => {
+  return axios.get(`/common/areas/longitudeAndLatitude`, {params:parms})
+}
+//添加能源站
+
+export const addstations = parms => {
+  return axios.post("/stations", parms, );
+};
+//获取能源站的列表
+export const  getstationSubTypes = () => {
+  return axios.get(`common/stationSubTypes`)
+}
+//获取能源站总站的信息 /stations/{stationId}/config
+export const  getstationconfig = (stationId) => {
+  return axios.get(`/stations/${stationId}/config`)
+}
+
+//获取分时计费方案列表 ienergy-web/common/tous/idName
+
+export const  gettousidname = (parms) => {
+  return axios.get(`/common/tous/idName`,{params:parms})
+}
+
+//添加能源子站
+export const stationssubNodes = (stationId, parms) => {
+  return axios.post(`/stations/${stationId}/subNodes`, parms);
+};
+//获取设备类型-品牌-型号信息
+export const  getdeviceBrandModelTree = () => {
+  return axios.get(`/common/deviceBrandModelTree`,)
+}
+//获取子站设备下面的节点树/stations/subNodes/{subStationId}/devices/configTree
+export const  getsubStationIdsubNodes = (subStationId) => {
+  return axios.get(`/stations/subNodes/${subStationId}/devices/configTree`,)
+}
+//添加设备
+
+export const stationsdevices= (subStationId, parms) => {
+  return axios.post(`/stations/subNodes/${subStationId}/devices`, parms);
+};
+//添加dtu
+export const stationssubNodesdtu= (subStationId, parms) => {
+  return axios.post(`/stations/subNodes/${subStationId}/dtus`, parms);
+};
+//编辑dtu 
+export const stationeditdtu= (subStationId,dtuId, parms) => {
+  return axios.put(`/stations/subNodes/${subStationId}/dtus/${dtuId}`, parms);
+};
+
+//编辑设备 /stations/subNodes/{subStationId}/devices/{deviceId}
+export const stationeditdeviceId= (subStationId,deviceId, parms) => {
+  return axios.put(`/stations/subNodes/${subStationId}/devices/${deviceId}`, parms);
+};
+//修改总站的
+
+export const editstation= (stationId, parms) => {
+  return axios.put(`/stations/${stationId}`, parms);
+};
+//修改能源子站
+export const editsubsite= (stationId,subStationId, parms) => {
+  return axios.put(`/stations/${stationId}/subNodes/${subStationId}`, parms);
+};
+//获取电站计量点配置树
+export const  ConfigurationPoints  = (parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`,{params:parms})
+}
+//添加电站计量点节点
+export const addenergyConsumptionManagement= (parms) => {
+  return axios.post(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`, parms);
+};
+//获取电站计量点配置下尚未配置的电表节点列表
+export const  getelectricityBillNodeConfig  = (parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/electricityBillNodeConfig/unconfiguredDeviceNodes`,{params:parms} )
+}
+//删除计量点
+export const  deleteNodeConfig  = (parms) => {
+  return axios.delete(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`,{params:parms} )
+}
+//删除能源子站
+export const  deletesubNodes  = (stationId,subStationId,parms) => {
+  return axios.delete(`/stations/${stationId}/subNodes/${subStationId}`,{params:parms} )
+}
+//删除设备
+export const  deletedeviceId  = (subStationId,deviceId,parms) => {
+  return axios.delete(`/stations/subNodes/${subStationId}/devices/${deviceId}`,{params:parms})
+}
+//删除DTU
+export const  deletedtuId = (subStationId,dtuId,parms) => {
+  return axios.delete(`/stations/subNodes/${subStationId}/dtus/${dtuId}`,{params:parms})
+}

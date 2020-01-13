@@ -1,0 +1,588 @@
+<template>
+  <el-row class="loginConteiner">
+    <el-col class="backgroundstart">
+           <div style="height:80px;">
+                <div    :style="dynamicstate">
+                   <img   :src="this.loginLogoUrl" alt=""   
+                    v-if="this.loginLogoUrl" 
+                  
+                        > 
+                    <span  class="otherNametotal">{{this.logoTitle}}</span>
+                </div>
+            </div>
+
+      <el-col :span="14" style="height:80%;">
+        <div class="sourceimg imgchangs"></div>
+      </el-col>
+      <el-col :span="10" style="height:80%;padding-left:100px;">
+        <div class="fromtable">
+          <div class="entitle_name">
+           <span  v-if='this.logoTitle' >{{this.logoTitle}}</span>
+            <span  v-else  >智慧能源管理平台</span>
+
+
+            </div>
+          <div class="dislogcenter" :class=" show_PassForm ? 'form_login': 'from_passcheck' ">
+            <el-form :model="LoginForm" :rules="rules" ref="loginForm" v-if="show_PassForm">
+              <!-- <el-form-item style="text-align:center">
+              <span class="companyName">智慧新能源管理平台</span>
+              </el-form-item>-->
+              <el-form-item prop="name">
+                <el-input
+                  v-model="LoginForm.name"
+                  placeholder="登录名/邮箱/手机号"
+                  class="inputwidth inputusericon"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-user-solid"></i>
+                </el-input>
+              </el-form-item>
+              <el-form-item prop="pass" :error="showError">
+                <el-input
+                  v-model="LoginForm.pass"
+                  placeholder="请输入密码"
+                  @keyup.native.enter="submitlogin()"
+                  type="password"
+                  class="inputwidth inputpassword"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-lock"></i>
+                </el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-input type="button" @click.native="submitlogin" value="登录" class="Enter"></el-input>
+              </el-form-item>
+            </el-form>
+
+            <el-form
+              :model="ruleForm"
+              :rules="rulespass"
+              ref="ruleForm"
+              label-width="68px"
+              label-position="left"
+              v-else
+            >
+              <!-- <el-form-item style="text-align:center">
+                <span class="companyName">修改密码</span>
+              </el-form-item>-->
+              <el-form-item prop="Mobile_phone" label="手机号">
+                <el-input
+                  v-model="ruleForm.Mobile_phone"
+                  placeholder="注册手机号"
+                  class="inputwidth inputusericon"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-phone"></i>
+                </el-input>
+              </el-form-item>
+              <el-form-item prop="code" label="验证码">
+                <el-input
+                  v-model="ruleForm.code"
+                  placeholder="请输入验证码"
+                  class="inputwidth inputpassword"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-message"></i>
+                  <el-button
+                    slot="append"
+                    size="small"
+                    @click="getCode"
+                    :disabled="disabled"
+                  >{{getSmsCodeLabel}}</el-button>
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="密码" prop="new_password" placehoder="输入密码">
+                <el-input type="password" v-model="ruleForm.new_password" autocomplete="off">
+                  <i slot="prefix" class="el-input__icon el-icon-key"></i>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="确认密码" prop="checkPass">
+                <el-input
+                  type="password"
+                  v-model="ruleForm.checkPass"
+                  autocomplete="off"
+                  placeholder="请确认密码"
+                >
+                  <i slot="prefix" class="el-input__icon el-icon-key"></i>
+                </el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="submitForm('ruleForm')" size="mini">提交</el-button>
+                <el-button @click="resetForm('ruleForm')" size="mini">重置</el-button>
+              </el-form-item>
+            </el-form>
+
+            <!-- <span>忘记密码</span> -->
+            <div style="position: absolute; top: 85%;right: 3%;">
+              <el-button type="text" class="forget_password" @click="forgrtPass">
+                <span v-if="show_PassForm">忘记密码</span>
+                <span v-else>返回登录</span>
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </el-col>
+
+      <div class="statement">
+              <div  style="margin:20px"   v-if="!this.customLoginInfo.logoNameCn" >
+                <img src="../../assets/imgs/qrcode.jpg" alt style="width:80px;height:80px" />
+                  <div style="font-size:12px;text-align:center;color:#636f8a">微信小程序</div>
+              </div >
+              <div style="margin:20px"  v-if="!this.customLoginInfo.logoNameCn">
+                <img src="../../assets/imgs/qrcode.jpg" alt style="width:80px;height:80px" />
+                <div style="font-size:12px;text-align:center;color:#636f8a">微信公众号</div>
+              </div>
+             <span   v-if="this.customLoginInfo.logoNameCn" >
+                <div  style="margin:20px;display:inline-block"  v-for="(item,index) in vxdata"  :key='index' >
+                <img :src="item.attachedAttrValue" alt style="width:80px;height:80px" />
+                  <div style="font-size:12px;text-align:center;color:#636f8a">
+                    <!-- 微信小程序 -->
+                    {{item.name}}
+                  </div>
+              </div >
+
+             </span>
+ 
+        <div class="companymess"  v-if="this.customLoginInfo.logoNameCn">
+               <div   v-for="(item,index) in messagedata" :key='index'>
+                     <div class="lin_he">
+                        {{item.name}} : {{item.content}}
+                     </div>
+                </div>     
+        </div>
+        <div class="companymess"  v-else>
+          <div class="lin_he">友情链接 : 深圳华杰电气技术有限公司</div>
+          <div class="lin_he">电话 : 0755-22677962</div>
+          <div class="lin_he">邮箱 : service@huajiesolar.com</div>
+          <div class="lin_he">地址 : 深圳南山区创盛路一号新能源创新产业园4楼4060</div>
+          <!-- <div class="lin_he"></div> -->
+        </div>
+
+
+      </div>
+    </el-col>
+  </el-row>
+</template>
+<script>
+import { userlogin, forgetpassword, accountpermissionCodes } from "@/api/api";
+import { mapGetters, mapActions } from "vuex";
+
+export default {
+  props:{
+     queryCustomUrl: {
+      type: String,
+      default: "./logos/byDomain"
+    },
+    queryCustomByUserUrl: {
+      type: String,
+      default: "./logos/showedByUserId"
+    }
+  },
+  data() {
+    var telphon = (rule, value, callback) => {
+      if (!/^(\(\d{3,4}\)|\d{3,4}-|\s)?\d{7,14}$/.test(value)) {
+        callback(new Error("电话号码格式有误"));
+      }
+    };
+
+    var validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入密码"));
+      } else {
+        if (this.ruleForm.checkPass !== "") {
+          this.$refs.ruleForm.validateField("checkPass");
+        }
+        callback();
+      }
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.ruleForm.new_password) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
+
+    return {
+      disabled: false, //默认能点击
+      getSmsCodeLabel: "获取验证码",
+      show_PassForm: true, //控制忘记密码框显示隐藏
+      LoginForm: {
+        name: "",
+        pass: ""
+      },
+      timer: null,
+      showError: null,
+      countTimes: 60,
+      ruleForm: {
+        Mobile_phone: "",
+        //修改密码
+        new_password: "",
+        checkPass: ""
+      },
+      rulespass: {
+        Mobile_phone: [{ validator: telphon, trigger: "blur" }],
+        new_password: [{ validator: validatePass, trigger: "blur" }],
+        checkPass: [{ validator: validatePass2, trigger: "blur" }]
+      },
+       copyRightInfo: null,
+       contactInfo: [],
+       customPics: [], //联系我们的图片列表
+        loginLogoUrl: "",
+        customLoginInfo:{
+             data:[],
+        },
+      messagedata:[],//公司信息
+      vxdata:[],
+      logoTitle:"",//标题
+      dynamicstate:{},
+     
+    };
+  },
+  computed: {
+    rules() {
+      return {
+        name: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+        pass: [
+          {
+            required: true,
+            message: "请输入密码",
+            trigger: "blur"
+          }
+        ]
+      };
+    }
+  },
+  methods: {
+    ...mapActions("login", ["setUserInfo", "setCustomSetting"]),
+    submitlogin() {
+      this.showError = null;
+      let user = { name: this.LoginForm.name };
+      sessionStorage.setItem("user", JSON.stringify(user));
+      var parms = {
+        username: this.LoginForm.name,
+        password: this.$md5(this.LoginForm.pass)
+      };
+      this.$refs["loginForm"].validate(valid => {
+        if (valid) {
+          userlogin(parms).then(res => {
+            console.log("-------登录---");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              sessionStorage.setItem(
+                "menudata",
+                JSON.stringify(res.data.data.permissionTrees)
+              );
+            this.queryCustomSettingByDomain("after");
+              sessionStorage.setItem("loginName", res.data.data.nickname);
+              if(this.hasMapMapPermission(res.data.data.permissionTrees)){
+                this.$router.push("/mainmap");
+              }else{                
+                this.$router.push("/realTimeMain");
+              }
+            } else {
+              console.log("用户密码错误");
+
+              this.showError = "用户名或密码错误";
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    hasMapMapPermission(permissionTrees){            
+      for(let item of permissionTrees){
+        if(item.key == 'map_index_group') return true
+      }
+      return false
+    },
+    forgrtPass() {
+      //忘记密码
+      this.show_PassForm = !this.show_PassForm;
+    },
+    getCode() {
+      //获取验证码
+      console.log("888");
+      this.$refs["ruleForm"].validateField("Mobile_phone", err => {
+        // console.log("err", err);
+        console.log(err);
+        if (!err) {
+          console.log("jinlaidedede");
+        }
+      });
+    },
+    submitForm(formName) {
+      //确认修改
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      //清空
+      this.$refs[formName].resetFields();
+    },
+       queryCustomSettingByDomain(type = "before") {
+      // 区分登录前、后的自定义设置，统一域名下不同集团用户的设置可能不一样
+      let url =
+        type === "before" ? this.queryCustomUrl : this.queryCustomByUserUrl;
+      this.$http({
+        url
+      }).then(response => {
+           console.log('更换logo')
+           console.log(response)
+
+        let code = response.data.head && response.data.head.code;
+        let data = response.data.data;
+        if (code === 0 && data) {
+          // 缓存自定义设置 区分登录前后 是否同一用户
+          if (type === "before") {
+            sessionStorage.setItem(
+              "_HUAJE_customLoginInfo_before",
+              JSON.stringify(data)
+            );
+          } else if (type === "after") {
+            // sessionStorage.setItem(
+            //   "_HUAJE_customLoginInfo_after",
+            //   JSON.stringify(data)
+            // );
+              
+
+            // 登录后更新自定义设置
+            //console.log('')
+
+            this.setCustomSetting(data);
+          }
+          this.updateLogoIconBySetting(data);
+        }
+      });
+    },
+   updateLogoIconBySetting(data) {
+      let groupId = data.groupId;
+      let picName = data.data && data.data.logoLoginFile;
+         console.log('标题的-----')
+         console.log(data)
+           this.$nextTick(()=>{
+             this.dynamicstate={
+                   display:'inline-block',
+                   'vertical-align': 'middle',
+                   marginTop:data.data.logoLoginFileTop+'px',
+                   marginLeft:data.data.logoLoginFileLeft+"px",
+             }
+        })
+
+      let homePageCustomInfo =
+        (data.data && data.data.homePageCustomInfo) || [];
+      this.loginLogoUrl = `./files/filestream?type=ienergy-logo&id=${groupId}&filename=${picName}`;
+      this.logoTitle =
+        localStorage.hjLanguage === "zh" ? data.logoNameCn : data.logoNameEn;
+      this.customPics = homePageCustomInfo.filter(item => {
+        return item.attachedAttrType === "src";
+      });
+      //默认最后一个数据是版权信息
+      this.copyRightInfo = homePageCustomInfo.pop();
+      this.contactInfo = homePageCustomInfo.filter(item => {
+        return item.attachedAttrType !== "src";
+      });
+      let prevUrl = `${location.protocol}//${location.host}`;
+      let iconUrl = `${prevUrl}/ienergy-web/files/filestream?type=ienergy-logo&id=${groupId}&filename=${data.logoIconFile}`;
+      let title =
+        document.querySelector("title") || document.createElement("title");
+      title.innerText = this.logoTitle;
+
+      console.log('标题的-----')
+      console.log(title)
+       console.log(iconUrl)
+
+  
+
+      let iconLinkEle =
+        document.querySelector("link[rel*='icon']") ||
+         document.createElement("link");
+
+      iconLinkEle.type = "image/x-icon";
+      iconLinkEle.rel = "shortcut icon";
+      iconLinkEle.href = iconUrl;
+      document.getElementsByTagName("head")[0].appendChild(iconLinkEle);
+
+
+    },
+        initCustomSetting() {
+
+      if (!sessionStorage.getItem("_HUAJE_customLoginInfo_before")) {
+        this.queryCustomSettingByDomain();
+      } else {
+        this.customLoginInfo = JSON.parse(
+          sessionStorage.getItem("_HUAJE_customLoginInfo_before")
+        );
+       this.messagedata=this.customLoginInfo.data.homePageCustomInfo.slice(-5)
+       this.vxdata=this.customLoginInfo.data.homePageCustomInfo.slice(0,2)
+        this.updateLogoIconBySetting(this.customLoginInfo);
+      }
+    }
+
+
+    // getuseraount() {
+
+    // }
+  },
+  mounted() {
+
+    this.initCustomSetting();
+
+   console.log('获取取到的')
+   console.log(this.customLoginInfo)
+   console.log(this.messagedata)
+    //this.getuseraount();
+  }
+};
+</script>
+<style lang="scss" scoped>
+.lin_he {
+  height: 24px;
+  line-height: 22px;
+}
+.companymess {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #636f8a;
+  margin-left: 40px;
+}
+.entitle_name {
+  margin-top: 60px;
+  text-align: center;
+  background: #455fe7;
+  color: #fff;
+  font-size: 30px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  height: 60px;
+  line-height: 60px;
+  margin-bottom: 40px;
+  border-radius: 8px;
+  //width: 102%;
+}
+.sourceimg {
+  left: 14%;
+  position: relative;
+  top: 7%;
+  width: 74%;
+  height: 68%;
+  background-image: url("../../assets/imgs/loginimg.png");
+}
+.imgchangs {
+  background-size: 100% 100%;
+  background-position: 0% 0%;
+  background-repeat: no-repeat;
+  // position: relative;
+  vertical-align: middle;
+}
+.huajielog {
+  width: 288px;
+  height: 36px;
+  background-image: url("../../assets/imgs/logo.png");
+  margin: 40px 0px 0px 50px;
+}
+.backgroundstart {
+  width: 100%;
+  height: 100%;
+}
+.loginConteiner {
+  position: relative;
+  height: 100%;
+  font-family: sans-serif;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  background: #fff;
+  //  background: url(../../assets/img/loginnackurl.jpg) no-repeat;
+  overflow: hidden;
+  background-size: cover;
+  .form_login {
+    // margin-top: 184px;
+    width: 463px;
+    height: 53%;
+
+    // margin-top: -170px;
+    // margin-left: -220px;
+  }
+  .from_passcheck {
+    // margin-top: 184px;
+    top: calc(15% + 56px);
+    width: 463px;
+    height: 53%;
+    // margin-top: -220px;
+    // margin-left: -270px;
+    color: #181343;
+  }
+  .dislogcenter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .fromtable {
+    top: calc(15% + 56px);
+    position: absolute;
+    // width:463px;
+    // height:598px;
+    height: 53%;
+    background: rgba(251, 253, 255, 1);
+    box-shadow: 0px 4px 49px 0px rgba(132, 149, 239, 0.28);
+    border-radius: 8px;
+    border: 1px solid #f2f2f2;
+    border-radius: 10px;
+
+    .inputwidth {
+      width: 240px;
+      background: #fff;
+      border-radius: 5px;
+    }
+    .companyName {
+      // color: #fff;
+      font-size: 20px;
+    }
+  }
+  .statement {
+    // color: #fff;
+    //   text-align: center;
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .forget_password {
+    float: right;
+    margin-right: 20px;
+    // color: #fff;
+    color: #181343;
+  }
+ .otherNametotal{
+     vertical-align: middle;
+     font-family: "微软雅黑";
+     font-size: 30px;
+     font-weight: 800;
+     margin-left: 24px;
+ }
+
+}
+</style>
+<style >
+.Enter .el-input__inner {
+  cursor: pointer;
+  background: #4460e7;
+  color: #fff;
+  border-radius: 20px;
+}
+/* .from_passcheck .el-form-item__label {
+  color: #fff;
+} */
+</style>
+
+

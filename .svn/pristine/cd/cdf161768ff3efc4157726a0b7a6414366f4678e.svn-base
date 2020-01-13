@@ -1,0 +1,161 @@
+<template>
+  <!-- <div>
+      设备管理
+  </div>-->
+  <el-row>
+    <el-col :span="24">
+      <div style="margin-top:40px">
+        <el-form :inline="true" label-width="80px">
+          <el-form-item label="搜索:">
+            <el-input
+              v-model="keyword"
+              placeholder="输入总站名称"
+              style="width:370px"
+              suffix-icon="el-icon-search"
+              @keyup.native.enter="getenerylist()"
+            ></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" @click="clear">重置</el-button>
+          </el-form-item>
+          <el-form-item style="float:right;margin-right:40px">
+            <el-button type="primary" icon="el-icon-plus" size="small" @click="addEnery">添加能源总站</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-col>
+    <el-col :span="24" style="padding:20px 40px">
+      <el-table
+        :data="energytableData"
+        style="width: 100%"
+        border
+        :header-cell-style="{background:'#F1F1F5',color:'#606266',}"
+      >
+        <el-table-column prop="name" label="能源总站" width="180"></el-table-column>
+        <el-table-column prop="address" label="地址" min-width="320" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column prop="installedDate" label="安装日期"></el-table-column>
+        <el-table-column label="子站类型" min-width="268">
+          <template slot-scope="scope">
+            <span v-for="(item,index) in scope.row.subStationTypes" :key="item.value">
+              <span v-if="scope.row.subStationTypes.length>1 && index!==0 ">、</span>
+              <span>{{item.type.desc}}</span>
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button icon="el-icon-view" size="mini" @click="look_over(scope.row)"></el-button>
+            <el-button icon="el-icon-delete" size="mini" @click="delectenery(scope.row)"></el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-col :span="24">
+        <el-dialog title="输入账号密码" :visible.sync="paswordvisible" width="30%">
+          <el-input v-model="password" type="password"></el-input>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="paswordvisible = false" size="small">取 消</el-button>
+            <el-button type="primary" @click="Delect_sure" size="small">确 定</el-button>
+          </span>
+        </el-dialog>
+      </el-col>
+
+      <el-col :span="24" style="margin-top:20px">
+        <page-compent :pageSize="size" :pagetotal="temtatol" @fanye="pageIndexChange"></page-compent>
+      </el-col>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { enerylist, deleteenery } from "@/api/api";
+import pageCompent from "@/components/pagination"; //分页
+export default {
+  components: {
+    pageCompent
+  },
+  data() {
+    return {
+      keyword: "",
+      energytableData: [], //表格
+      start: 0,
+      size: 10,
+      temtatol: 0,
+      password: "",
+      paswordvisible: false,
+      delectID: null
+    };
+  },
+  methods: {
+    getenerylist() {
+      var params = {
+        start: this.start,
+        size: this.size,
+        keyword: this.keyword
+      };
+      enerylist(params).then(res => {
+        console.log("列表");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.energytableData = res.data.data.rows;
+          if (this.start == 0) {
+            //this.temtatol=
+          }
+        }
+      });
+    },
+    pageIndexChange(index) {
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getenerylist();
+    },
+    clear() {
+      this.$nextTick(() => {
+        this.keyword = "";
+      });
+
+      //this.getenerylist();
+    },
+    look_over() {
+      //查看
+    },
+    addEnery() {
+      //添加能源站
+      this.$router.push({ path: "/mastertion", query: { type: "add" } }); //跳转到添加总站页面
+    },
+
+    delectenery(row) {
+      //删除
+      this.paswordvisible = true;
+      console.log(row);
+      this.delectID = row.id;
+    },
+    Delect_sure() {
+      //删除
+      var params = {
+        password: this.$md5(this.password)
+      };
+      deleteenery(this.delectID, params).then(res => {
+        console.log("-删除-");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.$message({
+            type: "success",
+            message: "删除成功"
+          });
+          this.paswordvisible = false;
+          this.getenerylist();
+        } else {
+          this.$message.error("删除失败");
+        }
+      });
+    }
+  },
+  mounted() {
+    this.getenerylist();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+</style>

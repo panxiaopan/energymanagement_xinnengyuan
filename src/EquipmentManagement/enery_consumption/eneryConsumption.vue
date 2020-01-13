@@ -1,0 +1,1429 @@
+<template>
+  <el-row style="height:100%">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big" class="toptab">
+        <el-tab-pane label="基本信息" name="first"></el-tab-pane>
+        <el-tab-pane label="设备管理" name="second"></el-tab-pane>
+        <el-tab-pane label="计量点配置" name="third"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-row class="Devicemain" style="margin-top:20px;height:calc(100% - 20px ) ">
+      <div class="mainbox">
+        <div style="width:100%;padding:40px 0px 0px 20px;" v-if="activecurrent=='first'">
+          <el-form
+            :model="enery_ruleForm"
+            :rules="enery_rules"
+            ref="enery_ruleForm"
+            label-width="120px"
+            class="demo-dynamic addstaonform"
+            :inline="true"
+          >
+            <el-form-item label="地址" style="display:block" required>
+              <el-radio-group v-model="defaultaddress">
+                <el-radio :label="1">使用总站地址</el-radio>
+                <el-radio :label="0">其他</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="经纬度" prop="geographic" v-if="defaultaddress==0">
+              <el-input
+                v-model="enery_ruleForm.geographic"
+                placeholder="请选择经纬度"
+                style="width:900px;"
+              ></el-input>
+            </el-form-item>
+            <el-form-item v-if="defaultaddress==0">
+              <el-button type="primary" style="float:right" @click="enery_seletMap">点击选择经纬度</el-button>
+            </el-form-item>
+
+            <el-form-item label="所在地区" required v-if="defaultaddress==0">
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.sellectprovice"
+                  placeholder="请选择省"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_provice"
+                >
+                  <el-option
+                    v-for="(item,index) in  enery_ruleForm.provinceadress"
+                    :key="index"
+                    :label="item.name"
+                    :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.selectcity"
+                  placeholder="请选择市"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_selectcity"
+                >
+                  <el-option
+                    v-for="(item,index)  in   enery_ruleForm.selectcityDate "
+                    :key="index"
+                    :label="item.name"
+                    :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.selectarea "
+                  placeholder="请选择区"
+                  style="width: 175px;margin-right:50px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_selectareaData"
+                >
+                  <el-option
+                    v-for="(item,index)  in enery_ruleForm.selectareaData  "
+                    :key="index"
+                    :label="item.name"
+                    :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.areaId"
+                  placeholder="请选择街道"
+                  style="width: 175px;margin-right:50px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                >
+                  <el-option
+                    v-for="(item,index) in enery_ruleForm.areaIddata "
+                    :key="index"
+                    :label="item.name"
+                    :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+            <el-form-item
+              label="详细地址"
+              prop="desc"
+              style="display:block;"
+              v-if="defaultaddress==0"
+              required
+            >
+              <el-input v-model="enery_ruleForm.desc" style="width:900px"></el-input>
+            </el-form-item>
+            <el-form-item label="变压器容量" prop="installedCapacity" required>
+              <el-input
+                v-model="enery_ruleForm.installedCapacity"
+                style="width:900px"
+                placeholder="请输入变压器容量(单位/KVA)"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="变压器数量" prop="numberOfTransformer" required>
+              <el-input
+                v-model="enery_ruleForm.numberOfTransformer"
+                style="width:900px"
+                placeholder="请输入变压器数量"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="容量电价" prop="demandUnitPrice" required>
+              <el-input
+                v-model="enery_ruleForm.demandUnitPrice"
+                style="width:900px"
+                placeholder="请输入容量电价"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="需量电价" prop="capacityUnitPrice" required>
+              <el-input
+                v-model="enery_ruleForm.capacityUnitPrice"
+                style="width:900px"
+                placeholder="请输入需量电价"
+              ></el-input>
+            </el-form-item>
+
+            <el-form-item label="分时计费方案" style="width:900px" required prop="touId">
+              <el-select v-model="enery_ruleForm.touId" placeholder="请选择">
+                <el-option
+                  v-for="item in time_shareoptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="上传图片" style="display:block">
+              <el-upload
+                class="upload-demo"
+                action="https://jsonplaceholder.typicode.com/posts/"
+                :file-list="fileList"
+                list-type="picture"
+                :limit="1"
+              >
+                <el-button style="width:100px;height:88px" icon="el-icon-plus"></el-button>
+              </el-upload>
+            </el-form-item>
+
+            <el-form-item style="margin:20px 60px">
+              <el-button type="primary" @click="submitForm('enery_ruleForm')">保存</el-button>
+              <el-button @click="resetForm('enery_ruleForm')">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        <div style="width:100%;padding:0px 0px 0px 20px;height:100%" v-if="activecurrent=='second'">
+          <el-col :span="24" style="height:100%">
+            <el-col :span="6" style="padding:20px;height:100%">
+              <div class="mainbox">
+                <div class="tabselect">
+                  <el-radio size="small" v-model="radio1" label="1" border>添加DTU</el-radio>
+                  <el-radio size="small" v-model="radio1" label="2" border>添加设备</el-radio>
+                </div>
+                <el-tree
+                  class="equiment"
+                  style="padding:0px 20px"
+                  :data="equipmentdata"
+                  node-key="id"
+                  :props="equipdefaultProps"
+                  default-expand-all
+                  :expand-on-click-node="false"
+                  @current-change="currentnode"
+                >
+                  <span class="custom-tree-node" slot-scope="{ node, data }">
+                    <span>{{ node.label }}</span>
+                    <span>
+                      <el-button
+                        v-show="data.isDtu"
+                        type="text"
+                        size="mini"
+                        @click="() => equmentappend(node,data)"
+                      >
+                        <i class="el-icon-plus" circle></i>
+                      </el-button>
+                      <el-button type="text" size="mini" @click="() => equmentremove(node, data)">
+                        <i class="el-icon-delete" circle @click="delect_node(node, data)"></i>
+                      </el-button>
+                    </span>
+                  </span>
+                </el-tree>
+
+                <el-col :span="24" style="margin-top:40px;text-align:center">
+                  <page-compent
+                    :pageSize="size"
+                    :pagetotal="equmenttatol"
+                    @fanye="alrempageIndexChange"
+                  ></page-compent>
+                </el-col>
+              </div>
+            </el-col>
+            <el-col :span="18">
+              <div v-show="radio1==1">
+                <div style="padding:40px 120px 0px 0px">
+                  <el-form
+                    :model="formInline"
+                    :rules="formInlinerules"
+                    class="demo-form-inline"
+                    label-width="120px"
+                    ref="formInline"
+                  >
+                    <el-form-item label="DTU名称" required prop="dtuName">
+                      <el-input v-model="formInline.dtuName" placeholder="请输入DTU名称"></el-input>
+                    </el-form-item>
+                    <el-form-item label="注册码" required prop="registCodedtu">
+                      <el-input v-model="formInline.registCodedtu" placeholder="请输入注册码"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button type="primary" @click="saveDtu">保存</el-button>
+                      <el-button @click="claerDtu">重置</el-button>
+                    </el-form-item>
+                  </el-form>
+                </div>
+              </div>
+              <div v-show="radio1==2">
+                <div style="padding:40px 120px 0px 0px">
+                  <el-form
+                    :model="formDeviceInline"
+                    class="demo-form-inline"
+                    label-width="120px"
+                    ref="formDeviceInline"
+                    :rules="formDevicerules"
+                  >
+                    <el-form-item label="注册码" prop="registCode" v-show="dtuId">
+                      <el-input v-model="formDeviceInline.registCode" placeholder="输入注册码"></el-input>
+                    </el-form-item>
+                    <el-form-item label="设备名称" prop="deviceName">
+                      <el-input v-model="formDeviceInline.deviceName" placeholder="输入设备名称"></el-input>
+                    </el-form-item>
+                    <el-form-item label="设备位置" prop="location">
+                      <el-input v-model="formDeviceInline.location" placeholder="输入设备位置"></el-input>
+                    </el-form-item>
+                    <el-form-item label="品牌型号" style="width:500px" prop="deviceBrandId">
+                      <el-cascader
+                        style="width:100%"
+                        v-model="formDeviceInline.deviceBrandId"
+                        :options="brandoptions"
+                        :props="deviceprops"
+                        placeholder="选择品牌型号"
+                        @change="brandhandleChange"
+                      ></el-cascader>
+                    </el-form-item>
+                    <el-form-item label="装机容量" required prop="installedCapacity">
+                      <el-input v-model="formDeviceInline.installedCapacity" placeholder="输入装机容量"></el-input>
+                    </el-form-item>
+                    <el-form-item label="通信ID" required prop="commId">
+                      <el-input v-model="formDeviceInline.commId" placeholder="输入装机容量"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button type="primary" @click="saveDaviceenery">保存</el-button>
+                      <el-button @click="claerdevice">重置</el-button>
+                    </el-form-item>
+                  </el-form>
+                </div>
+              </div>
+            </el-col>
+          </el-col>
+        </div>
+
+        <div style="width:100%;padding:0px 0px 0px 20px;height:100%" v-if="activecurrent=='third'">
+          <el-col :span="24" style="height:100%">
+            <div>
+              <div class="noconent" v-if="configurationPointsdata.length==0">
+                <img src="/static/imgs/noContent.png" alt />
+                <div>暂时无内容呀,请先在设备管理界面添加设备</div>
+              </div>
+              <div style="padding-top:60px;width:400px;" class="equiment" v-else>
+                <el-tree
+                  :data="configurationPointsdata"
+                  node-key="nodeId"
+                  default-expand-all
+                  @node-drag-start="handleDragStart"
+                  @node-drag-enter="handleDragEnter"
+                  @node-drag-leave="handleDragLeave"
+                  @node-drag-over="handleDragOver"
+                  @node-drag-end="handleDragEnd"
+                  @node-drop="handleDrop"
+                  draggable
+                  :expand-on-click-node="false"
+                  :props="configprops"
+                  :allow-drop="allowDrop"
+                  :allow-drag="allowDrag"
+                >
+                  <span class="custom-tree-node" slot-scope="{ node, data }">
+                    <span>{{ node.label }}</span>
+                    <span>
+                      <el-button
+                        v-show="data.nodeType!=='PowerStationGNode'"
+                        type="text"
+                        size="mini"
+                        @click="() => configremove(node, data)"
+                      >
+                        <!-- Delete -->
+                        <i class="el-icon-delete-solid"></i>
+                      </el-button>
+                      <el-button type="text" size="mini" @click="() => configappend(data)">
+                        <!-- Append -->
+                        <i class="el-icon-plus"></i>
+                      </el-button>
+                    </span>
+                  </span>
+                </el-tree>
+              </div>
+            </div>
+          </el-col>
+          <el-dialog title="添加计量点" :visible.sync="ConfigurationdialogVisible" width="30%">
+            <el-form
+              :model="numberValidateForm"
+              ref="numberValidateForm"
+              label-width="100px"
+              class="demo-ruleForm"
+            >
+              <el-form-item
+                label="计量点名称"
+                prop="nodeName"
+                :rules="[
+                          { required: true, message: '计量点名称不能为空'},
+                        ]"
+              >
+                <el-input
+                  type="age"
+                  v-model.number="numberValidateForm.nodeName"
+                  autocomplete="off"
+                ></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click="ConfigurationForm('numberValidateForm')"
+                >提交</el-button>
+                <el-button size="small" @click="Configurationrest('numberValidateForm')">取消</el-button>
+              </el-form-item>
+            </el-form>
+          </el-dialog>
+
+          <el-dialog
+            title="添加填表(用户提醒:出现在以下列表中的都是没有添加过的设备)"
+            :visible.sync="electricityVisible"
+            width="45%"
+          >
+            <div style="margin:20px 0px 20px 0px ;width:300px">
+              <el-input v-model="Stoichiometric_keyword">
+                <el-button slot="append" icon="el-icon-search" @click="FindOne"></el-button>
+              </el-input>
+            </div>
+
+            <el-table
+              :data="electricityTableData"
+              border
+              style="width: 100%"
+              ref="multipleTable"
+              tooltip-effect="dark"
+              @selection-change="handleSelectionChange"
+            >
+              <el-table-column type="selection" width="55"></el-table-column>
+              <el-table-column prop="deviceName" label="名称" width="240"></el-table-column>
+              <el-table-column prop="location" label="位置"></el-table-column>
+              <el-table-column label="装机容量(KW)" width="200">
+                <template slot-scope="scope">
+                  {{scope.row.installedCapacity.value}}
+                  {{scope.row.installedCapacity.unit}}
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <span slot="footer" class="dialog-footer">
+              <el-button size="small" @click="electricityVisible = false">取 消</el-button>
+              <el-button size="small" type="primary" @click="addelectric">确 定</el-button>
+            </span>
+          </el-dialog>
+        </div>
+        <el-col :span="24">
+          <el-dialog title="点击地图任意位置选择经纬度" :visible.sync="enery_map_dialogVisible" width="60%">
+            <div style="width:100%;height:600px;">
+              <baidu-map
+                :center="enery_mapcenter"
+                :zoom="11"
+                :scroll-wheel-zoom="true"
+                style="height:100%;width:100%"
+                @click="enery_clickpoint"
+              >
+                <bm-control :offset="{width: '10px', height: '10px'}" style="margin:20px">
+                  <el-input
+                    v-model="enery_keyword"
+                    @keyup.enter.native="enery_findepoint"
+                    placeholder="输入城市名称"
+                  ></el-input>
+                </bm-control>
+
+                <bm-marker :position="enery_clickposition">
+                  <bm-info-window :show="enery_showclick">{{enery_addressmes}}</bm-info-window>
+                </bm-marker>
+              </baidu-map>
+            </div>
+            <span slot="footer" class="dialog-footer">
+              <el-button size="small" @click="enery_map_dialogVisible = false">取 消</el-button>
+              <el-button size="small" type="primary" @click="enery_addressure">确 定</el-button>
+            </span>
+          </el-dialog>
+        </el-col>
+        <el-col :span="24">
+          <el-dialog title="输入账号密码" :visible.sync="paswordvisible" width="30%">
+            <el-input v-model="password" type="password"></el-input>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="paswordvisible = false" size="small">取 消</el-button>
+              <el-button type="primary" @click="Delect_sure" size="small">确 定</el-button>
+            </span>
+          </el-dialog>
+        </el-col>
+      </div>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+import pageCompent from "@/components/pagination"; //分页
+import { SearchField } from "vue-baidu-map";
+import {
+  provincecity,
+  townCodestree,
+  addstations,
+  gettousidname,
+  stationssubNodes,
+  getdeviceBrandModelTree,
+  getstationconfig,
+  stationsdevices,
+  getsubStationIdsubNodes,
+  stationssubNodesdtu,
+  stationeditdtu,
+  stationeditdeviceId,
+  editsubsite,
+  ConfigurationPoints,
+  addenergyConsumptionManagement,
+  getelectricityBillNodeConfig,
+  deleteNodeConfig,
+  deletedeviceId,
+  deletedtuId
+} from "@/api/api";
+export default {
+  inject: ["reload"],
+  components: {
+    pageCompent
+  },
+
+  data() {
+    return {
+      delectid: null,
+      password: "",
+      paswordvisible: false,
+      formDeviceInline: {
+        registCode: "",
+        deviceName: "",
+        deviceClassId: "",
+        deviceBrandId: [],
+        deviceTypeId: "",
+        commId: 1,
+        location: "",
+        installedCapacity: ""
+      },
+      formDevicerules: {
+        registCode: [
+          { required: true, message: "请输入注册码", trigger: "blur" }
+        ],
+        deviceName: [
+          { required: true, message: "请输入设备名称", trigger: "blur" }
+        ],
+        location: [
+          { required: true, message: "请输入设备位置", trigger: "blur" }
+        ],
+        installedCapacity: [
+          { required: true, message: "请输入装机容量", trigger: "blur" },
+          { pattern: /^\d+(\.\d+)?$/, message: "输入正浮点数", trigger: "blur" }
+        ],
+        deviceBrandId: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择设备型号",
+            trigger: "change"
+          }
+        ],
+        commId: [{ required: true, message: "请填写通信ID", trigger: "blur" }]
+      },
+
+      brandoptions: [],
+      deviceprops: {
+        value: "id",
+        label: "name",
+        children: "nodeList"
+      },
+      radio1: "1",
+      time_shareoptions: [],
+      equipmentdata: [], //树状菜单
+      equipdefaultProps: {
+        children: "subNodes",
+        label: "name"
+      },
+      start: 0,
+      size: 10,
+      equmenttatol: null,
+      formInline: {
+        dtuName: "",
+        registCodedtu: ""
+      },
+      formInlinerules: {
+        dtuName: [
+          { required: true, message: "请输入DTU名称", trigger: "blur" }
+        ],
+        registCodedtu: [
+          { required: true, message: "请输入注册码", trigger: "blur" }
+        ]
+      },
+
+      defaultaddress: 1,
+      activecurrent: "first",
+      fileList: [],
+      enery_showclick: false, //显示框,
+      enery_clickposition: {},
+      enery_mapcenter: "深圳",
+      enery_addressmes: "", //点击时候显示上面的地址
+      enery_keyword: "",
+      enery_map_dialogVisible: false,
+      parentId: 100,
+      enery_ruleForm: {
+        stationName: "",
+        sellectprovice: "",
+        provinceadress: [], //选择省
+        geographic: "", //经纬度地址
+        desc: "",
+        selectcityDate: [], //市的遍历数据
+        selectcity: "", //市
+        selectarea: "",
+        selectareaData: [], //区
+        areaId: "", //区的id
+        areaIddata: [], //街道的位置
+        numberOfTransformer: null, //变压器数量
+        installedCapacity: null, //变压器容量
+        demandUnitPrice: null, //容量电价
+        capacityUnitPrice: null, //需量电价
+        touId: null
+      },
+      enery_towncode: "",
+      enery_rules: {
+        stationName: [
+          { required: true, message: "请输入能源站名称", trigger: "blur" }
+        ],
+        sellectprovice: [
+          { required: true, message: "请选择活动区域", trigger: "change" }
+        ],
+        areaId: [
+          { required: true, message: "请选择街道地址", trigger: "change" }
+        ],
+        geographic: [
+          { required: true, message: "请选择经纬度", trigger: "change" }
+        ],
+        desc: [{ required: true, message: "请填写详细地址", trigger: "blur" }],
+        numberOfTransformer: [
+          { required: true, message: "请填写数量", trigger: "blur" },
+          {
+            pattern: /^\+?[1-9][0-9]*$/,
+            message: "大于0的正整数",
+            trigger: "blur"
+          }
+        ],
+        installedCapacity: [
+          { required: true, message: "请填写变压器容量", trigger: "blur" },
+          { pattern: /^\d+(\.\d+)?$/, message: "输入正浮点数", trigger: "blur" }
+        ],
+        capacityUnitPrice: [
+          { required: true, message: "请填写需量电价", trigger: "blur" },
+          { pattern: /^\d+(\.\d+)?$/, message: "输入正浮点数", trigger: "blur" }
+        ],
+        demandUnitPrice: [
+          { required: true, message: "请填写容量电价", trigger: "blur" },
+          { pattern: /^\d+(\.\d+)?$/, message: "输入正浮点数", trigger: "blur" }
+        ],
+        touId: [
+          { required: true, message: "请选择计费方式", trigger: "change" }
+        ]
+      },
+      enery_Longitude: "",
+      currentid: null, //当前设备的id
+      defaultProps: "",
+      dtuId: true, //在下面添加DTU的时候,
+      addDtuid: "", //在dtu下添加
+      editDtu: "",
+      editdevide: "", //编辑设备的时候
+      basicInformationEdit: "", //编辑基本信息的时候
+      configurationPointsdata: [], //配置点树状数据
+      configprops: {
+        label: "nodeName",
+        children: "subNodes"
+      },
+      ConfigurationdialogVisible: false,
+      numberValidateForm: {
+        nodeName: ""
+      },
+      parentNodeId: "", //父节点id
+      parentNodeType: "", //节点类型
+      electricityVisible: false,
+      electricityTableData: [],
+      Stoichiometric_keyword: "",
+      Stoichiometric_start: 0,
+      Stoichiometric_size: 5,
+      multipleTable: [],
+      moveNodeid: null,
+      movenodeType: "",
+      moveparentId: null, //用来判断父节点没变的时候,
+      add_device_father: "",
+      current_dtu: false,
+      deleceJudge: null
+    };
+  },
+  watch: {
+    radio1() {
+      console.log(this.radio1);
+      if (this.radio1 == "1") {
+        this.dtuId = true;
+      }
+
+      //  this.dtuId = true;
+
+      //  if(this.current_dtu){
+      //      this.dtuId = false;
+      //  }else{
+      //      this.dtuId = true;
+      //  }
+      this.claerdevice();
+      this.claerDtu();
+      //  this.formDeviceInline.registCode="",
+      //    this.formDeviceInline.deviceName= "",
+      //    this.formDeviceInline.deviceClassId= "",
+      //   deviceBrandId: [],
+      //   deviceTypeId: "",
+      //   commId: 1,
+      //   location: "",
+      //   installedCapacity: ""
+    }
+  },
+  methods: {
+    claerdevice() {
+      this.$refs["formDeviceInline"].resetFields();
+    },
+    claerDtu() {
+      this.$refs["formInline"].resetFields();
+    },
+
+    getProvinces() {
+      //全部省份的时候,
+      provincecity(this.parentId).then(res => {
+        console.log("省----");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.enery_ruleForm.provinceadress = res.data.data;
+        }
+      });
+    },
+    enery_getlocation(lat, lng) {
+      let _this = this;
+      $.ajax({
+        //经纬度转换显示位置,
+        type: "get",
+        url: `https://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=${lat},${lng}&output=json&pois=1&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        dataType: "jsonp",
+        success: function(res) {
+          console.log("经纬度转换-----");
+          console.log(res);
+          _this.enery_towncode = res.result.addressComponent.adcode;
+          _this.enery_addressmes = res.result.formatted_address;
+          _this.enery_showclick = true;
+
+          _this.enery_Longitude =
+            res.result.location.lng + "," + res.result.location.lat;
+
+          console.log(_this.enery_Longitude);
+        }
+      });
+    },
+    enery_findepoint(e) {
+      console.log("enter");
+      console.log(this.enery_keyword);
+      this.enery_mapcenter = this.enery_keyword;
+      let _this = this;
+      $.ajax({
+        type: "get",
+        dataType: "jsonp",
+        url: `https://api.map.baidu.com/geocoder/v2/?mcode=sha1:包名&address=${this.enery_keyword}&output=json&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        success: function(res) {
+          console.log("深圳");
+          console.log(res);
+          _this.enery_clickposition = {
+            lng: res.result.location.lng,
+            lat: res.result.location.lat
+          };
+          _this.enery_getlocation(
+            res.result.location.lat,
+            res.result.location.lng
+          );
+          // _this.enery_addressmes=res
+          _this.enery_showclick = true;
+        }
+      });
+    },
+    change_provice() {
+      //切换省的时候
+      provincecity(this.enery_ruleForm.sellectprovice).then(res => {
+        //用省请求市
+        if (res.data.head.code == 0) {
+          console.log("改变了省");
+          console.log(res);
+          this.enery_ruleForm.selectcityDate = res.data.data;
+          this.enery_ruleForm.selectcity = res.data.data[0].id;
+        }
+      });
+    },
+    change_selectcity() {
+      //改变市的时候
+      provincecity(this.enery_ruleForm.selectcity).then(res => {
+        //用省请求市
+        if (res.data.head.code == 0) {
+          console.log("改变了省");
+          console.log(res);
+          this.enery_ruleForm.selectareaData = res.data.data;
+          this.enery_ruleForm.selectarea = res.data.data[0].id;
+        }
+      });
+    },
+    change_selectareaData() {
+      //改变区的时候
+      provincecity(this.enery_ruleForm.selectarea).then(res => {
+        //用省请求市
+        if (res.data.head.code == 0) {
+          this.enery_ruleForm.areaIddata = res.data.data;
+          this.enery_ruleForm.areaId = res.data.data[0].id;
+        }
+      });
+    },
+    enery_seletMap() {
+      this.enery_map_dialogVisible = true;
+    },
+    enery_addressure() {
+      this.enery_ruleForm.desc = this.enery_addressmes;
+      this.enery_ruleForm.geographic = this.enery_Longitude;
+      this.enery_map_dialogVisible = false;
+      let lonlang = this.enery_Longitude.split(",");
+      var parms = {
+        longitude: lonlang[0], //经纬度发给后台
+        latitude: lonlang[1]
+      };
+      this.getcounty(parms);
+    },
+    getcounty(parms) {
+      //根据坐标点,,去找位置
+      townCodestree(parms).then(res => {
+        console.log("前面三级城市");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          provincecity(res.data.data.province.code).then(res => {
+            //用省请求市
+            if (res.data.head.code == 0) {
+              this.enery_ruleForm.selectcityDate = res.data.data;
+            }
+          });
+          provincecity(res.data.data.city.code).then(res => {
+            //用市请求区
+            if (res.data.head.code == 0) {
+              this.enery_ruleForm.selectareaData = res.data.data; //每个区的id
+            }
+          });
+          provincecity(res.data.data.county.code).then(res => {
+            if (res.data.head.code == 0) {
+              this.enery_ruleForm.areaIddata = res.data.data;
+            }
+          });
+          this.enery_ruleForm.sellectprovice = res.data.data.province.code; //省
+          this.enery_ruleForm.selectcity = res.data.data.city.code; //市的id
+          this.enery_ruleForm.selectarea = res.data.data.county.code; //区
+          this.enery_ruleForm.areaId = res.data.data.town.code; //街道
+        }
+      });
+    },
+    handleClick() {},
+
+    enery_clickpoint(e) {
+      console.log("当前点击点");
+      console.log(e.point.lat);
+      let _this = this;
+      this.enery_showclick = false;
+      _this.enery_getlocation(e.point.lat, e.point.lng);
+
+      this.enery_clickposition = {
+        lng: e.point.lng,
+        lat: e.point.lat
+      };
+    },
+    gettousidnamelist() {
+      //获取分时计费的列表
+      var parms = {
+        keyword: ""
+      };
+      gettousidname(parms).then(res => {
+        if (res.data.head.code == 0) {
+          this.time_shareoptions = res.data.data;
+        }
+      });
+    },
+
+    submitForm() {
+      //基本信息
+
+      var parms = {
+        numberOfTransformer: Number(this.enery_ruleForm.numberOfTransformer),
+        installedCapacity: Number(this.enery_ruleForm.installedCapacity),
+        demandUnitPrice: Number(this.enery_ruleForm.demandUnitPrice),
+        capacityUnitPrice: Number(this.enery_ruleForm.capacityUnitPrice),
+        touId: Number(this.enery_ruleForm.touId),
+        useParentStationAddress: Boolean(this.defaultaddress),
+        stationClassId: this.$route.params.subid
+      };
+      var lonlang = this.enery_Longitude.split(",");
+
+      if (this.basicInformationEdit == "") {
+        //新增的时候
+
+        if (this.defaultaddress) {
+          //使用总站地址的时候
+          this.$refs["enery_ruleForm"].validate(valid => {
+            if (valid) {
+              console.log(parms);
+              console.log("验证通过");
+              // if()
+              stationssubNodes(this.$route.params.id, parms).then(res => {
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "添加成功"
+                  });
+                  this.getsattionmes();
+                }
+              });
+            }
+          });
+        } else {
+          parms.longitude = lonlang[0];
+          parms.latitude = lonlang[1];
+          (parms.areaId = this.enery_ruleForm.areaId),
+            (parms.detailedAddress = this.enery_ruleForm.desc);
+          this.$refs["enery_ruleForm"].validate(valid => {
+            if (valid) {
+              stationssubNodes(
+                this.$route.params.id,
+                this.basicInformationEdit,
+                parms
+              ).then(res => {
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "添加成功"
+                  });
+                  this.getsattionmes();
+                }
+              });
+            }
+          });
+        }
+      } else {
+        //编辑的时候
+        if (this.defaultaddress) {
+          //使用总站地址的时候
+          this.$refs["enery_ruleForm"].validate(valid => {
+            if (valid) {
+              editsubsite(
+                this.$route.params.id,
+                this.basicInformationEdit,
+                parms
+              ).then(res => {
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "编辑成功"
+                  });
+                  this.getsattionmes();
+                }
+              });
+            }
+          });
+        } else {
+          parms.longitude = lonlang[0];
+          parms.latitude = lonlang[1];
+          (parms.areaId = this.enery_ruleForm.areaId),
+            (parms.detailedAddress = this.enery_ruleForm.desc);
+          this.$refs["enery_ruleForm"].validate(valid => {
+            if (valid) {
+              editsubsite(this.$route.params.id, parms).then(res => {
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "编辑成功"
+                  });
+                  this.getsattionmes();
+                }
+              });
+            }
+          });
+        }
+      }
+    },
+    handDTUleNodeClick() {},
+    getsattionmes() {
+      getstationconfig(this.$route.params.id).then(res => {
+        console.log("当前能源站的信息");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          for (var i = 0; i < res.data.data.subNodes.length; i++) {
+            let station = res.data.data.subNodes[i];
+            if (station.stationType.value == "energyconsumptionmanagement") {
+              this.basicInformationEdit = station.id;
+              let node = this.basicInformationEdit;
+              this.getConfigurationPoints(node);
+
+              this.enery_ruleForm.numberOfTransformer =
+                station.numberOfTransformer;
+              this.enery_ruleForm.installedCapacity = station.installedCapacity;
+              this.enery_ruleForm.demandUnitPrice = station.demandUnitPrice;
+              this.enery_ruleForm.capacityUnitPrice = station.capacityUnitPrice;
+              this.enery_ruleForm.touId = station.touId;
+              (this.enery_ruleForm.areaId = station.areaId),
+                (this.currentid = station.id);
+            }
+          }
+        }
+      });
+    },
+
+    brandhandleChange(value) {
+      console.log(value);
+    },
+    getTreeData(data) {
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].nodeList.length < 1) {
+          // children若为空数组，则将children设为undefined
+          data[i].nodeList = undefined;
+        } else {
+          // children若不为空数组，则继续 递归调用 本方法
+          this.getTreeData(data[i].nodeList);
+        }
+      }
+      return data;
+    },
+    getdeviceBrand() {
+      getdeviceBrandModelTree().then(res => {
+        console.log("获取设备信息");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          let treeData = res.data.data;
+          for (let item of treeData) {
+            item.id = item.deviceClassId;
+          }
+          this.brandoptions = this.getTreeData(treeData);
+        }
+      });
+    },
+    getDevicesubtree() {
+      getsubStationIdsubNodes(this.currentid).then(res => {
+        console.log("获取树状菜单");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.equipmentdata = res.data.data.rows;
+        }
+        // this.equipmenttotal=
+        if (this.start == 0) {
+          this.equmenttatol = res.data.data.total;
+        }
+      });
+    },
+
+    alrempageIndexChange() {
+      let page = (index - 1) * this.size;
+      console.log(index);
+      this.start = page;
+      // this.getalremlist();
+      this.getDevicesubtree();
+    },
+    equmentappend(node, data) {
+      console.log(node);
+      console.log(data);
+      //  this.dtuId = true; //点击的是dtu 的时候,,就隐藏注册码
+      this.addDtuid = node.data.id;
+      console.log(this.addDtuid);
+      this.current_dtu = data.isDtu;
+      setTimeout(() => {
+        this.radio1 = "2";
+        // this.addevent=true
+        this.dtuId = false;
+      }, 200);
+      this.editdevide = node.id;
+      this.add_device_father = node.id;
+      console.log(this.editdevide);
+    },
+    equmentremove(data, node) {},
+
+    saveDaviceenery() {
+      //添加设备
+
+      var parms = {
+        registCode: this.formDeviceInline.registCode,
+        deviceName: this.formDeviceInline.deviceName,
+        deviceClassId: this.formDeviceInline.deviceBrandId[0],
+        deviceBrandId: this.formDeviceInline.deviceBrandId[1],
+        deviceTypeId: this.formDeviceInline.deviceBrandId[2],
+        commId: this.formDeviceInline.commId,
+        location: this.formDeviceInline.location,
+        installedCapacity: this.formDeviceInline.installedCapacity
+        // dtuId:this.add_device_father
+      };
+      if (this.editdevide == "") {
+        //添加分两种,,直接添加,,在dtux下面添加
+        if (this.dtuId) {
+          //  parms.dtuId=
+
+          this.$refs["formDeviceInline"].validate(valid => {
+            if (valid) {
+              stationsdevices(this.currentid, parms).then(res => {
+                console.log("添加设备");
+                console.log(res);
+                /* //if() */
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "添加成功"
+                  });
+                  this.getDevicesubtree();
+                }
+              });
+            }
+          });
+        } else {
+          this.formDeviceInline.registCode = 111;
+          parms.dtuId = this.addDtuid; //发给后台时候的
+          console.log(parms);
+          this.$refs["formDeviceInline"].validate(valid => {
+            if (valid) {
+              stationsdevices(this.currentid, parms).then(res => {
+                if (res.data.head.code == 0) {
+                  this.$message({
+                    type: "success",
+                    message: "添加成功"
+                  });
+                  this.getDevicesubtree();
+                }
+              });
+            }
+          });
+        }
+      } else {
+        console.log("编辑设备");
+        this.$refs["formDeviceInline"].validate(valid => {
+          stationeditdeviceId(this.currentid, this.editdevide, parms).then(
+            res => {
+              if (res.data.head.code == 0) {
+                this.$message({
+                  type: "success",
+                  message: "编辑成功"
+                });
+                this.getDevicesubtree();
+              }
+            }
+          );
+        });
+      }
+      //this.getDevicesubtree()
+    },
+    currentnode(node, data) {
+      console.log("当前节点-----");
+      console.log(node);
+      //  console.log(data)
+      if (node.isDtu) {
+         this.radio1 = "1";
+        this.$nextTick(() => {
+          this.formInline.dtuName = node.name;
+          this.formInline.registCodedtu = node.registCode;
+          this.editDtu = node.id;
+        });
+      } else {
+        console.log("shebei");
+        this.radio1 = "2";
+        if (node.registCode == "") {
+          console.log("进来了");
+          this.$nextTick(() => {
+            this.dtuId = false;
+          });
+        }
+        this.editdevide = node.id;
+        console.log(this.editdevide);
+        this.$nextTick(() => {
+          this.formDeviceInline.deviceName = node.name;
+          this.formDeviceInline.registCode = node.registCode;
+          this.formDeviceInline.commId = node.commId;
+          this.formDeviceInline.deviceBrandId = [
+            node.deviceClassId,
+            node.deviceBrandId,
+            node.deviceTypeId
+          ];
+          this.formDeviceInline.location = node.location;
+          this.formDeviceInline.installedCapacity = node.installCapacity;
+          this.formDeviceInline.commId = node.commId;
+        });
+      }
+    },
+    resetForm() {
+      this.$refs["enery_ruleForm"].resetFields();
+    },
+    saveDtu() {
+      var parms = {
+        dtuName: this.formInline.dtuName,
+        registCode: this.formInline.registCodedtu
+      };
+
+      if (this.editDtu !== "") {
+        // parms.dtuId=this.editDtu
+        this.$refs["formInline"].validate(valid => {
+          stationeditdtu(this.currentid, this.editDtu, parms).then(res => {
+            console.log("添加dtu");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              this.$message({
+                type: "success",
+                message: "编辑DTU成功"
+              });
+              this.getDevicesubtree();
+            }
+          });
+        });
+      } else {
+        this.$refs["formInline"].validate(valid => {
+          stationssubNodesdtu(this.currentid, parms).then(res => {
+            console.log("添加dtu");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              this.$message({
+                type: "success",
+                message: "添加DTU成功"
+              });
+              this.getDevicesubtree();
+            }
+          });
+        });
+      }
+    },
+    delect_node(node, data) {
+      this.delectid = data.id;
+      console.log("delect", node);
+      console.log("data", data);
+      this.deleceJudge = data.isDtu; //判断删除的是不是Dtu
+      this.paswordvisible = true;
+      // deletedeviceId().then(res=>{
+      // })
+    },
+    Delect_sure() {
+      var parms = {
+        password: this.$md5(this.password)
+      };
+      if (this.deleceJudge) {
+        deletedtuId(this.$route.params.id, this.delectid, parms).then(res => {
+          console.log("DTU", res);
+          if (res.data.head.code == 0) {
+            this.paswordvisible = false;
+            this.password = "";
+          }
+        });
+      } else {
+        deletedeviceId(this.$route.params.id, this.delectid, parms).then(
+          res => {
+            console.log("shebei", res);
+            if (res.data.head.code == 0) {
+              this.paswordvisible = false;
+              this.password = "";
+            }
+          }
+        );
+      }
+    },
+
+    handleDragStart(node, ev) {
+      console.log("drag start", node);
+      this.moveNodeid = node.data.nodeId; //移动时候,,
+      this.movenodeType = node.data.nodeType;
+      this.moveparentId = node.parent.key;
+    },
+    handleDragEnter(draggingNode, dropNode, ev) {
+      // console.log('tree drag enter: ', dropNode);
+    },
+    handleDragLeave(draggingNode, dropNode, ev) {
+      console.log("tree drag leave: ", dropNode);
+    },
+    handleDragOver(draggingNode, dropNode, ev) {
+      // console.log('tree drag over: ', dropNode);
+    },
+    handleDragEnd(draggingNode, dropNode, dropType, ev) {
+      console.log("tree drag end: ", draggingNode, dropNode, dropType);
+
+      let parendid = dropNode.parent.key;
+      console.log(draggingNode);
+      let data = draggingNode.data;
+      if (this.moveparentId !== parendid) {
+        console.log("不等于");
+        this.configremove(data);
+        // console.log(this.moveNodeid)
+        var parms = {
+          parentNodeType: dropNode.data.nodeType,
+          parentNodeId: dropNode.data.nodeId,
+          nodeIds: [data.nodeId]
+        };
+
+        console.log(parms);
+
+        setTimeout(() => {
+          addenergyConsumptionManagement(parms).then(res => {
+            console.log("添加设备");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              this.electricityVisible = false;
+              this.multipleSelection = [];
+              this.getConfigurationPoints(this.basicInformationEdit);
+            }
+          });
+        }, 100);
+      } else {
+        console.log("dengyu");
+      }
+    },
+    handleDrop(draggingNode, dropNode, dropType, ev) {
+      return dropNode.parent.data.nodeType !== "PowerStationGNode";
+    },
+    allowDrop(draggingNode, dropNode, type) {
+      if (dropNode.data.nodeType == "LogicalPartitionGNode") {
+        return type === "inner";
+      } else {
+        return true;
+      }
+    },
+    allowDrag(draggingNode) {
+      return draggingNode.data.nodeType === "DeviceNode";
+    },
+    getConfigurationPoints(node) {
+      var parms = {
+        subStationId: node
+      };
+      ConfigurationPoints(parms).then(res => {
+        console.log("计量节点");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.configurationPointsdata = res.data.data;
+        }
+      });
+    },
+    configappend(data) {
+      //添加计量点
+      console.log(data);
+      this.parentNodeId = data.nodeId;
+      this.parentNodeType = data.nodeType;
+      if (data.nodeType == "PowerStationGNode") {
+        this.ConfigurationdialogVisible = true;
+      } else {
+        this.electricityVisible = true;
+      }
+    },
+    ConfigurationForm(formName) {
+      //添加计量点
+
+      var parms = this.numberValidateForm;
+      parms.parentNodeType = this.parentNodeType;
+      parms.parentNodeId = this.parentNodeId;
+
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          addenergyConsumptionManagement(parms).then(res => {
+            console.log("计量点");
+            console.log(res);
+            if (res.data.head.code == 0) {
+              this.ConfigurationdialogVisible = false;
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    Configurationrest(formName) {
+      this.$refs[formName].resetFields();
+      this.ConfigurationdialogVisible = false;
+    },
+
+    configremove(data) {
+      //删除计量点
+      console.log(data);
+      var parms = {
+        nodeType: data.nodeType,
+        nodeId: data.nodeId
+      };
+      deleteNodeConfig(parms).then(res => {
+        console.log("删除");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.getConfigurationPoints(this.basicInformationEdit);
+        }
+      });
+    },
+
+    FindOne() {
+      this.GetLietEctricity();
+    },
+
+    GetLietEctricity() {
+      var parms = {
+        subStationId: this.basicInformationEdit,
+        keyword: this.Stoichiometric_keyword,
+        start: this.Stoichiometric_start,
+        size: this.Stoichiometric_size
+      };
+      getelectricityBillNodeConfig(parms).then(res => {
+        if (res.data.head.code == 0) {
+          this.electricityTableData = res.data.data.rows;
+        }
+      });
+    },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    addelectric() {
+      //添加电表
+      let nodeIds = [];
+      console.log(this.multipleSelection);
+      for (var i = 0; i < this.multipleSelection.length; i++) {
+        nodeIds.push(this.multipleSelection[i].deviceId);
+      }
+      var parms = {
+        parentNodeType: this.parentNodeType,
+        parentNodeId: this.parentNodeId,
+        nodeIds: nodeIds
+      };
+
+      console.log(parms);
+      addenergyConsumptionManagement(parms).then(res => {
+        console.log("添加设备");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.electricityVisible = false;
+          this.multipleSelection = [];
+          this.getConfigurationPoints(this.basicInformationEdit);
+        }
+      });
+    }
+  },
+  mounted() {
+    this.getsattionmes();
+    this.gettousidnamelist();
+    this.getdeviceBrand();
+
+    setTimeout(() => {
+      if (this.currentid) {
+        this.getDevicesubtree();
+        this.GetLietEctricity();
+      }
+      this.defaultProps = this.$route.params.subid;
+    }, 500);
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.saveenerg {
+  display: block;
+  margin-left: 60px;
+  position: fixed;
+  left: 45%;
+  bottom: 15%;
+}
+.tabselect {
+  height: 80px;
+  //border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.noconent {
+  display: inline-block;
+  text-align: center;
+  top: 50%;
+  position: absolute;
+  left: 45%;
+  font-size: 16px;
+  color: #181343;
+}
+</style>
+<style >
+.equiment .custom-tree-node {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-right: 8px;
+}
+</style>

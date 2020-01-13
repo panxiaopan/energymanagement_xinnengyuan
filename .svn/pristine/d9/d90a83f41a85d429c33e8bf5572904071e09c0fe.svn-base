@@ -1,0 +1,22 @@
+<template>
+  <el-col :span="24" style="height:100%;">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" size="big" class="toptab">
+        <el-tab-pane label="基本信息" name="first"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+  </el-col>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      activecurrent: "first"
+    };
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+</style>

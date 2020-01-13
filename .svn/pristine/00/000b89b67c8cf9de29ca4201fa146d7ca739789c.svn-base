@@ -1,0 +1,749 @@
+<template>
+  <el-row style="height:100%;min-width:1460px">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big" class="toptab">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="报警" name="third"></el-tab-pane>
+        <el-tab-pane label="工单" name="fourth"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+    <el-row v-if="activecurrent=='first'">
+      <el-col :span="24" class="mainpict">
+        <el-row :gutter="20" class="SandHCollagen">
+          <el-col :span="16" class="SandHCollagen">
+            <div class="grid-content conctent">
+              <div style="padding:20px">
+                <div class="boxName">电站信息</div>
+                <div class="typeradiousgood" v-if="status.value===10"></div>
+                <div class="typeradiousgeneral" v-if="status.value===20"></div>
+                <div class="typeradiousbad" v-if="status.value===30"></div>
+                <span class="typedesc">{{status.desc}}</span>
+                <span class="typedesc">{{status.updateTime}}</span>
+              </div>
+              <div class="phomessage">
+                <div class="photovolcapacity" v-for="(item,index) in capacitydata" :key="index">
+                  <div class="photovolbox">
+                    <div class="photvolboxleft">
+                      <img :src="eneryimg[index]" alt class="boximg" />
+                    </div>
+                    <div class="photvolboxright">
+                      <div class="units">{{item.name+'('+item.unit+')'}}</div>
+                      <div class="unitsvalue">{{item.value}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="dataimformation">
+                <div v-for="(item,index) in todaydata" :key="index">
+                  <div class="datamessage">
+                    <div class="dataleft">
+                      <img :src="todayimg[index]" alt class="boximg" />
+                    </div>
+                    <div class="photvolboxright">
+                      <div class="unitsvalue">{{item.value}}</div>
+                      <div class="units">{{item.name+'('+item.unit+')'}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-col>
+          <el-col :span="8" class="SandHCollagen">
+            <div class="grid-content conctent">
+              <div style="padding:20px;position:relative">
+                <div class="boxName">设备状态统计</div>
+                <div class="Devicetotal">
+                  <div class="DeviceNumber">{{totalDevice}}</div>
+                  <div class="Devicepcs">设备总数(个)</div>
+                </div>
+                <div style="height:320px">
+                  <ve-histogram
+                    :data="devicechartData"
+                    :settings="devicechartSettings"
+                    :extend="devicechartExtend"
+                    :yAxis="deviceyAxisOption"
+                    :legend="devicelegend_top"
+                    height="100%"
+                    :grid="devicegrid"
+                    :colors="deviceColor"
+                  ></ve-histogram>
+                </div>
+              </div>
+            </div>
+          </el-col>
+        </el-row>
+      </el-col>
+      <el-col :span="24" class="mainfoot">
+        <div class="mainbox">
+          <div class="boxName tendency">发电趋势图</div>
+
+          <div class="timeselect">
+            <div class="timetab">
+              <span class="timebox">
+                <el-radio-group v-model="datatime" size="medium" @change="changetypadata">
+                  <el-radio-button label="日"></el-radio-button>
+                  <el-radio-button label="月"></el-radio-button>
+                  <el-radio-button label="年"></el-radio-button>
+                  <el-radio-button label="总"></el-radio-button>
+                </el-radio-group>
+              </span>
+              <span class="timebox">
+                <el-button
+                  icon="el-icon-arrow-left"
+                  circle
+                  @click="previous"
+                  :disabled="datatime=='总'"
+                ></el-button>
+                <el-date-picker
+                  v-model="timevalue"
+                  :type="typedate"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  @change="changetime"
+                  :picker-options="pickerOptions"
+                  :clearable="false"
+                  :disabled="datatime=='总'"
+                ></el-date-picker>
+                <el-button
+                  icon="el-icon-arrow-right"
+                  circle
+                  @click="gonext"
+                  :disabled="datatime=='总'"
+                ></el-button>
+              </span>
+            </div>
+          </div>
+
+          <div style="height:240px;">
+            <ve-line
+              v-if="datatime=='日'"
+              :data="datachartData"
+              height="100%"
+              :xAxis="tonngxAxis"
+              :yAxis="datayAxis"
+              :colors="datacolor"
+              :settings="datachartseting"
+              :legend-visible="false"
+              :grid="datagrid"
+            ></ve-line>
+            <ve-histogram
+              v-else
+              :legend-visible="false"
+              :data="yearchartData"
+              height="100%"
+              :grid="datagrid"
+              :colors="yearcolors"
+              :extend="yearextend"
+              :settings="yearsettings"
+              :yAxis="yearyAxis"
+            ></ve-histogram>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <el-row v-if="activecurrent=='second'" class="Devicemain" style="padding-top:80px">
+      <device-page></device-page>
+    </el-row>
+    <el-row v-if="activecurrent=='third'" class="Devicemain" style="padding-top:80px">
+      <alarm-list></alarm-list>
+    </el-row>
+    <el-row v-if="activecurrent=='fourth'" class="Devicemain" style="padding-top:80px">
+      <el-col :span="24" class="mainboxfour">
+        <task-list
+          list-type="workOrder"
+          ref="workOrder"
+          style="margin: 20px 40px"
+          :subid="this.$route.params.subid"
+        ></task-list>
+      </el-col>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+//import moment from "moment";
+//import moment from "@/assets/js/moment.js";
+// import "moment/locale/zh-cn";
+// moment.locale("zh-cn");
+import pageCompent from "@/components/pagination"; //分页
+import devicePage from "@/components/syllogeDevice/equipment"; //设备
+import alarmList from "@/components/syllogeAlarm/alarmlist"; //报警列表
+import TaskList from "@/components/task-list"; //工单
+import {
+  getsubstation,
+  getsolardata,
+  getsolaryearmonth,
+  getdevicesidName
+} from "@/api/api";
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+export default {
+  components: {
+    pageCompent,
+    TaskList,
+    devicePage,
+    alarmList
+  },
+  data() {
+    return {
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      devicetableDatamesage: [], //设备信息类表
+      activecurrent: "first",
+      capacitydata: [], //遍历装机容量
+      status: {}, //光伏的状态
+
+      eneryimg: [
+        "static/imgs/install.png",
+        "static/imgs/power.png",
+        "static/imgs/generatingenergy.png",
+        "static/imgs/recharge.png"
+      ],
+      todaydata: [],
+      todayimg: [
+        "static/imgs/red.png",
+        "static/imgs/blue.png",
+        "static/imgs/green.png"
+      ],
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        },
+        minInterval: 1
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 10,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      totalDevice: 0, //设备总数
+      datatime: "日",
+      timevalue: timeFormatdata(new Date()),
+      typedate: "date",
+      datachartData: {
+        columns: ["time", "value"],
+        rows: []
+      },
+      tonngxAxis: {
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10);
+            return str_before;
+          }
+        }
+      },
+      yearxAxis: {
+        type: "category",
+        axisLabel: {}
+      },
+
+      monthxAis: {
+        type: "category",
+        axisLabel: {
+          formatter: function(value) {
+            console.log("X轴的值");
+            console.log(value);
+            var str_before = value.substring(8, 10);
+            return str_before;
+          }
+        }
+      },
+      yearxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(5, 7);
+            return str_before;
+          }
+        }
+      },
+      allxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(0, 4);
+            return str_before;
+          }
+        }
+      },
+
+      datayAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      datacolor: ["#2925C2"],
+      datachartseting: {
+        area: true,
+        showLine: ["value"],
+        legendName: {
+          value: "发电功率"
+        },
+        labelMap: {
+          value: "发电功率"
+        }
+      },
+      datagrid: {
+        right: 50,
+        left: 50,
+        bottom: 20
+      },
+      yearchartData: {
+        columns: ["time", "value"],
+        rows: []
+      },
+      yearcolors: ["#6076FF"],
+
+      yearextend: {
+        series: {
+          label: { show: true, position: "top" }
+        },
+        barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          },
+          axisLabel: {
+            formatter: function(value) {
+              var str_before = value.substring(0, 8);
+              return str_before;
+            }
+          }
+        }
+      },
+      yearyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: ""
+      },
+      yearsettings: {
+        legendName: {
+          value: "电量"
+        },
+        labelMap: {
+          value: "电量"
+        }
+      }
+    };
+  },
+
+  methods: {
+    getlist() {
+      //获取光伏信息
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("==00000=====");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.status = res.data.data.status;
+            this.capacitydata = res.data.data.statistics.slice(0, 4); //截取前四个
+            this.todaydata = res.data.data.statistics.slice(-3); //截取后三个
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+          }
+          console.log(this.todaydata);
+        }
+      );
+    },
+
+    handleClick(index) {
+      //改变选中的tab
+      console.log(index);
+    },
+    gettimedate() {
+      var parms = {
+        date: this.timevalue
+      };
+      getsolardata(this.$route.params.subid, parms).then(res => {
+        console.log("当日");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.datachartData.rows = res.data.data.logs;
+          this.datayAxis.name = "功率/" + res.data.data.unit;
+        }
+      });
+    },
+    getyeardata() {
+      //
+      let data = this.timevalue.split("-");
+      if (this.timevalue == "") {
+        //总
+        var year = "";
+        var month = "";
+      } else if (this.datatime == "年") {
+        var year = data[0];
+        var month = "";
+      } else {
+        var year = data[0];
+        var month = data[1];
+      }
+      getsolaryearmonth(this.$route.params.subid, year, month).then(res => {
+        console.log("年月");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.yearchartData.rows = res.data.data.logs;
+          this.yearyAxis.name = "电量/" + res.data.data.unit;
+        }
+      });
+    },
+
+    changetime() {
+      if (this.datatime == "日") {
+        //日的时候调一个接口./其他调另外的接口
+        this.gettimedate();
+      } else {
+        this.getyeardata();
+      }
+    },
+    changetypadata() {
+      this.timevalue = timeFormatdata(new Date());
+      console.log(this.datatime);
+      switch (this.datatime) {
+        case "日":
+          this.typedate = "date";
+          this.gettimedate();
+          break;
+        case "月":
+          this.typedate = "month";
+          console.log("进月来");
+          this.yearextend.xAxis.axisLabel = this.monthxAis.axisLabel;
+          this.getyeardata();
+
+          break;
+        case "年":
+          this.typedate = "year";
+          this.yearextend.xAxis.axisLabel = this.yearxAis.axisLabel;
+          this.getyeardata();
+          break;
+        default:
+          this.timevalue = "";
+          this.yearextend.xAxis.axisLabel = this.allxAis.axisLabel;
+
+          this.getyeardata();
+          break;
+      }
+    },
+
+    addEventDate(addType = "add") {
+      //移过来的! 可以抽空优化
+      var type = this.typedate;
+      let datatime = new Date();
+      switch (type) {
+        case "date":
+          var datetime = moment(this.timevalue).add(
+            addType === "add" ? 1 : -1,
+            "days"
+          );
+          let newtime = moment(datetime).format("YYYY-MM-DD");
+          if (addType === "add") {
+            if (new Date(newtime) > datatime) {
+              this.$message.error("日期大于当天,从新选择");
+            } else {
+              this.timevalue = newtime;
+            }
+          } else {
+            this.timevalue = newtime;
+          }
+          break;
+        case "month":
+          console.log("month");
+          var mounthstime = moment(this.timevalue).add(
+            addType === "add" ? 1 : -1,
+            "months"
+          );
+          let newtimemounth = moment(mounthstime).format("YYYY-MM");
+          console.log(newtimemounth);
+
+          if (addType === "add") {
+            if (new Date(newtimemounth) > datatime) {
+              this.$message.error("日期大于当月,从新选择");
+            } else {
+              this.timevalue = newtimemounth;
+            }
+          } else {
+            this.timevalue = newtimemounth;
+          }
+          break;
+        case "year":
+          var yearstime = moment(this.timevalue).add(
+            addType === "add" ? 1 : -1,
+            "years"
+          );
+          let newtimeyears = moment(yearstime).format("YYYY");
+
+          if (addType === "add") {
+            if (new Date(newtimeyears) > datatime) {
+              this.$message.error("日期大于当年,从新选择");
+            } else {
+              this.timevalue = newtimeyears;
+            }
+          } else {
+            this.timevalue = newtimeyears;
+          }
+          break;
+      }
+      if (this.datatime == "日") {
+        //日的时候调一个接口./其他调另外的接口
+        this.gettimedate();
+      } else {
+        this.getyeardata();
+      }
+    },
+
+    previous() {
+      //日期往前
+      this.addEventDate("subtract");
+    },
+    gonext() {
+      //日期往后
+      this.addEventDate("add");
+    }
+  },
+  mounted() {
+    this.getlist();
+    console.log(this.$route.params);
+    this.gettimedate();
+
+    if (this.$refs.workOrder) {
+      this.$refs.workOrder.queryDataList();
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.photovolbox {
+  // border: 1px solid red;
+  height: 100px;
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 100px;
+  width: 210px;
+  .photvolboxleft {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    background: #7383e7;
+    vertical-align: middle;
+    border-radius: 5px;
+    line-height: 60px;
+  }
+}
+.photovolcapacity {
+  // border: 1px solid #efefef;
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  width: 240px;
+  height: 100px;
+  text-align: center;
+  border-radius: 5px;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 100px;
+}
+
+// .photvolboxright {
+//   display: inline-block;
+//   width: 120px;
+//   height: 60px;
+
+//   //border: 1px solid red;
+//   vertical-align: middle;
+//   .units {
+//     height: 20px;
+//     line-height: 20px;
+//     font-family: "微软雅黑";
+//   }
+//   .unitsvalue {
+//     height: 40px;
+//     line-height: 40px;
+//     font-weight: 800;
+//     font-size: 24px;
+//     font-family: "微软雅黑";
+//   }
+// }
+.SandHCollagen {
+  height: 100%;
+}
+.mainpict {
+  height: 50%;
+  // border: 1px solid red;
+  min-height: 400px;
+  padding: 24px;
+  .conctent {
+    height: 100%;
+    box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+    background: #fff;
+    border-radius: 5px;
+  }
+}
+.bg-purple {
+  background: #d3dce6;
+}
+.dataimformation {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.grid-content {
+  border-radius: 4px;
+  height: 100%;
+}
+
+.phomessage {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.dataleft {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  vertical-align: middle;
+  border-radius: 5px;
+  line-height: 60px;
+  // border: 1px solid;
+}
+.datamessage {
+  border-right: 1px solid #dadde2;
+  padding: 20px;
+}
+
+.mainfoot {
+  height: 50%;
+  // border: 1px solid red;
+  padding: 0px 24px;
+  // min-height: 380px;
+  //border: 1px solid red;
+  // box-shadow: 0px 0px 8px 6px rgba(103, 119, 127, 0.1);
+}
+
+.tendency {
+  display: inline-block;
+  padding: 20px;
+}
+.timeselect {
+  height: 60px;
+  // border: 1px solid red;
+}
+.timetab {
+  float: right;
+}
+.timebox {
+  padding-right: 100px;
+}
+
+.lookover {
+  cursor: pointer;
+}
+</style>
+<style>
+.showHazard .el-dialog__body {
+  background: #e3e5e8;
+}
+.handlingSuggestion .el-textarea__inner {
+  height: 100px;
+}
+.el-dialog__header {
+  background: #0b61aa;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+}
+
+.el-dialog__title {
+  color: #fff;
+}
+.top_enry .el-tabs__nav-scroll {
+  padding-left: 30px;
+}
+</style>

@@ -10,10 +10,13 @@ axios.interceptors.request.use(
   config => {
     //const token = sessionStorage.getItem('token')
     //  let data = config.data
-    if (config.method == "post") {
+    if (config.method == "post"||config.method == "put") {
       let data = config.data;
       console.log("拦截");
-      console.log(config)
+      console.log(config.url)
+      if(config.url=='./logos'){
+          return
+      }
       console.log(data);
       config.data = qs.stringify({
         ...config.data
@@ -40,6 +43,23 @@ axios.interceptors.request.use(
 //登录接口
 export const userlogin = parms => {
   return axios.post("/session", parms);
+};
+//判断别人从链接的位置是不是能进去  /ienergy-web/account/permissionCodes
+
+
+export const accountpermissionCodes = () => {
+  return axios.get(`/account/permissionTree`);
+};
+
+//获取地图重点位置
+
+export const mapconfigcustom = () => {
+  return axios.get(`/map/config/customInitLocation`);
+};
+
+//退出清空信息
+export const sessionlogout = () => {
+  return axios.post("session/logout");
 };
 //忘记密码重置
 export const forgetpassword = parms => {
@@ -115,7 +135,7 @@ export const getdevicesidName = (subStationId, parms) => {
 };
 //人工上报报警记录
 export const alarmsreportArtificially = parms => {
-  return axios.post("alarms/reportArtificially", parms);
+  return axios.post("alarms/reportArtificially", parms, );
 };
 //运维人员列表
 export const getauthmaintainers = parms => {
@@ -230,7 +250,7 @@ export const stationidNametype = (parms) => {
 }
 //报警列表,人工报警
 export const reportalrem = (parms) => {
-  return axios.post('/alarms/reportArtificially', parms)
+  return axios.post('/alarms/reportArtificially', parms, )
 }
 //获取能耗子站的功率信息
 export const switchpower = (subStationId, parms) => {
@@ -240,20 +260,27 @@ export const switchpower = (subStationId, parms) => {
 }
 //用电量变化
 export const powerDistribution = (subStationId, year, month, parms) => {
-  return axios.get(`/stations/energyConsumptionManagement/${subStationId}/energys/${year}/${month}`, {
+  let url = `/stations/energyConsumptionManagement/${subStationId}/energys`
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  return axios.get(url, {
     params: parms
   })
 }
 //获取能耗管理子站的电量分析下的配置节点
 export const enerymanage = (parms) => {
-  return axios.get('/stations/energyConsumptionManagement/analysis/meterConfigTree', {
+  return axios.get('/stations/energyConsumptionManagement/analysis/nodeConfigTree', {
     params: parms
   })
 }
 //获取能耗管理子站的电量分析统计数据
 
 export const nergyConsumchart = (year, month, parms) => {
-  return axios.get(`/stations/energyConsumptionManagement/analysis/energyStatistics/${year}/${month}`, {
+  let url = '/stations/energyConsumptionManagement/analysis/energyStatistics'
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  console.log('nergyConsumchart', year, month, parms, url)
+  return axios.get(url, {
     params: parms
   })
 }
@@ -286,4 +313,121 @@ export const treenodeconfig = (parms) => {
   return axios.get('/stations/energyConsumptionManagement/analysis/nodeConfigTree', {
     params: parms
   })
+}
+//获取能耗管理子站的节点负荷数据
+export const eneryConsuntion = (parms, year, month, day) => {
+  let url = '/stations/energyConsumptionManagement/analysis/load'
+  if(year) url = url + `/${year}`
+  if(month) url = url + `/${month}`
+  if(day) url = url + `/${day}`
+  return axios.get(url, {
+    params: parms
+  })
+}
+//获取能耗管理子站的需量分析数据
+export const demandanalysis = (parms) => {
+  return axios.get('/stations/energyConsumptionManagement/analysis/demand', {
+    params: parms
+  })
+}
+//省市联动接口
+
+export const provincecity = (parentId) => {
+  return axios.get(`/common/areas/parentId/${parentId}`)
+}
+//根据最后一级 的去找前年几级的
+
+export const townCodestree = (parms) => {
+  return axios.get(`/common/areas/longitudeAndLatitude`, {params:parms})
+}
+//添加能源站
+
+export const addstations = parms => {
+  return axios.post("/stations", parms, );
+};
+//获取能源站的列表
+export const  getstationSubTypes = () => {
+  return axios.get(`common/stationSubTypes`)
+}
+//获取能源站总站的信息 /stations/{stationId}/config
+export const  getstationconfig = (stationId) => {
+  return axios.get(`/stations/${stationId}/config`)
+}
+
+//获取分时计费方案列表 ienergy-web/common/tous/idName
+
+export const  gettousidname = (parms) => {
+  return axios.get(`/common/tous/idName`,{params:parms})
+}
+
+//添加能源子站
+export const stationssubNodes = (stationId, parms) => {
+  return axios.post(`/stations/${stationId}/subNodes`, parms);
+};
+//获取设备类型-品牌-型号信息
+export const  getdeviceBrandModelTree = () => {
+  return axios.get(`/common/deviceBrandModelTree`,)
+}
+//获取子站设备下面的节点树/stations/subNodes/{subStationId}/devices/configTree
+export const  getsubStationIdsubNodes = (subStationId) => {
+  return axios.get(`/stations/subNodes/${subStationId}/devices/configTree`,)
+}
+//添加设备
+
+export const stationsdevices= (subStationId, parms) => {
+  return axios.post(`/stations/subNodes/${subStationId}/devices`, parms);
+};
+//添加dtu
+export const stationssubNodesdtu= (subStationId, parms) => {
+  return axios.post(`/stations/subNodes/${subStationId}/dtus`, parms);
+};
+//编辑dtu 
+export const stationeditdtu= (subStationId,dtuId, parms) => {
+  return axios.put(`/stations/subNodes/${subStationId}/dtus/${dtuId}`, parms);
+};
+
+//编辑设备 /stations/subNodes/{subStationId}/devices/{deviceId}
+export const stationeditdeviceId= (subStationId,deviceId, parms) => {
+  return axios.put(`/stations/subNodes/${subStationId}/devices/${deviceId}`, parms);
+};
+//修改总站的
+
+export const editstation= (stationId, parms) => {
+  return axios.put(`/stations/${stationId}`, parms);
+};
+//修改能源子站
+export const editsubsite= (stationId,subStationId, parms) => {
+  return axios.put(`/stations/${stationId}/subNodes/${subStationId}`, parms);
+};
+//获取电站计量点配置树
+export const  ConfigurationPoints  = (parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`,{params:parms})
+}
+//添加电站计量点节点
+export const addenergyConsumptionManagement= (parms) => {
+  return axios.post(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`, parms);
+};
+//获取电站计量点配置下尚未配置的电表节点列表
+export const  getelectricityBillNodeConfig  = (parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/electricityBillNodeConfig/unconfiguredDeviceNodes`,{params:parms} )
+}
+//删除计量点
+export const  deleteNodeConfig  = (parms) => {
+  return axios.delete(`/stations/energyConsumptionManagement/electricityBillNodeConfig/nodeTree`,{params:parms} )
+}
+//删除能源子站
+export const  deletesubNodes  = (stationId,subStationId,parms) => {
+  return axios.delete(`/stations/${stationId}/subNodes/${subStationId}`,{params:parms} )
+}
+//删除设备
+export const  deletedeviceId  = (subStationId,deviceId,parms) => {
+  return axios.delete(`/stations/subNodes/${subStationId}/devices/${deviceId}`,{params:parms})
+}
+//删除DTU
+export const  deletedtuId = (subStationId,dtuId,parms) => {
+  return axios.delete(`/stations/subNodes/${subStationId}/dtus/${dtuId}`,{params:parms})
+}
+//获取能耗管理子站的电量分类统计数据
+export const  getenergyConsumptionManagement  = (year,month,parms) => {
+  return axios.get(`/stations/energyConsumptionManagement/analysis/energyClassification/${year}/${month}`,{params:parms} )
 }

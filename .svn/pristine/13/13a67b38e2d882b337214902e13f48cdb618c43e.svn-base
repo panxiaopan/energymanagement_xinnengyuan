@@ -1,0 +1,1034 @@
+<template>
+  <!-- <div>能耗</div> -->
+  <el-row style="height:100%;min-width:1460px">
+    <el-col :span="24" class="top_enry">
+      <el-tabs v-model="activecurrent" size="big" class="toptab">
+        <el-tab-pane label="主页" name="first"></el-tab-pane>
+        <el-tab-pane label="设备" name="second"></el-tab-pane>
+        <el-tab-pane label="电量" name="third"></el-tab-pane>
+        <el-tab-pane label="需量" name="fourth"></el-tab-pane>
+        <el-tab-pane label="负荷" name="five"></el-tab-pane>
+        <el-tab-pane label="报警" name="six"></el-tab-pane>
+        <el-tab-pane label="工单" name="seven"></el-tab-pane>
+      </el-tabs>
+    </el-col>
+
+    <el-col :span="24" v-if="activecurrent=='first'">
+      <el-col :span="24">
+        <el-col :span="15" style="height:490px;padding:20px 20px 0px 20px">
+          <div class="mainbox" style="padding-left:15px">
+            <div style="padding:20px">
+              <div class="boxName">电站信息</div>
+              <div class="typeradiousgood" v-if="status.value===10"></div>
+              <div class="typeradiousgeneral" v-if="status.value===20"></div>
+              <div class="typeradiousbad" v-if="status.value===30"></div>
+              <span class="typedesc">{{status.desc}}</span>
+              <span class="typedesc">{{status.updateTime}}</span>
+            </div>
+
+            <div class="humileft">
+              <!-- <div class="humiditydisblock" v-for="(item,index) in humitureData " :key="index">
+              <span>
+                <span>{{item.name}}:</span>
+                <span v-show="item.value">{{item.value}}</span>
+                <span>{{item.unit}}</span>
+              </span>
+              </div>-->
+              <div
+                class="photvolboxright transright"
+                v-for="(item,index) in transformerData "
+                :key="index"
+              >
+                <div class="units">{{item.name+'('+item.unit+')'}}</div>
+                <div class="unitsvalue">{{item.value}}</div>
+              </div>
+            </div>
+            <!-- <div class="humiright">
+            <div
+              class="photvolboxright transright"
+              v-for="(item,index) in transformerData "
+              :key="index"
+            >
+              <div class="units">{{item.name+'('+item.unit+')'}}</div>
+              <div class="unitsvalue">{{item.value}}</div>
+            </div>
+            </div>-->
+            <div>
+              <div class="padding20">
+                <span class="boxName">电量统计信息</span>
+              </div>
+              <div class="earnmiddle" style="width:80%;margin-top:10px">
+                <div class="eletricquantity" v-for="(item,index) in BatteryStats" :key="index">
+                  <div class="earningsimgtop">
+                    <img src="static/imgs/storedblue.png" alt class="boximg" />
+                  </div>
+                  <div class="unitName nametop left20">
+                    <span>{{item.name+'('+item.unit+')'}}</span>
+                  </div>
+                  <div class="unitName namebottom left20">{{item.value}}</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="padding20">
+                <span class="boxName">功率统计信息</span>
+              </div>
+              <div class="earnbottom" style="width:65%">
+                <div class="operationmessage" v-for="(item,index) in Statisticalpower" :key="index">
+                  <div class="unitName nametop left20">
+                    {{item.name}}
+                    <span v-if="item.unit!=='' ">{{'('+item.unit+')'}}</span>
+                  </div>
+                  <div class="unitName namebottom left20">{{item.value}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="9" style="height:490px;padding:20px 20px 0px 0px">
+          <div class="mainbox">
+            <div class="Statmessage mainbox">
+              <div style="padding:20px;position:relative">
+                <div class="boxName">设备状态统计</div>
+                <div class="Devicetotal">
+                  <div class="DeviceNumber">{{totalDevice}}</div>
+                  <div class="Devicepcs">设备总数(个)</div>
+                </div>
+                <div style="height:420px">
+                  <ve-histogram
+                    :data="devicechartData"
+                    :settings="devicechartSettings"
+                    :extend="devicechartExtend"
+                    :yAxis="deviceyAxisOption"
+                    :legend="devicelegend_top"
+                    height="100%"
+                    :grid="devicegrid"
+                    :colors="deviceColor"
+                  ></ve-histogram>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-col>
+      <el-col :span="24">
+        <el-col :span="12" style="height:580px;padding:20px 20px 0px 20px">
+          <div class="mainbox">
+            <div class="padding20">
+              <span class="boxName">用电负荷变化趋势</span>
+            </div>
+            <div style="float: right; margin-right: 30px;">
+              <el-button icon="el-icon-arrow-left" circle @click="powderleft"></el-button>
+              <el-date-picker
+                v-model="powertime"
+                align="right"
+                type="date"
+                placeholder="选择日期"
+                value-format="yyyy-MM-dd"
+                :picker-options=" powerpickerOptions"
+                @change="changepower"
+              ></el-date-picker>
+              <el-button icon="el-icon-arrow-right" circle @click="powderright"></el-button>
+            </div>
+            <div style="height:420px;margin-top: 60px;padding:0px 20px;">
+              <ve-line
+                :data="powerchartData"
+                height="100%"
+                :settings="powerchartSettings"
+                :xAxis="xAxisOption"
+                :colors="powercolor"
+                :grid="powergrid"
+                :legend="powerlegend"
+                :extend="powerextend"
+              ></ve-line>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="12" style="height:580px;padding:20px 20px 0px 0px">
+          <div class="mainbox">
+            <div class="padding20">
+              <span class="boxName">用电量变化趋势</span>
+            </div>
+
+            <div class="timetab">
+              <span class="timebox" style="margin-right:40px">
+                <el-radio-group v-model="datatime" size="medium" @change="changetypadata">
+                  <el-radio-button label="月"></el-radio-button>
+                  <el-radio-button label="年"></el-radio-button>
+                  <el-radio-button label="总"></el-radio-button>
+                </el-radio-group>
+              </span>
+              <span class="timebox">
+                <el-button
+                  icon="el-icon-arrow-left"
+                  circle
+                  @click="batteryleft"
+                  :disabled="datatime=='总'"
+                ></el-button>
+                <el-date-picker
+                  v-model="timevalue"
+                  :type="typedate"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  @change="batterychangetime"
+                  :picker-options="batterypickerOptions"
+                  :clearable="false"
+                  :disabled="datatime=='总'"
+                ></el-date-picker>
+                <el-button
+                  icon="el-icon-arrow-right"
+                  circle
+                  @click="battaryright"
+                  :disabled="datatime=='总'"
+                ></el-button>
+              </span>
+            </div>
+
+            <div style="position:relative;height:60px">
+              <div style="float:right;margin-right:60px;margin-top:20px">
+                <el-radio-group v-model="fengtype" size="small" @change="changeType">
+                  <el-radio-button label="总用电量"></el-radio-button>
+                  <el-radio-button label="峰平谷电量"></el-radio-button>
+                </el-radio-group>
+              </div>
+            </div>
+
+            <div style="height:370px;padding:0px 20px">
+              <ve-histogram
+                :data="batterychartData"
+                height="100%"
+                :settings="batterSetting"
+                :colors="powercolor"
+                :yAxis="batteryAxis"
+                :extend="yearextend"
+                :grid="powergrid"
+                :legend-visible="powerleg"
+              ></ve-histogram>
+            </div>
+          </div>
+        </el-col>
+      </el-col>
+      <el-col :span="24" style="margin-top:20px">
+        <el-col :span="10" style="height:300px;padding:0px 20px 0px 20px ">
+          <div class="mainbox">
+            <div class="padding20">
+              <span class="boxName">温度探测器状态排名</span>
+
+              <div style="float:right;margin-right:20px">
+                <el-link type="primary" @click="temperadialogTableVisible=true">
+                  更多
+                  <i class="el-icon-arrow-right"></i>
+                </el-link>
+              </div>
+            </div>
+
+            <div>
+              <el-dialog title="温湿度探测器排名" :visible.sync="temperadialogTableVisible">
+                <div style=" margin-bottom:20px;">
+                  <el-input
+                    style="width:300px"
+                    placeholder="请输入查询内容"
+                    v-model="keyword"
+                    @keyup.native.enter="gettemlist()"
+                  >
+                    <el-button slot="append" icon="el-icon-search" @click="findeone"></el-button>
+                  </el-input>
+                </div>
+
+                <el-table :data="temperagridData" border>
+                  <el-table-column type="index" label="序号" width="80"></el-table-column>
+                  <el-table-column label="名称">
+                    <template slot-scope="scope">{{scope.row.device.name}}</template>
+                  </el-table-column>
+                  <el-table-column label="位置">
+                    <template slot-scope="scope">{{scope.row.device.location}}</template>
+                  </el-table-column>
+                  <el-table-column label="数值">
+                    <template slot-scope="scope">
+                      {{scope.row.valueUnit.value}}
+                      {{scope.row.valueUnit.unit}}
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="状态">
+                    <template slot-scope="scope">{{scope.row.status.desc}}</template>
+                  </el-table-column>
+                  <el-table-column label="更新时间" width="180">
+                    <template slot-scope="scope">{{scope.row.status.updateTime}}</template>
+                  </el-table-column>
+                </el-table>
+                <el-col :span="24" style="margin-top:20px">
+                  <page-compent :pageSize="size" :pagetotal="temtatol" @fanye="pageIndexChange"></page-compent>
+                </el-col>
+
+                <span slot="footer" class="dialog-footer">
+                  <el-button size="small" @click="temperadialogTableVisible=false">关 闭</el-button>
+                </span>
+              </el-dialog>
+
+              <div style="padding:0px 20px;margin-top:10px">
+                <el-table :data="tempertableData" style="width: 100%" size="mini" border>
+                  <el-table-column type="index" label="排序" width="100"></el-table-column>
+                  <el-table-column prop="name" label="名称" width="180">
+                    <template slot-scope="scope">{{scope.row.device.name}}</template>
+                  </el-table-column>
+                  <el-table-column prop="address" label="数值">
+                    <template slot-scope="scope">
+                      {{scope.row.valueUnit.value }}
+                      {{scope.row.valueUnit.unit}}
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="address" label="状态">
+                    <template slot-scope="scope">{{scope.row.status.desc}}</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="14" style="height:300px;padding:0px 20px 0px 0px">
+          <div class="mainbox">
+            <div class="padding20">
+              <span class="boxName">环境监测</span>
+            </div>
+            <div style="padding:20px ;">
+              <div class="mentPoint" v-for="(item,index) in humitureData " :key="index">
+                <div class="mainbox">
+                  <div class="mentpoint_title">{{item.device.name}}</div>
+                  <div class="templuter">
+                    <span>{{item.temperature.measureName}}</span>
+                    <span>
+                      {{item.temperature.valueUnit.value}}
+                      {{item.temperature.valueUnit.unit}}
+                    </span>
+                  </div>
+                  <div class="templuter">
+                    <span>{{item.humidity.measureName}}</span>
+                    <span>
+                      {{item.humidity.valueUnit.value}}
+                      {{item.humidity.valueUnit.unit}}
+                    </span>
+                  </div>
+                  <div class="templuter">
+                    <span>{{item.smokeDetector.measureName}}</span>
+                    <span>{{item.smokeDetector.status.desc}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-col>
+    </el-col>
+    <el-row
+      v-if="activecurrent=='second'"
+      class="Devicemain"
+      style="margin-top:20px;height:calc(100% - 20px ) "
+    >
+      <device-page></device-page>
+    </el-row>
+    <el-row
+      v-if="activecurrent=='third'"
+      class="Devicemain"
+      style="margin-top:20px;height:calc(100% - 20px ) "
+    >
+      <eletric-chart></eletric-chart>
+    </el-row>
+
+    <el-row
+      v-if="activecurrent=='fourth'"
+      class="Devicemain"
+      style="margin-top:20px;height:calc(100% - 20px ) "
+    >
+      <demand-chart></demand-chart>
+    </el-row>
+
+    <el-row
+      v-if="activecurrent=='five'"
+      class="Devicemain"
+      style="margin-top:20px;height:calc(100% - 20px ) "
+    >
+      <load-file></load-file>
+    </el-row>
+
+    <el-row
+      v-if="activecurrent=='six'"
+      class="Devicemain"
+      style="margin-top:20px; height:calc(100% - 20px ) "
+    >
+      <alarm-list></alarm-list>
+    </el-row>
+    <el-row
+      v-if="activecurrent=='seven'"
+      class="Devicemain"
+      style="margin-top:20px; height:calc(100% - 20px ) "
+    >
+      <el-col :span="24" class="mainboxfour">
+        <task-list
+          list-type="workOrder"
+          ref="workOrder"
+          style="margin: 20px 40px"
+          :subid="this.$route.params.subid"
+        ></task-list>
+      </el-col>
+    </el-row>
+  </el-row>
+</template>
+
+<script>
+import {
+  getsubstation,
+  switchpower,
+  powerDistribution,
+  enerymanage,
+  temperatureDetectors
+} from "@/api/api";
+
+import pageCompent from "@/components/pagination"; //分页
+import devicePage from "@/components/syllogeDevice/equipment"; //设备
+import alarmList from "@/components/syllogeAlarm/alarmlist"; //报警列表
+import TaskList from "@/components/task-list"; //工单
+import eletricChart from "@/components/electricquantity/eletricchart"; //电量
+import loadFile from "@/components/loadfile/load"; //负荷
+import demandChart from "@/components/demand/demandchart"; //需量
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+export default {
+  components: {
+    pageCompent,
+    TaskList,
+    devicePage,
+    alarmList,
+    eletricChart,
+    loadFile,
+    demandChart
+  },
+  data() {
+    return {
+      // filterText: "",
+      temperagridData: [],
+      temperadialogTableVisible: false,
+      batterypickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      typedate: "month",
+      timevalue: timeFormatmonth(new Date()),
+      datatime: "月",
+      activecurrent: "first",
+      status: {}, //能耗的状态
+      humitureData: [], //温湿度
+      transformerData: [],
+      BatteryStats: [],
+      Statisticalpower: [],
+      devicechartData: {
+        //能源汇总
+        columns: ["类型", "正常", "离线", "报警", "故障"],
+        rows: []
+      },
+      devicechartSettings: {
+        stack: { 类型: ["正常", "离线", "报警", "故障"] },
+        textStyle: {
+          color: "#fff"
+        },
+        itemStyle: {
+          //color: ["#c23531", "#2f4554", "#61a0a8", "#ca8622"]
+        }
+      },
+      deviceColor: ["#00CC92", "#adadad", "red", "#FF9D6B"],
+      devicechartExtend: {
+        barWidth: "30%",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      deviceyAxisOption: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "数量/台",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      devicelegend_top: {
+        top: 25,
+        right: 10
+        // textStyle: {
+        //   color: "#fff"
+        // }
+      },
+      devicegrid: {
+        right: 20,
+        left: 20,
+        bottom: 20,
+        // top: -20
+        top: 120
+      },
+      deviceamount: [], //各个设备的总数
+      totalDevice: null,
+      powertime: timeFormatdata(new Date()), //功率时间
+      powerpickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "今天",
+            onClick(picker) {
+              picker.$emit("pick", new Date());
+            }
+          },
+          {
+            text: "昨天",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24);
+              picker.$emit("pick", date);
+            }
+          },
+          {
+            text: "一周前",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", date);
+            }
+          }
+        ]
+      },
+      powerleg: false,
+      powerchartData: {
+        columns: ["time", "activePower", "reactivePower", "installedCapacity"],
+        rows: []
+      },
+      powergrid: {
+        bottom: 10
+      },
+      powerlegend: {
+        // legend: 50
+      },
+      powerextend: {
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+          }
+        },
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+        }
+      },
+      powerchartSettings: {
+        labelMap: {
+          activePower: "有功功率",
+          reactivePower: "无功功率",
+          installedCapacity: "装机容量"
+        },
+        axisSite: { right: ["reactivePower"] },
+        yAxisName: []
+      },
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 20);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        }
+      },
+      powercolor: ["#6076FF"],
+      poweryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      powerunits: [], //功率单
+      batterychartData: {
+        columns: [],
+        rows: []
+      },
+      batterSetting: {
+        // labelMap: {
+        // }
+      },
+      batterextend: {
+        barWidth: "30%",
+        top: "-20px",
+        barCategoryGap: "10%",
+        // barGap: "10%",
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              var str_before = value.substring(10, 20);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        }
+      },
+      batteryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      monthxAis: {
+        type: "category",
+        axisLabel: {
+          formatter: function(value) {
+            console.log("X轴的值");
+            console.log(value);
+            var str_before = value.substring(8, 10);
+            return str_before;
+          }
+        }
+      },
+      yearxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(5, 7);
+            return str_before;
+          }
+        }
+      },
+      allxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(0, 4);
+            return str_before;
+          }
+        }
+      },
+      yearextend: {
+        barWidth: "30%",
+
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              // console.log("加油=========站");
+              // console.log(value);
+              var str_before = value.substring(8, 10);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        }
+      },
+
+      fengtype: "总用电量",
+      //峰值的
+      tempertableData: [], //温度探测排名
+
+      //       Earningsdataimg: [
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedred.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedgreen.png",
+      //   "static/imgs/storedblue.png",
+      //   "static/imgs/storedblue.png"
+      // ],
+      envioDate: [], //环境监测
+      start: 0,
+      size: 10,
+      temtatol: 0,
+      keyword: ""
+    };
+  },
+
+  methods: {
+    getswichroom() {
+      getsubstation(this.$route.params.id, this.$route.params.subid).then(
+        res => {
+          console.log("能耗");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.tempertableData = res.data.data.temperaturePoints;
+            this.humitureData = res.data.data.deviceEnvironmentData;
+
+            this.status = res.data.data.status;
+            this.transformerData = res.data.data.statistics.slice(0, 2);
+            this.BatteryStats = res.data.data.statistics.slice(6, 11);
+
+            this.Statisticalpower = res.data.data.statistics.slice(2, 6);
+            console.log(this.Statisticalpower);
+            let data = res.data.data.deviceStatusWithCountAndTypes;
+            for (let i in data) {
+              let temp = {};
+              let devitotal = {};
+              let devicenum = 0;
+              for (let n of data[i].deviceStatusWithCounts) {
+                temp[n["desc"]] = n.count;
+                temp["类型"] = data[i].type;
+                devicenum += n.count;
+                devitotal["type"] = data[i].type;
+                devitotal["total"] = devicenum;
+              }
+              this.devicechartData.rows.push(temp);
+              this.deviceamount.push(devitotal);
+            }
+            for (let k = 0; k < this.deviceamount.length; k++) {
+              this.totalDevice += this.deviceamount[k].total; //总数,
+            }
+          }
+        }
+      );
+    },
+    battaryaddEventDate(addType = "add") {
+      //移过来的! 可以抽空优化
+      var type = this.typedate;
+      let datatime = new Date();
+      switch (type) {
+        case "month":
+          console.log("month");
+          var mounthstime = moment(this.timevalue).add(
+            addType === "add" ? 1 : -1,
+            "months"
+          );
+          let newtimemounth = moment(mounthstime).format("YYYY-MM");
+          console.log(newtimemounth);
+
+          if (addType === "add") {
+            if (new Date(newtimemounth) > datatime) {
+              this.$message.error("日期大于当月,从新选择");
+              return;
+            } else {
+              this.timevalue = newtimemounth;
+            }
+          } else {
+            this.timevalue = newtimemounth;
+          }
+          break;
+        case "year":
+          var yearstime = moment(this.timevalue).add(
+            addType === "add" ? 1 : -1,
+            "years"
+          );
+          let newtimeyears = moment(yearstime).format("YYYY");
+
+          if (addType === "add") {
+            if (new Date(newtimeyears) > datatime) {
+              this.$message.error("日期大于当年,从新选择");
+              return;
+            } else {
+              this.timevalue = newtimeyears;
+            }
+          } else {
+            this.timevalue = newtimeyears;
+          }
+          break;
+      }
+      this.getenergycharts();
+    },
+
+    getenergycharts() {
+      let data = this.timevalue.split("-");
+      if (this.timevalue == "") {
+        //总
+        var year = "";
+        var month = "";
+      } else if (this.datatime == "年") {
+        var year = data[0];
+        var month = "";
+      } else {
+        var year = data[0];
+        var month = data[1];
+      }
+      let newvalue = "";
+      if (this.fengtype == "总用电量") {
+        newvalue = "";
+      } else {
+        newvalue = "tou";
+      }
+      var paramstype = {
+        type: newvalue
+      };
+      // var parms={}
+      powerDistribution(this.$route.params.subid, year, month, paramstype).then(
+        res => {
+          console.log("用电量变化");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.batterychartData.rows = res.data.data.logs;
+            if (this.fengtype == "总用电量") {
+              this.powercolor = ["#6076FF"];
+              this.batterychartData.columns = ["time", "value"];
+              this.powerleg = false;
+              this.batterSetting.labelMap = {
+                value: "值"
+              };
+            } else {
+              this.powerleg = true;
+              this.powercolor = ["#FFC600", "#6076FF", "#FB5A6E"];
+              this.batterychartData.columns = [
+                "time",
+                "flatKwh",
+                "peakKwh",
+                "valleyKwh"
+              ];
+              this.batterSetting = {
+                labelMap: {
+                  peakKwh: "峰平电量",
+                  flatKwh: "平时电量",
+                  valleyKwh: "谷时电量"
+                },
+                stack: {
+                  用户: ["flatKwh", "peakKwh", "valleyKwh"]
+                }
+              };
+            }
+            this.batteryAxis.name = "单位/" + res.data.data.unit[0];
+          }
+        }
+      );
+    },
+    changeType() {
+      this.getenergycharts();
+    },
+    batterychangetime() {
+      this.getenergycharts();
+    },
+
+    changetypadata() {
+      //
+      this.timevalue = timeFormatdata(new Date());
+      console.log(this.datatime);
+      switch (this.datatime) {
+        case "月":
+          this.typedate = "month";
+          // this.getyeardata();
+          this.yearextend.xAxis.axisLabel = this.monthxAis.axisLabel;
+
+          break;
+        case "年":
+          this.typedate = "year";
+          // this.getyeardata();
+          this.yearextend.xAxis.axisLabel = this.yearxAis.axisLabel;
+
+          break;
+        default:
+          this.timevalue = "";
+          // this.getyeardata();
+          this.yearextend.xAxis.axisLabel = this.allxAis.axisLabel;
+          break;
+      }
+
+      this.getenergycharts();
+    },
+    batteryleft() {
+      // this.addEventdata("miuns");
+      this.battaryaddEventDate("miuns");
+    },
+
+    battaryright() {
+      this.battaryaddEventDate("add");
+    },
+
+    powderleft() {
+      this.addEventdata("miuns");
+    },
+    powderright() {
+      this.addEventdata("add");
+    },
+    addEventdata(addType = "add") {
+      let datatime = new Date();
+      var datetimes = moment(this.powertime).add(
+        addType === "add" ? 1 : -1,
+        "days"
+      );
+      let newtime = moment(datetimes).format("YYYY-MM-DD");
+
+      if (addType === "add") {
+        if (new Date(newtime) > datatime) {
+          this.$message.error("日期大于当天,从新选择");
+          return;
+        } else {
+          this.powertime = newtime;
+        }
+      } else {
+        this.powertime = newtime;
+      }
+      // this.getenergyStoragepowers();
+      this.getswitchpowerchart();
+    },
+    changepower() {
+      this.getswitchpowerchart();
+    },
+
+    getswitchpowerchart() {
+      var parms = {
+        date: this.powertime
+      };
+      switchpower(this.$route.params.subid, parms).then(res => {
+        console.log("用电功率");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.powerchartData.rows = res.data.data.logs;
+
+          this.powerchartSettings.yAxisName = [
+            "单位/" + res.data.data.units[0],
+            "单位/" + res.data.data.units[1]
+          ];
+
+          //this.powerunits = res.data.data.units;
+          // this.powerchartSettings.legendName.activePower =
+          //   "有功功率" + "(" + res.data.data.units[0] + ")";
+          // this.powerchartSettings.legendName.无功功率 =
+          //   "无功功率" + "(" + res.data.data.units[1] + ")";
+          // this.powerchartSettings.legendName.装机容量 =
+          //   "无功功率" + "(" + res.data.data.units[2] + ")";
+        }
+      });
+    },
+    findeone() {
+      this.gettemlist();
+    },
+    gettemlist() {
+      var params = {
+        keyword: this.keyword,
+        start: this.start,
+        size: this.size
+      };
+      temperatureDetectors(this.$route.params.subid, params).then(res => {
+        console.log("表格");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.temperagridData = res.data.data.rows;
+          if (this.start == 0) {
+            this.temtatol = res.data.data.total;
+          }
+        }
+      });
+    },
+    pageIndexChange(index) {
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.gettemlist();
+    }
+  },
+  mounted() {
+    console.log("路由");
+    console.log(this.$route.params);
+    this.getswichroom();
+    this.getswitchpowerchart();
+    this.getenergycharts();
+    this.gettemlist();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.timetab {
+  // float: right;
+  // margin-right: 80px;
+  margin-left: 120px;
+}
+.humiditydisblock {
+  display: inline-block;
+  margin-right: 20px;
+  padding-left: 20px;
+
+  // margin-top: 40px;
+}
+.humileft {
+  display: inline-block;
+  width: 50%;
+  //border-right: 1px solid rgba(182, 187, 198, 1);
+  height: 60px;
+  line-height: 60px;
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #636f8a;
+  padding-left: 10px;
+}
+.humiright {
+  display: inline-block;
+  width: 48%;
+  padding-left: 60px;
+}
+.transright {
+  margin-right: 60px;
+}
+.operationmessage {
+  width: 159px;
+  height: 60px;
+  border-right: 1px solid #b6bbc6;
+}
+.operationmessage:last-of-type {
+  border: none;
+}
+.mentPoint {
+  display: inline-block;
+  width: 162px;
+  height: 168px;
+  font-family: Microsoft YaHei;
+  color: rgba(99, 111, 138, 1);
+  margin-right: 60px;
+}
+.mentpoint_title {
+  height: 37px;
+  border-bottom: 1px solid #e5e5e5;
+  line-height: 37px;
+  padding-left: 15px;
+}
+.templuter {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 15px;
+}
+.mentboxtem {
+  display: inline-block;
+}
+.eletricquantity {
+  border: 1px solid #efefef;
+  -webkit-box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  box-shadow: 0px 0px 8px 6px rgba(245, 245, 250, 0.8);
+  border-radius: 5px;
+  display: inline-block;
+  vertical-align: middle;
+  width: 140px;
+  height: 128px;
+}
+</style>
+
+<style>
+</style>

@@ -1,0 +1,193 @@
+<template>
+  <!-- <div>实时监控页面</div> -->
+  <el-row>
+    <el-col :span="24">
+      <div class="demo-input-suffix">
+        <!-- 属性方式： -->
+        <el-input
+          placeholder="请输入电站名称和地址"
+          v-model="keyword"
+          @keyup.native.enter="getrealTimelist()"
+        >
+          <el-button slot="append" icon="el-icon-search" @click="seach_one"></el-button>
+        </el-input>
+      </div>
+    </el-col>
+    <el-col :span="24" style="padding:20px" class="realmainclass">
+      <!-- <i class="iconfont icon-weibiaoti--"></i> -->
+      <el-table
+        :data="tableData"
+        border
+        style="width: 100%"
+        :header-cell-style="{background:'#F1F1F5',color:'#606266',}"
+      >
+        <el-table-column label="名称" width="220">
+          <template slot-scope="scope">
+            <el-link type="primary" @click="To_view(scope.row)">{{scope.row.name}}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="address" label="地址" min-width="320" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column prop="deviceCount" label="设备(个)" width="100"></el-table-column>
+        <el-table-column prop="status.desc" label="状态" width="120">
+          <template slot-scope="scope">
+            <el-button
+              type="success"
+              size="mini"
+              plain
+              v-if="scope.row.status.value==10"
+            >{{scope.row.status.desc}}</el-button>
+            <el-button
+              type="primary"
+              size="mini"
+              plain
+              v-if="scope.row.status.value==20"
+            >{{scope.row.status.desc}}</el-button>
+            <el-button
+              type="danger"
+              size="mini"
+              plain
+              v-if="scope.row.status.value==30"
+            >{{scope.row.status.desc}}</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="更新时间" width="220">
+          <template slot-scope="scope">{{scope.row.status.updateTime}}</template>
+        </el-table-column>
+
+        <el-table-column prop="installedDate" label="安装日期" width="230"></el-table-column>
+        <el-table-column label="子站类型" min-width="268">
+          <template slot-scope="scope">
+            <span v-for="(item,index) in scope.row.subStationTypes" :key="item.value">
+              <span v-if="scope.row.subStationTypes.length>1 && index!==0 ">、</span>
+              <el-link type="primary" @click="zizhan_view(scope.row,item)">
+                <span>{{item.type.desc}}</span>
+              </el-link>
+            </span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-col>
+    <el-col :span="24">
+      <page-compent :pageSize="size" :pagetotal="paggtatol" @fanye="pageIndexChange"></page-compent>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import pageCompent from "@/components/pagination"; //分页
+import { getstations } from "@/api/api";
+// import { getstationssummary } from "@/api/api";
+export default {
+  components: {
+    pageCompent
+  },
+  data() {
+    return {
+      keyword: "", //搜索
+      start: 0, //当前页
+      size: 10, //请求显示页
+      paggtatol: null, //总条数/
+      tableData: [] //实时监控的表格
+    };
+  },
+  methods: {
+    To_view(row) {
+      if(row.subStationTypes.length == 1){
+        this.zizhan_view(row, row.subStationTypes[0])
+      }else{
+        this.$router.push({
+          path: `/collect/${row.id}`,
+          query: { realTime: 1 }
+        });
+      }      
+    },
+    zizhan_view(row, item) {
+      console.log("zizhan");
+      console.log(row);
+      console.log(item);
+      switch (item.type.value) {
+        case 60:
+          this.$router.push({
+            path: `/switchroom/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+
+          break;
+        case 30:
+          this.$router.push({
+            path: `/chargestation/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+          break;
+        case 10:
+          this.$router.push({
+            path: `/Photovoltaic/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+          break;
+        case 20:
+          this.$router.push({
+            path: `/storedenery/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+          break;
+        case 40:
+          this.$router.push({
+            path: `/firecontrol/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+          break;
+        case 50:
+          this.$router.push({
+            path: `/safeprotection/${row.id}/${item.id}`,
+            query: { realTime: 1 }
+          });
+
+        default:
+          break;
+      }
+    },
+
+    getrealTimelist() {
+      var parms = {
+        keyword: this.keyword,
+        start: this.start,
+        size: this.size
+      };
+      getstations(parms).then(res => {
+        console.log("实时监控");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.tableData = res.data.data.rows;
+          if (this.start == 0) {
+            //页面值过来了一次
+            this.paggtatol = res.data.data.total;
+          }
+        }
+      });
+    },
+
+    pageIndexChange(index) {
+      console.log(index);
+      let page = (index - 1) * this.size;
+      this.start = page;
+      this.getrealTimelist();
+      //分页
+    },
+    seach_one() {
+      this.getrealTimelist();
+    }
+  },
+  mounted() {
+    this.getrealTimelist();
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.demo-input-suffix {
+  width: 400px;
+  margin: 20px 0px 0px 20px;
+}
+</style>
+

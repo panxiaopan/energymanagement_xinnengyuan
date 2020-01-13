@@ -1,0 +1,889 @@
+<template>
+  <el-col :span="24" style="width:100%;height:1620px">
+    <el-col :span="24" style="width:100%;height:100%">
+      <div class="mainbox">
+        <el-col :span="24" style="height:100%">
+          <el-col :span="5" style="height:100%;padding:20px;">
+            <div class="electricleft">
+              <div style="margin-top:20px">
+                <div style="margin-bottom:20px">
+                  <el-input placeholder="输入关键字进行过滤" v-model="filterText"></el-input>
+                </div>
+
+                <el-tree
+                  class="filter-tree"
+                  :data="data"
+                  :props="defaultProps"
+                  default-expand-all
+                  :filter-node-method="filterNode"
+                  @node-click="nodeclick"
+                  :expand-on-click-node="false"
+                  :highlight-current="true"
+                  accordion
+                  ref="tree"
+                  node-key="nodeId"
+                  :current-node-key="this.defalutnone"
+                ></el-tree>
+
+                <!-- <el-input placeholder="输入关键字进行过滤" v-model="filtertext">
+                </el-input>
+                <el-tree
+                  class="filter-tree"
+                  :data="data"
+                  :props="defaultProps"
+                  default-expand-all
+                  :filter-node-method="filterNode"
+                  ref="tree"
+                  :highlight-current="true"
+                  :expand-on-click-node="false"
+                  accordion
+                ></el-tree>-->
+              </div>
+            </div>
+          </el-col>
+          <el-col :span="19">
+            <div class="current_Name">{{current_title_Name}}</div>
+            <div class="electritimetab">
+              <span class="timebox" style="margin-right:40px;">
+                <el-radio-group
+                  v-model="electricdatatime"
+                  size="medium"
+                  @change="elecchangetypadata"
+                >
+                  <el-radio-button label="月"></el-radio-button>
+                  <el-radio-button label="年"></el-radio-button>
+                  <el-radio-button label="总"></el-radio-button>
+                </el-radio-group>
+              </span>
+              <span class="timebox">
+                <el-button
+                  icon="el-icon-arrow-left"
+                  circle
+                  @click="electricleft"
+                  :disabled="electricdatatime=='总'"
+                ></el-button>
+                <el-date-picker
+                  v-model="electricelectrictimevalue"
+                  :type="electrictypedate"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  :picker-options="electricpickerOptions"
+                  :clearable="false"
+                  :disabled="electricdatatime=='总'"
+                ></el-date-picker>
+                <el-button
+                  icon="el-icon-arrow-right"
+                  circle
+                  @click="electricright"
+                  :disabled="electricdatatime=='总'"
+                ></el-button>
+              </span>
+            </div>
+
+            <el-col :span="24" style="margin-top:20px">
+              <el-col :span="12">
+                <div class="time_share">分时电量</div>
+                <div style="height:400px;position:relative">
+                  <div class="Nouse">
+                    <!-- <div class="Nousemessage nousetotal">充电个数</div> -->
+                    <div class="Nousemessage nousescale">分时电量</div>
+                    <!-- <span>{{item.}}</span> -->
+                  </div>
+
+                  <div class="power_battery">
+                    <span class="power_battery_name">{{Totalwattage[1].name}}</span>
+
+                    <span style="float:right;padding-right:24px">
+                      <span class="powervalue">{{Totalwattage[1].value}}</span>
+                      <span class="powerunit">{{Totalwattage[1].unit}}</span>
+                    </span>
+                  </div>
+
+                  <div class="peakvalue">
+                    <div
+                      class="peakunit"
+                      v-for="(item,index)  in this.eleclowdata.rows "
+                      :key="index"
+                    >
+                      <span class="powervalue">{{item.value}}</span>
+                      <span class="powerunit">{{item.unit}}</span>
+                    </div>
+                    <!-- <div class="peakunit">120 KW</div>
+                    <div class="peakunit">300 KW</div>-->
+                  </div>
+
+                  <ve-ring
+                    :data="eleclowdata"
+                    height="100%"
+                    :settings="ringSettings"
+                    :legend="ringlegend"
+                    :colors="ringscolor"
+                    :extend="ring_extend"
+                  ></ve-ring>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="time_share">用电趋势</div>
+                <div style="position:relative;height:60px">
+                  <div style="float:right;margin-right:60px;margin-top:20px">
+                    <el-radio-group
+                      v-model="chiderfengtype"
+                      size="small"
+                      @change="chirderchangeType"
+                    >
+                      <el-radio-button label="总用电量"></el-radio-button>
+                      <el-radio-button label="峰平谷电量"></el-radio-button>
+                    </el-radio-group>
+                  </div>
+                </div>
+                <div style="height:370px;padding:0px 20px">
+                  <ve-histogram
+                    :data="electrichartsDate"
+                    height="100%"
+                    :settings="electbatterSetting"
+                    :colors="elecpowercolor"
+                    :yAxis="elecbatteryAxis"
+                    :extend="elecyearextend"
+                    :grid="elecpowergrid"
+                    :legend-visible="elecpowerleg"
+                  ></ve-histogram>
+                </div>
+              </el-col>
+            </el-col>
+            <el-col :span="24">
+              <div style="margin:40px 40px 20px 40px">
+                <hr />
+              </div>
+            </el-col>
+            <el-col :span="24" style="margin-top:20px;margin-bottom:40px">
+              <div style="float: right; margin-right: 30px;">
+                <el-button icon="el-icon-arrow-left" circle @click="elecdataleft"></el-button>
+                <el-date-picker
+                  v-model="elecdatatime"
+                  align="right"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                  :picker-options=" electricpickerOptions"
+                  @change="chaelecpower"
+                ></el-date-picker>
+                <el-button icon="el-icon-arrow-right" circle @click="elecdataright"></el-button>
+              </div>
+            </el-col>
+
+            <el-col :span="24" style="height:440px;">
+              <el-col :span="12" style="height:100%;padding-right:40px">
+                <div class="time_share">电量负荷变化趋势</div>
+                <div style="height:420px;">
+                  <ve-line
+                    :data="powerloadchartData"
+                    height="100%"
+                    :settings="chirderhartSettings"
+                    :xAxis="xAxisOption"
+                    :colors="colorelec"
+                    :legend="powerlegend"
+                    :grid="powergrid"
+                    :extend="powerextend"
+                  ></ve-line>
+                </div>
+
+                <!-- 打完打完的 -->
+              </el-col>
+              <el-col :span="12" style="padding-left:40px">
+                <div class="time_share">功率因数</div>
+                <div style="height:420px;">
+                  <ve-line
+                    :data="factorchartData"
+                    height="100%"
+                    :yAxis="poweryAxis"
+                    :xAxis="xAxisOption"
+                    :settings="factorsetting"
+                  ></ve-line>
+                </div>
+              </el-col>
+            </el-col>
+            <el-col :span="24" style="height:420px;margin-top:40px ">
+              <el-col :span="12" style="height:100%;padding-right:40px;">
+                <div class="time_share">电流</div>
+                <ve-line
+                  :data="electricchartData"
+                  height="100%"
+                  :settings="elecsetting"
+                  :yAxis="currentyAxis"
+                  :xAxis="xAxisOption"
+                ></ve-line>
+              </el-col>
+              <el-col :span="12" style="height:100%;padding-left:40px;">
+                <div class="time_share">电压</div>
+                <ve-line
+                  :data="voltagechartData"
+                  height="100%"
+                  :yAxis="voltageyAxis"
+                  :xAxis="xAxisOption"
+                  :settings="voltagesettings"
+                ></ve-line>
+              </el-col>
+            </el-col>
+          </el-col>
+        </el-col>
+      </div>
+    </el-col>
+  </el-col>
+</template>
+<script>
+import { enerymanage, nergyConsumchart, eneryarguments } from "@/api/api";
+import {
+  timeFormastart,
+  timeFormanow,
+  timeFormatdata,
+  timeFormatmonth,
+  timeFormatyear
+} from "@/assets/js/common";
+
+export default {
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+
+  data() {
+    return {
+      current_title_Name: "",
+      chiderfengtype: "总用电量",
+      defalutnone: null,
+      filterText: "",
+      defaultProps: {
+        children: "subNodes",
+        label: "nodeName"
+      },
+      data: [],
+      electricdatatime: "月",
+      electricpickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      electricelectrictimevalue: timeFormatmonth(new Date()),
+      electrictypedate: "month",
+      eleclowdata: {
+        rows: [],
+        columns: ["name", "value"]
+      },
+      ringSettings: {
+        offsetY: 240,
+        radius: [80, 120]
+        // center: ["20%", "50%"],
+      },
+      ringlegend: {
+        top: 140,
+        right: 220,
+        width: 60,
+        height: 80,
+        itemGap: 30
+      },
+      ring_grid: {
+        right: 500,
+        top: 200
+      },
+      Totalwattage: [], //总用电量
+      ring_extend: {
+        // grid: {
+        //   left: 500
+        // }
+        series: {
+          center: ["25%", "50%"]
+        }
+      },
+      ringscolor: ["#FFC600", "#6076FF", "#FB5A6E"],
+      electrichartsDate: {
+        columns: [],
+        rows: []
+      },
+      electbatterSetting: {
+        // labelMap: {
+        // }
+      },
+      batterextend: {
+        //  barWidth: "30px",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              var str_before = value.substring(10, 20);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        }
+      },
+      elecbatteryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      elecpowergrid: {
+        bottom: 10
+      },
+      monthxAis: {
+        type: "category",
+        axisLabel: {
+          formatter: function(value) {
+            console.log("X轴的值");
+            console.log(value);
+            var str_before = value.substring(8, 10);
+            return str_before;
+          }
+        }
+      },
+
+      yearxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(5, 7);
+            return str_before;
+          }
+        }
+      },
+      allxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(0, 4);
+            return str_before;
+          }
+        }
+      },
+
+      elecpowerleg: false,
+      elecyearextend: {
+        series: {
+          //barGap: "20%"
+          barWidth: "30%"
+        },
+        xAxis: {
+          axisLabel: {
+            formatter: function(value) {
+              // console.log("加油=========站");
+              // console.log(value);
+              var str_before = value.substring(8, 10);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          },
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      elecpowercolor: [],
+      elecdatatime: timeFormatdata(new Date()), //功率时间
+      powerloadchartData: {
+        columns: ["time", "activePower", "reactivePower", "installedCapacity"],
+        rows: []
+      },
+      powerlegend: {
+        // legend: 50
+      },
+      powergrid: {
+        // bottom: 10,
+        right: 40,
+        left: 40
+      },
+      chirderhartSettings: {
+        labelMap: {
+          activePower: "有功功率",
+          reactivePower: "无功功率",
+          installedCapacity: "装机容量"
+        },
+        axisSite: { right: ["reactivePower"] },
+        yAxisName: []
+      },
+      xAxisOption: {
+        //修改截取的时间
+        type: "category",
+        splitLine: {},
+        axisTick: {},
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 16);
+            // var str_after = value.split(" ")[1];
+            return str_before;
+          }
+        },
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+        }
+      },
+      colorelec: ["#1B77FC", "#FB5A6E", "#56D07E"],
+      poweryAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      powerextend: {
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+          }
+        },
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+        }
+      },
+
+      factorchartData: {
+        rows: [],
+        columns: ["time", "value"]
+      },
+      factorsetting: {
+        labelMap: {
+          value: "功率因数"
+        }
+      },
+      electricchartData: {
+        rows: [],
+        columns: ["time", "ia", "ib", "ic"]
+      },
+      elecsetting: {
+        labelMap: {
+          ia: "A相电压",
+          ib: "B相电流",
+          ic: "A相电流"
+        }
+      },
+      currentyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      voltagechartData: {
+        rows: [],
+        columns: ["time", "ua", "ub", "uc"]
+      },
+      voltagesettings: {
+        labelMap: {
+          ua: "A相电压",
+          ub: "B相电压",
+          uc: "C相电压"
+        }
+      },
+      voltageyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      }
+    };
+  },
+  methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
+    },
+
+    nodeclick(data, node) {
+      console.log("=====");
+      console.log(data);
+      console.log(node);
+      this.defalutnone = data.nodeId;
+      // setTimeout(() => {
+      this.getparamslist();
+      //  this.gettreelist();
+      this.getelectrichart();
+      // }, 1000);
+    },
+
+    gettreelist() {
+      var parms = {
+        subStationId: this.$route.params.subid,
+        type: "meter"
+      };
+      return Promise.resolve(
+        enerymanage(parms).then(res => {
+          console.log("树状菜单");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.data = res.data.data;
+            this.defalutnone = res.data.data[0].nodeId;
+            this.current_title_Name = res.data.data[0].nodeName;
+
+            console.log("id" + this.defalutnone);
+          }
+        })
+      );
+    },
+
+    electricleft() {
+      // this.addEventdata("miuns");
+      this.electricaddEventDate("miuns");
+    },
+
+    electricright() {
+      this.electricaddEventDate("add");
+    },
+
+    electricaddEventDate(addType = "add") {
+      //移过来的! 可以抽空优化
+      var type = this.electrictypedate;
+      let electricdatatime = new Date();
+      switch (type) {
+        case "month":
+          console.log("month");
+          var mounthstime = moment(this.electricelectrictimevalue).add(
+            addType === "add" ? 1 : -1,
+            "months"
+          );
+          let newtimemounth = moment(mounthstime).format("YYYY-MM");
+          console.log(newtimemounth);
+
+          if (addType === "add") {
+            if (new Date(newtimemounth) > electricdatatime) {
+              this.$message.error("日期大于当月,从新选择");
+              return;
+            } else {
+              this.electricelectrictimevalue = newtimemounth;
+            }
+          } else {
+            this.electricelectrictimevalue = newtimemounth;
+          }
+          break;
+        case "year":
+          var yearstime = moment(this.electricelectrictimevalue).add(
+            addType === "add" ? 1 : -1,
+            "years"
+          );
+          let newtimeyears = moment(yearstime).format("YYYY");
+
+          if (addType === "add") {
+            if (new Date(newtimeyears) > electricdatatime) {
+              this.$message.error("日期大于当年,从新选择");
+              return;
+            } else {
+              this.electricelectrictimevalue = newtimeyears;
+            }
+          } else {
+            this.electricelectrictimevalue = newtimeyears;
+          }
+          break;
+      }
+      this.getelectrichart();
+    },
+
+    elecchangetypadata() {
+      ///充电放电趋势图
+      //放电
+      this.electricelectrictimevalue = timeFormatdata(new Date());
+      console.log(this.electricdatatime);
+      switch (this.electricdatatime) {
+        case "月":
+          this.electrictypedate = "month";
+          // this.getyeardata();
+          this.elecyearextend.xAxis.axisLabel = this.monthxAis.axisLabel;
+
+          break;
+        case "年":
+          this.electrictypedate = "year";
+          // this.getyeardata();
+          this.elecyearextend.xAxis.axisLabel = this.yearxAis.axisLabel;
+
+          break;
+        default:
+          this.electricelectrictimevalue = "";
+          // this.getyeardata();
+          this.elecyearextend.xAxis.axisLabel = this.allxAis.axisLabel;
+          break;
+      }
+      // this.getenergycharts();
+      this.getelectrichart();
+    },
+
+    chirderchangeType() {
+      //改变点量的状态
+      this.getelectrichart();
+    },
+    getelectrichart() {
+      // console.log("日期");
+      // console.log(this.electricelectrictimevalue);
+
+      let data = this.electricelectrictimevalue.split("-");
+      if (this.electricelectrictimevalue == "") {
+        //总
+        var year = "";
+        var month = "";
+      } else if (this.electricdatatime == "年") {
+        var year = data[0];
+        var month = "";
+      } else {
+        var year = data[0];
+        var month = data[1];
+      }
+
+      // console.log("==年=")
+      // console.log()
+
+      var parms = {
+        deviceId: this.defalutnone
+      };
+
+      return Promise.resolve(
+        nergyConsumchart(year, month, parms).then(res => {
+          console.log("电量==============变化");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.eleclowdata.rows = res.data.data.touEnergyStatistics;
+            this.Totalwattage = res.data.data.statistics;
+
+            if (this.chiderfengtype == "总用电量") {
+              this.electrichartsDate.rows = res.data.data.totalEnergyTrend.logs;
+              this.electrichartsDate.columns = ["time", "value"];
+              this.elecpowerleg = false;
+              this.elecpowercolor = ["#6076FF"];
+              this.electbatterSetting.labelMap = {
+                value: "值"
+              };
+              this.elecbatteryAxis.name =
+                "单位/" + res.data.data.totalEnergyTrend.unit;
+            } else {
+              this.electrichartsDate.rows = res.data.data.touEnergyTrend.logs;
+              this.elecpowerleg = true;
+              this.electrichartsDate.columns = [
+                "time",
+                "peakKwh",
+                "flatKwh",
+                "valleyKwh"
+              ];
+
+              this.electbatterSetting.labelMap = {
+                peakKwh: "峰值电量",
+                flatKwh: "平时电量",
+                valleyKwh: "谷时电量"
+              };
+              this.electbatterSetting.stack = {
+                用户: ["peakKwh", "flatKwh", "valleyKwh"]
+              };
+              this.elecpowercolor = ["#FFC600", "#6076FF", "#FB5A6E"];
+              this.elecbatteryAxis.name =
+                "单位" + res.data.data.touEnergyTrend.units[0];
+            }
+          }
+        })
+      );
+    },
+    elecdataleft() {
+      this.addEventdata("miuns");
+    },
+    elecdataright() {
+      this.addEventdata("add");
+    },
+    addEventdata(addType = "add") {
+      let datatime = new Date();
+      var datetimes = moment(this.elecdatatime).add(
+        addType === "add" ? 1 : -1,
+        "days"
+      );
+      let newtime = moment(datetimes).format("YYYY-MM-DD");
+
+      if (addType === "add") {
+        if (new Date(newtime) > datatime) {
+          this.$message.error("日期大于当天,从新选择");
+          return;
+        } else {
+          this.elecdatatime = newtime;
+        }
+      } else {
+        this.elecdatatime = newtime;
+      }
+      // this.getenergyStoragepowers();
+      // this.getswitchpowerchart();
+      this.getparamslist();
+    },
+    chaelecpower() {
+      //改变时间
+      //this.getenergyStoragepowers();
+      this.getparamslist();
+    },
+
+    getparamslist() {
+      var params = {
+        deviceId: this.defalutnone,
+        date: this.elecdatatime
+      };
+      return Promise.resolve(
+        eneryarguments(params).then(res => {
+          console.log("用电负荷");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.powerloadchartData.rows = res.data.data.power.logs;
+
+            this.chirderhartSettings.yAxisName = [
+              "单位/" + res.data.data.power.units[0],
+              "单位/" + res.data.data.power.units[1]
+            ];
+
+            this.factorchartData.rows = res.data.data.powerFactors;
+            this.currentyAxis.name =
+              "单位/" + res.data.data.threePhaseCurrent.units[0];
+            this.electricchartData.rows = res.data.data.threePhaseCurrent.logs;
+            this.voltagechartData.rows = res.data.data.threePhaseVoltage.logs;
+            this.voltageyAxis.name =
+              "单位/" + res.data.data.threePhaseVoltage.units[0];
+          }
+        })
+      );
+    }
+  },
+  mounted() {
+    this.gettreelist().then(val => {
+      this.getelectrichart();
+      this.getparamslist();
+    });
+
+    // setTimeout(() => {
+    //   if (this.data.length > 0) {
+    //     this.getelectrichart();
+    //     this.getparamslist();
+    //   }
+    // }, 200);
+    // this.$nextTick(()=>{})
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.current_Name {
+  display: inline-block;
+  font-size: 14px;
+  position: absolute;
+  margin-top: 20px;
+  margin-left: 20px;
+}
+.Nouse {
+  position: absolute;
+  width: 120px;
+  // border: 1px solid;
+  height: 80px;
+  text-align: center;
+  left: calc(50% - 220px);
+  top: calc(50% - 20px);
+  z-index: 1000000;
+}
+.peakvalue {
+  position: absolute;
+  width: 120px;
+  text-align: center;
+  right: 13%;
+  top: calc(50% - 71px);
+  z-index: 1000000;
+  height: 150px;
+}
+.power_battery {
+  position: absolute;
+  top: calc(50% - 120px);
+  z-index: 1000000;
+  right: 13%;
+  height: 40px;
+  //border: 1px solid red;
+  width: 200px;
+  line-height: 40px;
+  padding-left: 10px;
+}
+.power_battery_name {
+  font-family: Microsoft YaHei;
+  font-size: 16px;
+  color: rgba(24, 19, 67, 1);
+}
+
+.powerunit {
+  font-size: 12px;
+  color: #677789;
+  font-family: Microsoft YaHei;
+}
+.powervalue {
+  font-size: 16px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: rgba(24, 19, 67, 1);
+}
+.peakunit {
+  height: 43px;
+  line-height: 40px;
+  vertical-align: top;
+}
+.Nousemessage {
+  height: 40px;
+  line-height: 40px;
+  // border: 1px solid red;
+}
+.nousetotal {
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #181343;
+}
+.nousescale {
+  font-family: Microsoft YaHei;
+  font-weight: 800;
+  color: #181343;
+  font-size: 20px;
+}
+
+.electricleft {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 3px 16px 0px rgba(103, 119, 137, 0.2);
+  padding: 20px;
+}
+.electritimetab {
+  float: right;
+  margin-top: 20px;
+  margin-right: 40px;
+}
+.time_share {
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: rgba(24, 19, 67, 1);
+  padding-left: 20px;
+  font-size: 14px;
+}
+</style>

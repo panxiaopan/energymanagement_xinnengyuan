@@ -1,0 +1,389 @@
+<template>
+  <el-col :span="24" style="height:100%;min-height:1300px">
+    <div class="mainbox">
+      <el-col :span="24" style="height:100%">
+        <el-col :span="6" style="height:100%;padding:20px;">
+          <div class="electricleft">
+            <div style="margin-top:20px">
+              <div style="margin-bottom:20px">
+                <el-input placeholder="输入关键字进行过滤" v-model="loadfifter"></el-input>
+              </div>
+              <el-tree
+                class="filter-tree"
+                :data="loaddata"
+                :props="defaultProps"
+                default-expand-all
+                :filter-node-method="loadfilterNode"
+                @node-click="loadnodeclick"
+                :expand-on-click-node="false"
+                :highlight-current="true"
+                accordion
+                ref="tree"
+                node-key="nodeId"
+                :current-node-key="this.loaddefalutnone"
+              ></el-tree>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="18">
+          <div style="padding:20px 0px 20px 60px">
+            <div style="font-size:14px;margin-bottom:20px;">{{curreent_Name_title}}</div>
+            <div style="display:inline-block">
+              <el-date-picker
+                v-model="mounthdata"
+                type="monthrange"
+                range-separator="至"
+                start-placeholder="开始月份"
+                end-placeholder="结束月份"
+                :picker-options="pickerOptions"
+                @change="demad_change"
+              ></el-date-picker>
+            </div>
+            <div style="display:inline-block">
+              <span class="Describe">
+                <span>报装是否合理结论:</span>
+                {{analysisConclusion}}
+              </span>
+            </div>
+          </div>
+          <div style="padding: 0px  20px;">
+            <hr />
+          </div>
+          <el-col :span="24">
+            <el-col :span="12">
+              <div style="padding:10px 0px 20px 60px">
+                <span class="damand_title">需量容量分析</span>
+                <span class="demand_hint">(按查询时间比较)</span>
+              </div>
+              <div style="height:400px;padding:0px 40px">
+                <ve-histogram
+                  :data="damand_chartData"
+                  height="100%"
+                  :yAxis="demand_yAxis"
+                  :extend="demand_extend"
+                  :settings="demmind_setting"
+                  :colors="demand_colors"
+                ></ve-histogram>
+              </div>
+            </el-col>
+            <el-col :span="12">
+              <div style="padding:10px 0px 20px 60px">
+                <span class="damand_title">报装方式电费比较</span>
+                <span class="demand_hint">(当前时间上月数据比较)</span>
+              </div>
+              <div style="height:400px;padding:0px 40px">
+                <ve-line
+                  :data="capacticychartData"
+                  height="100%"
+                  :settings="capacsetting"
+                  :extend="capacextend"
+                  :yAxis="capceyAxis"
+                  :colors="capcecolors"
+                ></ve-line>
+              </div>
+            </el-col>
+          </el-col>
+          <el-col :span="24">
+            <div style="padding:10px 0px 20px 60px">
+              <span class="damand_title">需量与容量对比分析</span>
+            </div>
+            <div style="padding:0px 60px">
+              <el-table
+                :data="volumetableData"
+                style="width: 100%"
+                align="center"
+                :span-method="cellMerge"
+                height="600px"
+              >
+                <el-table-column prop="month" label="月份" width="120"></el-table-column>
+
+                <el-table-column label="监测点">
+                  <template slot-scope="scope">{{scope.row.device.name}}</template>
+                </el-table-column>
+                <el-table-column label="按需量计算">
+                  <el-table-column prop="demand" label="需量实际量(KW)"></el-table-column>
+                  <el-table-column prop="authorizedDemand" label="核定需量(KW)"></el-table-column>
+                  <el-table-column prop="demandUnitPrice" label="基本电费单价(元/kw月)"></el-table-column>
+                </el-table-column>
+                <el-table-column label="按容量计算">
+                  <el-table-column prop="capacity" label="容量(KVA)" width="120"></el-table-column>
+                  <el-table-column prop="capacityUnitPrice" label="基本电费单价(元/KW月)" width="220"></el-table-column>
+                  <el-table-column prop="capacityTotalCost" label="电费(元)" width="120"></el-table-column>
+                </el-table-column>
+                <el-table-column prop="difference" label="差值"></el-table-column>
+              </el-table>
+            </div>
+          </el-col>
+        </el-col>
+      </el-col>
+    </div>
+  </el-col>
+</template>
+
+<script>
+import { demandanalysis, treenodeconfig } from "@/api/api";
+import { timeFormatmonth, timePrveFormatmonth } from "@/assets/js/common";
+export default {
+  watch: {
+    loadfifter(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  data() {
+    return {
+      curreent_Name_title: "",
+      loaddefalutnone: null,
+      nodeType: null,
+      loadfifter: "",
+      defaultProps: {
+        children: "subNodes",
+        label: "nodeName"
+      },
+      loaddata: [],
+      loadfifter: "",
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
+      mounthdata: [
+        timePrveFormatmonth(new Date()),
+        timeFormatmonth(new Date())
+      ],
+      damand_chartData: {
+        columns: ["time", "demandCost", "capacityCost", "authorizedDemandCost"],
+        rows: []
+      },
+      demand_yAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "",
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      demand_colors: ["#FFC600", "#6076FF", "#56D07E"],
+
+      demand_extend: {
+        barWidth: "20%",
+        top: "-20px",
+        barCategoryGap: "10%",
+        barGap: "10%",
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          },
+          axisLabel: {
+            formatter: function(value) {
+              var str_before = value.substring(0, 7);
+              // var str_after = value.split(" ")[1];
+              return str_before;
+            }
+          }
+        }
+      },
+      demmind_setting: {
+        labelMap: {
+          authorizedDemandCost: "核定需量费用",
+          demandCost: "需量费用",
+          capacityCost: "容量费用"
+        }
+      },
+      analysisConclusion: "",
+      capacticychartData: {
+        columns: ["demand", "demandCost", "capacityCost"],
+        rows: []
+      },
+      capacsetting: {
+        labelMap: {
+          capacityCost: "容量费用",
+          demandCost: "需量费用"
+        }
+      },
+      capacextend: {
+        xAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: { color: "#b1b1b1" } //x轴坐标的显示颜色
+          }
+        }
+      },
+      capceyAxis: {
+        axisLine: {
+          show: true,
+          lineStyle: { color: "#b1b1b1" } //y轴坐标的显示颜色
+        },
+        name: "单位/元",
+        splitLine: {
+          // show: true,
+          lineStyle: {
+            color: ["#E2E5EB"],
+            opacity: 0.4
+          }
+        }
+      },
+      capcecolors: ["#1B77FC", "#56D07E"],
+      volumetableData: [],
+      spanArr: [],
+      pos: null
+    };
+  },
+  methods: {
+    loadgettreelist() {
+      var parms = {
+        subStationId: this.$route.params.subid,
+        type: "chargingPoint"
+      };
+      treenodeconfig(parms).then(res => {
+        console.log("树状菜单");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.loaddata = res.data.data;
+          this.loaddefalutnone = res.data.data[0].nodeId;
+          this.curreent_Name_title = res.data.data[0].nodeName;
+          this.nodeType = res.data.data[0].nodeType;
+          // console.log("id" + this.loaddefalutnone);
+          console.log("树状id");
+          console.log(this.loaddefalutnone);
+        }
+      });
+    },
+
+    getdemandanalysislist() {
+      var params = {
+        nodeType: this.nodeType,
+        startTime: this.mounthdata[0],
+        endTime: this.mounthdata[1],
+        nodeId: this.loaddefalutnone
+      };
+      demandanalysis(params).then(res => {
+        console.log("需量数据---------");
+        console.log(res);
+        if (res.data.head.code == 0) {
+          this.analysisConclusion = res.data.data.analysisConclusion;
+
+          this.damand_chartData.rows =
+            res.data.data.demandAndCapacityCostTimeValues.logs;
+          this.demand_yAxis.name =
+            "单位/" + res.data.data.demandAndCapacityCostTimeValues.units[0];
+          console.log(this.damand_chartData.rows);
+
+          this.capacticychartData.rows =
+            res.data.data.capacityCostAndCostByDemands;
+
+          this.volumetableData =
+            res.data.data.demandAndCapacityCostByMonthDetails;
+
+          //传入参数
+          this.getSpanArr(this.volumetableData);
+        }
+      });
+    },
+    loadfilterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
+    },
+    loadnodeclick(node, data) {
+      console.log("当前点击");
+      console.log(node);
+      this.nodeType = node.nodeType;
+      this.loaddefalutnone = node.nodeId;
+
+      this.curreent_Name_title = node.nodeName;
+      // console.log(data);
+      this.getdemandanalysislist();
+      // this.loadgettreelist();
+
+      setTimeout(() => {
+        //this.getloadlist();
+      }, 500);
+    },
+
+    demad_change() {
+      //改变时间
+      console.log("------时间-");
+
+      this.startTime = timeFormatmonth(this.mounthdata[0]);
+      this.endTime = timeFormatmonth(this.mounthdata[1]);
+      console.log(this.startTime);
+
+      this.getdemandanalysislist();
+    },
+
+    getSpanArr(data) {
+      for (var i = 0; i < data.length; i++) {
+        if (i === 0) {
+          this.spanArr.push(1);
+          this.pos = 0;
+        } else {
+          // 判断当前元素与上一个元素是否相同
+          if (data[i].month === data[i - 1].month) {
+            this.spanArr[this.pos] += 1;
+            this.spanArr.push(0);
+          } else {
+            this.spanArr.push(1);
+            this.pos = i;
+          }
+        }
+      }
+    },
+
+    cellMerge({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0) {
+        const _row = this.spanArr[rowIndex];
+        const _col = _row > 0 ? 1 : 0;
+        return {
+          rowspan: _row,
+          colspan: _col
+        };
+      }
+    }
+  },
+
+  mounted() {
+    this.loadgettreelist();
+
+    setTimeout(() => {
+      this.getdemandanalysislist();
+    }, 1000);
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.damand_title {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: rgba(24, 19, 67, 1);
+}
+.demand_hint {
+  font-size: 12px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: rgba(99, 111, 138, 1);
+}
+.Describe {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: rgba(5, 40, 255, 1);
+  margin-left: 120px;
+}
+
+.electricleft {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 3px 16px 0px rgba(103, 119, 137, 0.2);
+  padding: 20px;
+  // min-height: 700px;
+}
+</style>

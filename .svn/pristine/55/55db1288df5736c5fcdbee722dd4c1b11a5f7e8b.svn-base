@@ -1,0 +1,716 @@
+<template>
+  <el-col :span="24" style="height:100%;">
+     <el-col :span='4' style="height:100%;padding:20px">
+           <div  class="mainbox">
+              <div class="back_main" @click="backMain">
+              <i class="iconfont icon-back" style="margin-right:10px"></i>
+              <span class="StionName">
+                返回
+              </span>
+            </div>
+           <el-menu
+              class="el-menu-vertical-demo"
+              :default-active="$route.path"
+              @select="selectchirden"
+            >
+              <template v-for=" (item,index) in submenuData">
+                <el-menu-item
+                  :key="index"
+                  :index="item.path"
+                  v-if="item.submenuDatachirden.length==0 && item.path!=='/' "
+                >
+                  <template slot="title">
+                    <span>{{item.name}}</span>
+                  </template>
+                </el-menu-item>
+                <el-submenu
+                  :key="index"
+                  :index="String(index)"
+                  v-if="item.submenuDatachirden.length !==0"
+                >
+                  <template slot="title">
+                    <!-- <i  :class="item[0].permissionIcon" class="fa"></i>   -->
+
+                    <span>{{item.name}}</span>
+                  </template>
+
+                  <el-menu-item
+                    :key="item.index"
+                    :index="item.path"
+                    v-for="item in item.submenuDatachirden"
+                  >
+                    <i :class="item.img" class="iconfont"></i>
+                    <!-- <img :src="item.img" alt class="subimgs" /> -->
+                    {{item.name}}
+                  </el-menu-item>
+                </el-submenu>
+              </template>
+            </el-menu>
+              <el-tree 
+              :data="chirdenstationdata" 
+              :props="defaultProps" 
+              :default-expand-all='true'  
+              :highlight-current='true' 
+                node-key="id"
+              :current-node-key="this.defaultPropsvalue"
+                @node-click="ndoeclick"    >
+              <span class="custom-tree-node" slot-scope="{ node, data}"     v-if="$route.params.id!=='123456'  "    >
+              <span >{{ node.label }}</span>
+
+              <span  v-show='data.id==100' >
+                <el-button
+                  type="text"
+                  size="mini"
+                  @click="() => append(data)">
+                  <el-button   size='mini'   icon="el-icon-plus" circle        ></el-button>
+                </el-button>
+              </span>
+
+            </span>
+            </el-tree>
+         </div> 
+     </el-col>
+    <el-col :span='20' style="height:100%;padding-bottom:20px">
+
+    <el-col  :span='24'    style="height:100%"   v-if="$route.params.subid =='master'  "       >
+    <el-col :span="24" class="top_enry">
+      <div class="mesage">基本信息</div>
+    </el-col>
+    <el-row class="Devicemain" style="margin-top:20px;height:calc(100% - 20px ) ">
+      <div class="mainbox">
+        <div style="width:100%;padding:40px 0px 0px 20px;">
+          <el-form
+            :model="ruleForm"
+            :rules="rules"
+            ref="ruleForm"
+            label-width="120px"
+            class="demo-dynamic addstaonform"
+            :inline="true"
+          >
+            <el-form-item label="名称" prop="stationName" style="display:block;">
+              <el-input v-model="ruleForm.stationName" style="width:900px"></el-input>
+            </el-form-item>
+
+            <el-form-item label="经纬度" prop="geographic">
+              <el-input v-model="ruleForm.geographic"  placeholder="请选择经纬度"      style="width:900px;"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" style="float:right" @click="seletMap">点击选择经纬度</el-button>
+            </el-form-item>
+
+            <el-form-item label="所在地区" required>
+              <el-col :span="6">
+                <el-select
+                  v-model="ruleForm.sellectprovice"
+                  placeholder="请选择省"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="ruleForm.geographic == ''  "
+                  @change="change_provice"
+                >
+                  <el-option 
+                     v-for="(item,index) in  ruleForm.provinceadress"
+                      :key='index'
+                      :label="item.name" 
+                      :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="ruleForm.selectcity"
+                  placeholder="请选择市"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="ruleForm.geographic == ''  "
+                  @change="change_selectcity"
+                >
+                  <el-option 
+                     v-for="(item,index)  in   ruleForm.selectcityDate "
+                     :key='index'
+                     :label="item.name" 
+                     :value="item.id"
+                     ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="ruleForm.selectarea "
+                  placeholder="请选择区"
+                  style="width: 175px;margin-right:50px"
+                  :disabled="ruleForm.geographic == ''  "
+                  @change="change_selectareaData"
+                >
+                  <el-option 
+                      v-for="(item,index)  in ruleForm.selectareaData  "
+                      :key='index'
+                      :label="item.name" 
+                      :value="item.id"
+                      
+                      ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="ruleForm.areaId"
+                  placeholder="请选择街道"
+                  style="width: 175px;margin-right:50px"
+                   :disabled="ruleForm.geographic == ''  "
+                >
+                  <el-option 
+                  v-for="(item,index) in ruleForm.areaIddata "
+                  :key="index"
+                  :label="item.name"
+                   :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+
+            <el-form-item label="详细地址" prop="desc" style="display:block;">
+              <el-input v-model="ruleForm.desc" style="width:900px"></el-input>
+            </el-form-item>
+
+            <el-form-item label="上传图片"  style="display:block">
+              <el-upload
+                class="upload-demo"
+                action="https://jsonplaceholder.typicode.com/posts/"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :file-list="fileList"
+                list-type="picture"
+                :limit="1"
+              >
+                <el-button style="width:100px;height:88px" icon="el-icon-plus"></el-button>
+                <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+              </el-upload>
+            </el-form-item>
+
+            <el-form-item  style="margin:20px 60px;" >
+              <el-button type="primary" @click="submitForm('ruleForm')">保存</el-button>
+              <el-button @click="resetForm('ruleForm')">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        <el-col :span="24">
+          <el-dialog title="点击地图任意位置选择经纬度" :visible.sync="map_dialogVisible" width="60%">
+            <div style="width:100%;height:600px;">
+              <baidu-map
+                :center="mapcenter"
+                :zoom="11"
+                :scroll-wheel-zoom="true"
+                style="height:100%;width:100%"
+                @click="clickpoint"
+              >
+                <bm-control :offset="{width: '10px', height: '10px'}" style="margin:20px">
+                  <el-input v-model="keyword" @keyup.enter.native="findepoint" placeholder="输入城市名称"></el-input>
+                </bm-control>
+
+                <bm-marker :position="clickposition">
+                  <bm-info-window :show="showclick">{{addressmes}}</bm-info-window>
+                </bm-marker>
+              </baidu-map>
+            </div>
+            <span slot="footer" class="dialog-footer">
+              <el-button  size='small'    @click="map_dialogVisible = false">取 消</el-button>
+              <el-button  size='small'    type="primary" @click="addressure">确 定</el-button>
+            </span>
+          </el-dialog>
+        </el-col>
+      </div>
+    </el-row>
+    </el-col>
+   
+    <el-col  :span='24' v-if="$route.params.subid=='energyconsumptionmanagement' " style="height:100%" >
+          <enery-consumption ></enery-consumption>
+    </el-col> 
+
+
+
+
+
+
+
+
+   </el-col>
+   <el-col :span='24'>
+          <el-dialog
+                title="添加子站"
+                :visible.sync="sunsitedialogVisible"
+                width="40%"
+                >
+               <div>
+                    <span style="margin-right:10px;font-size:16px ">子站类型 : </span>
+                    <el-radio-group v-model="addradio"  >
+                          <el-radio 
+                           v-for="(item,index) in subsiteDate "
+                           :key='index'
+                           :label="index"
+                          > {{item.name}}
+                          </el-radio>
+                     </el-radio-group>
+               </div>
+                
+                <span slot="footer" class="dialog-footer">
+                  <el-button  size='small'   @click="sunsitedialogVisible = false">取 消</el-button>
+                  <el-button  size='small'    type="primary" @click="suresunsitesub">确 定</el-button>
+                </span>
+              </el-dialog>
+   </el-col>
+  </el-col>
+</template>
+
+<script>
+let id = 1000;
+import { SearchField } from "vue-baidu-map";
+import { provincecity ,townCodestree,addstations,getstationSubTypes,getstationconfig} from "@/api/api";
+import eneryConsumption from '../enery_consumption/eneryConsumption.vue'
+ 
+export default {
+  inject:['reload'],
+  components: {
+    eneryConsumption
+  },
+
+  data() {
+    return {
+      submenuData: [
+        {
+          name: "能源综合总汇",
+          path: `/mastertion/${this.$route.params.type}/${this.$route.params.id}/master`,
+          submenuDatachirden: []
+        },
+        // {
+        //   name: "子站列表",
+        //   path: "/",
+        //   submenuDatachirden: []
+        // }
+      ],
+
+
+      showclick: false, //显示框,
+      clickposition: {},
+      mapcenter: "深圳",
+      addressmes: "", //点击时候显示上面的地址
+      keyword: "",
+      map_dialogVisible: false,
+      ruleForm: {
+        stationName: "",
+        sellectprovice:"",
+        provinceadress: [],//选择省
+        geographic:'',//经纬度地址
+        resource: "",
+        desc: "",
+        selectcityDate:[],//市的遍历数据
+        selectcity:"",//市
+        selectarea:"",
+        selectareaData:[],//区
+        areaId:"",//区的id
+        areaIddata:[],//街道的位置
+      },
+      fileList: [],
+      rules: {
+        stationName: [
+          { required: true, message: "请输入能源站名称", trigger: "blur" },
+          
+        ],
+        sellectprovice: [
+          {  required: true, message: "请选择活动区域", trigger: "change" }
+        ],
+        areaId:[{required: true, message: "请选择街道地址", trigger: "change" }],
+        geographic:[{required: true, message: "请选择经纬度", trigger: "change" }], 
+        desc: [{ required: true, message: "请填写详细地址", trigger: "blur" }]
+      },
+      parentId:100,
+      towncode:"",
+      Longitude:'',
+     chirdenstationdata:[
+         {
+         id: 100,
+         label: '子菜单列表',
+         children:[],
+         }
+      ],
+     defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+      sunsitedialogVisible:false,
+      subsiteDate:[],//  子站列表
+      addradio:null,//添加子站的
+      defaultPropsvalue:"",
+
+
+
+
+    };
+  },
+  watch: {
+        $route:{
+             handler:function (params) {
+                console.log('监控')
+                        console.log(params)
+                         //this.reload();
+                       // window.reload()
+             }
+        },
+        deep:true
+  },
+
+  methods: {
+   selectchirden(index) {
+      console.log(index);
+      this.$router.push(index);
+    },
+
+
+
+    seletMap() {
+      this.map_dialogVisible = true;
+    },
+       backMain() {
+      //返回上一页
+      //this.$router.go(-1);
+      this.$router.push("/stationDeviceManagement");
+    },
+    getProvinces(){//全部省份的时候,
+       provincecity(this.parentId).then(res=>{
+              console.log('省----')
+              console.log(res)
+               if(res.data.head.code==0){
+                   this.ruleForm.provinceadress=res.data.data
+               }
+       })
+    },
+    submitForm(formName) {
+             let lonlang=this.Longitude.split(',')
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          //alert("submit!");
+          //  submitForm().then(res=>{
+
+          //  })
+            var parms={
+                    stationName:this.ruleForm.stationName,
+                    areaId: this.ruleForm.areaId,
+                    latitude:lonlang[1],
+                    longitude:lonlang[0],
+                    detailedAddress:this.ruleForm.desc
+            }
+          addstations(parms).then(res=>{
+                      console.log('建站成功')
+                      console.log(res)
+                      if(res.data.head.code==0){
+                           this.$message({
+                             type:"success",
+                             message:"创建成功"
+                           })
+
+                           this.$router.push({ name: "mastertion", params: { type: "add",id:res.data.data } })
+                          // window.location.reload()
+                         //  this.reload();
+                      }  
+          })
+
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+    handlePreview(file) {},
+    handleRemove(file, fileList) {},
+
+    getlocation(lat, lng) {
+      let _this = this;
+      $.ajax({
+        //经纬度转换显示位置,l
+        type: "get",
+        url: `https://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=${lat},${lng}&output=json&pois=1&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        dataType: "jsonp",
+        success: function(res) {
+          console.log("经纬度转换-----");
+          console.log(res);
+          _this.towncode=res.result.addressComponent.adcode
+          _this.addressmes = res.result.formatted_address;
+          _this.showclick = true;
+
+          _this.Longitude=res.result.location.lng+','+ res.result.location.lat
+          
+          console.log(_this.Longitude)
+        }
+      });
+    },
+
+    clickpoint(e) {
+      console.log("当前点击点");
+      console.log(e.point.lat);
+      let _this = this;
+      this.showclick = false;
+      _this.getlocation(e.point.lat, e.point.lng);
+
+      this.clickposition = {
+        lng: e.point.lng,
+        lat: e.point.lat
+      };
+    },
+  
+    findepoint(e) {
+      console.log("enter");
+      console.log(this.keyword);
+      this.mapcenter = this.keyword;
+      let _this = this;
+      $.ajax({
+        type: "get",
+        dataType: "jsonp",
+        url: `https://api.map.baidu.com/geocoder/v2/?mcode=sha1:包名&address=${this.keyword}&output=json&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        success: function(res) {
+          console.log("深圳");
+          console.log(res);
+          _this.clickposition = {
+            lng: res.result.location.lng,
+            lat: res.result.location.lat
+          };
+          _this.getlocation(res.result.location.lat, res.result.location.lng);
+          // _this.addressmes=res
+          _this.showclick = true;
+        }
+      });
+    },
+    addressure() {
+         this.ruleForm.desc = this.addressmes;
+         this.ruleForm.geographic=this.Longitude
+         this.map_dialogVisible = false;
+      let lonlang=this.Longitude.split(',')
+     var parms={
+             longitude:lonlang[0],   //经纬度发给后台
+             latitude:lonlang[1]
+     }
+      this.getcounty(parms)
+    },
+     getcounty(parms){//根据坐标点,,去找位置
+        townCodestree(parms).then(res=>{
+              console.log('前面三级城市') 
+              console.log(res)  
+              if(res.data.head.code==0){
+                    provincecity(res.data.data.province.code).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                               this.ruleForm.selectcityDate=res.data.data
+                            }             
+                    })
+                   provincecity(res.data.data.city.code).then(res=>{//用市请求区
+                          if(res.data.head.code==0){
+                            this.ruleForm.selectareaData= res.data.data    //每个区的id
+                          } 
+                   })
+                    provincecity(res.data.data.county.code).then(res=>{
+                           if(res.data.head.code==0){
+                               this.ruleForm.areaIddata=res.data.data
+                           }
+                    })
+                    this.ruleForm.sellectprovice=res.data.data.province.code//省
+                    this.ruleForm.selectcity=res.data.data.city.code      //市的id
+                    this.ruleForm.selectarea=res.data.data.county.code //区
+                    this.ruleForm.areaId=res.data.data.town.code//街道
+              }  
+      })        
+     },
+   getsattionmes(){
+         getstationconfig(this.$route.params.id).then(res=>{
+                     console.log('当前能源站的信息')
+                      console.log(res)
+                      if(res.data.head.code==0){
+
+                       this.ruleForm.geographic = res.data.data.longitude+','+ res.data.data.latitude   
+                       this.ruleForm.stationName=res.data.data.name
+                       this.ruleForm.desc=res.data.data.address
+
+                      if(res.data.data.subNodes.length>0){
+                           for(var i=0;i<res.data.data.subNodes.length;i++){
+                             console.log('子站信息')
+                            this.chirdenstationdata[0].children.push({
+                                       id:res.data.data.subNodes[i].stationType.value,
+                                       value:res.data.data.subNodes[i].stationType.value,
+                                       label:res.data.data.subNodes[i].stationType.name
+                            })
+                        }
+                      }
+                       console.log( this.chirdenstationdata[0])
+                          var parms={
+                                longitude: res.data.data.longitude,
+                                latitude:  res.data.data.latitude                            
+                          }
+                         this.getcounty(parms)  
+                      }
+         })
+     },
+    change_provice(){//切换省的时候
+          provincecity(this.ruleForm.sellectprovice).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                                console.log('改变了省')
+                                console.log(res)
+                               this.ruleForm.selectcityDate=res.data.data
+                               this.ruleForm.selectcity=res.data.data[0].id
+                            }             
+                    })
+     },
+     change_selectcity(){//改变市的时候
+                provincecity(this.ruleForm.selectcity).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                                console.log('改变了省')
+                                console.log(res)
+                               this.ruleForm.selectareaData=res.data.data
+                               this.ruleForm.selectarea =res.data.data[0].id
+                            }             
+                    })
+     },
+     change_selectareaData(){//改变区的时候
+                   provincecity(this.ruleForm.selectarea).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                               this.ruleForm.areaIddata=res.data.data
+                               this.ruleForm.areaId =res.data.data[0].id
+                            }             
+                    })
+     },
+     masterStation(){
+            console.log('路由跳转')
+            this.$router.push({
+               name:'mastertion',
+               params:{
+                  type:this.$route.params.type,
+                  id:this.$route.params.id
+               }
+            })
+     },
+      getstationSubTypeslis(){//获取子站列表
+            getstationSubTypes().then(res=>{
+                    console.log('获取子站列表')
+                     console.log(res)  
+                     if(res.data.head.code==0){
+                        this.subsiteDate=res.data.data
+                     }   
+                 })
+      },
+      suresunsitesub(){
+             this.sunsitedialogVisible =false;
+              
+             // console.log(this.addradio)
+           //  console.log()
+
+           let obj={
+                    id:id++,
+                    value:this.subsiteDate[this.addradio].value,
+                    label:this.subsiteDate[this.addradio].name,
+                   
+           }
+             console.log(obj)
+           this.chirdenstationdata[0].children.push(obj)
+      },
+     append(){//点击添加 
+         this.sunsitedialogVisible =true    
+     },
+    ndoeclick(data,node,parms){
+           console.log('当前点击子站')
+           console.log(data)
+     
+          //  if(data.value=='energyconsumptionmanagement') {//能耗子站
+             if(data.id!==100){//点击子站的列表
+                 this.$router.push(`/mastertion/${this.$route.params.type}/${this.$route.params.id}/${data.value}`)   
+             }
+
+                 
+                 
+
+          //  }
+
+    }
+  },
+  mounted() {
+       this.getstationSubTypeslis()
+       this.getProvinces()
+       console.log('路由')
+       console.log(this.$route.params.id)
+      if(this.$route.params.id!=='123456'){//刚进来,默认给的123456
+                
+                this.getsattionmes()
+
+
+      }
+      setTimeout(() => {
+            if(this.chirdenstationdata[0].children.length==0){
+     //  console.log('meiyou zizhan')
+            this.$router.push(`/mastertion/${this.$route.params.type}/${this.$route.params.id}/master`)
+    }else{
+           console.log('大于0的时候')
+       this.$router.push(`/mastertion/${this.$route.params.type}/${this.$route.params.id}/${this.$route.params.subid}`) 
+    }
+   
+         
+      }, 500);
+
+       setTimeout(() => {
+             this.defaultPropsvalue=this.$route.params.subid
+              console.log( this.defaultPropsvalue)
+       },   600);
+
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.masterstation{
+    height:80px;
+    line-height:80px;
+    font-size: 16px;
+    color: #636F8A;
+    padding-left: 40px;
+    border-bottom: 1px solid #B6BBC6;
+    margin-bottom: 20px;
+    cursor: pointer;
+
+}
+.mesage {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: bold;
+  color: rgba(24, 19, 67, 1);
+  line-height: 60px;
+  padding-left: 40px;
+}
+.map {
+  height: 100%;
+  width: 100%;
+}
+.saveenerg {
+  display: block;
+  margin-left: 60px;
+  position: fixed;
+  left: 45%;
+  bottom: 15%;
+}
+.StionName {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+}
+.back_main {
+  height: 60px;
+  // border: 1px solid #e6e6e6;
+  border-bottom: none;
+  background: #f4f4fa;
+  text-align: center;
+  line-height: 60px;
+  cursor: pointer;
+}
+  .custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 50px;
+    // padding-left: 20px
+    
+  }
+</style>

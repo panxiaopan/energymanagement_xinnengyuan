@@ -19,16 +19,19 @@
                 :highlight-current="true"
                 accordion
                 ref="tree"
-                node-key="id"
+                node-key="nodeId"
                 :current-node-key="this.loaddefalutnone"
               ></el-tree>
             </div>
           </div>
         </el-col>
         <el-col :span="19" style="height:100%">
-          <div style="height:60px;border:1px solid;margin-top:40px;line-height:60px ">
+          <div class="current_name_title">{{currenName}}</div>
+
+          <div style="height:60px;margin-top:40px;line-height:60px ">
             <div class="time_share">负荷-图型</div>
             <div class="timeselect">
+
               <div class="timetab">
                 <span class="timebox">
                   <el-radio-group v-model="loaddatatime" size="medium" @change="loadchangetypadata">
@@ -62,26 +65,43 @@
                   ></el-button>
                 </span>
               </div>
+
+
             </div>
-            <div style="height:380px;border:1px solid ">
+            <div style="height:380px;">
               <ve-line
                 :data="loadchartData"
                 :colors="loadcolors"
                 :xAxis="xAxisOption"
                 :yAxis="voltageyAxis"
+                :settings="loadsetting"
               ></ve-line>
             </div>
-            <div style="height:280px;border:1px solid red ">
+            <div style="height:246px; ">
               <div class="time_share">负荷-表格</div>
+              <div class="load_box">
+                <div class="load_boxval load_title">{{statistics[0].name}}</div>
+                <div
+                  class="load_boxval loadvalue"
+                >{{statistics[0].value}}{{ "("+ statistics[0].unit +")" }}</div>
+                <div class="load_boxval load_title">发生时间</div>
+                <div class="last_load_boxval loadvalue">{{statistics[0].time}}</div>
 
-              <!-- <el-table :data="dataload">
-                <el-table-column label="Name"></el-table-column>
-                <el-table-column label="Name"></el-table-column>
-                <el-table-column label="Name"></el-table-column>
-                <el-table-column>
-                </el-table-column>
-              </el-table>-->
-              <div class="load_box"></div>
+                <div class="load_boxval load_title">{{statistics[1].name}}</div>
+                <div
+                  class="load_boxval loadvalue"
+                >{{statistics[1].value}}{{ '('+ statistics[1].unit +")" }}</div>
+                <div class="load_boxval load_title">发生时间</div>
+                <div class="last_load_boxval loadvalue">{{statistics[1].time}}</div>
+                <div class="botom_load_boxval load_title">{{statistics[2].name}}</div>
+                <div
+                  class="botom_load_boxval loadvalue"
+                >{{statistics[2].value}}{{ "("+ statistics[2].unit +")" }}</div>
+                <div class="botom_load_boxval load_title">{{statistics[3].name}}</div>
+                <div
+                  class="last_bottom_load_boxval loadvalue"
+                >{{statistics[3].value}}{{ "("+ statistics[3].unit +")" }}</div>
+              </div>
             </div>
           </div>
         </el-col>
@@ -98,7 +118,7 @@ import {
   timeFormatmonth,
   timeFormatyear
 } from "@/assets/js/common";
-import { enerymanage, treenodeconfig } from "@/api/api";
+import { enerymanage, treenodeconfig, eneryConsuntion } from "@/api/api";
 export default {
   watch: {
     loadfifter(val) {
@@ -107,12 +127,13 @@ export default {
   },
   data() {
     return {
+      currenName: null,
       loaddefalutnone: null,
+      nodeType: null,
       loadfifter: "",
       defaultProps: {
         children: "subNodes",
-        label: "nodeName",
-        id: "nodeId"
+        label: "nodeName"
       },
       loaddata: [],
       loadtypedate: "date",
@@ -124,15 +145,48 @@ export default {
       loadtimevalue: timeFormatdata(new Date()),
       loaddatatime: "日",
       loadchartData: {
-        columns: ["日期", "访问用户", "下单用户", "下单率"],
+        columns: [],
         rows: [
-          { 日期: "2019-11-09", 访问用户: 1393, 下单用户: 1093 },
-          { 日期: "2019-11-08", 访问用户: 3530, 下单用户: 3230 },
-          { 日期: "2019-11-04", 访问用户: 2923, 下单用户: 2623 },
-          { 日期: "2019-11-01", 访问用户: 1723, 下单用户: 1423 }
+          // { 日期: "2019-11-09", 访问用户: 1393, 下单用户: 1093 },
+          // { 日期: "2019-11-08", 访问用户: 3530, 下单用户: 3230 },
+          // { 日期: "2019-11-04", 访问用户: 2923, 下单用户: 2623 },
+          // { 日期: "2019-11-01", 访问用户: 1723, 下单用户: 1423 }
         ]
       },
+      loadsetting: {
+        labelMap: {}
+      },
+
       loadcolors: ["#56D07E", "#1B77FC"],
+
+      monthxAis: {
+        type: "category",
+        axisLabel: {
+          formatter: function(value) {
+            console.log("X轴的值");
+            console.log(value);
+            var str_before = value.substring(8, 10);
+            return str_before;
+          }
+        }
+      },
+      yearxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(5, 7);
+            return str_before;
+          }
+        }
+      },
+      dayxAis: {
+        axisLabel: {
+          formatter: function(value) {
+            var str_before = value.substring(10, 16);
+            return str_before;
+          }
+        }
+      },
+
       xAxisOption: {
         //修改截取的时间
         type: "category",
@@ -141,7 +195,6 @@ export default {
         axisLabel: {
           formatter: function(value) {
             var str_before = value.substring(10, 16);
-            // var str_after = value.split(" ")[1];
             return str_before;
           }
         },
@@ -164,7 +217,8 @@ export default {
           }
         }
       },
-      dataload: []
+      dataload: [],
+      statistics: [] //负荷状态
     };
   },
   methods: {
@@ -172,20 +226,94 @@ export default {
       var parms = {
         subStationId: this.$route.params.subid
       };
-      treenodeconfig(parms).then(res => {
-        console.log("树状菜单");
-        console.log(res);
-        if (res.data.head.code == 0) {
-          this.loaddata = res.data.data;
-          this.loaddefalutnone = res.data.data[0].nodeId;
-          // console.log("id" + this.loaddefalutnone);
-        }
-      });
+      return Promise.resolve(
+        treenodeconfig(parms).then(res => {
+          console.log("树状菜单");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.loaddata = res.data.data;
+
+            this.loaddefalutnone = res.data.data[0].nodeId;
+            this.currenName = res.data.data[0].nodeName;
+            this.nodeType = res.data.data[0].nodeType;
+            // console.log("id" + this.loaddefalutnone);
+            console.log("树状id");
+            console.log(this.loaddefalutnone);
+          }
+        })
+      );
     },
     loadfilterNode(value, data) {
       if (!value) return true;
       return data.label.indexOf(value) !== -1;
     },
+    getloadlist() {
+      let data = this.loadtimevalue.split("-");
+      if (this.loaddatatime == "日") {
+        //日的时候传三个参数,
+        console.log("日");
+        console.log(data);
+        //总
+        var year = Number(data[0]);
+        var month = Number(data[1]);
+        var day = Number(data[2]);
+      } else if (this.loaddatatime == "年") {
+        var year = Number(data[0]);
+        var month = "";
+        var day = "";
+      } else {
+        var year = Number(data[0]);
+        var month = Number(data[1]);
+        var day = "";
+      }
+
+      var params = {
+        nodeId: this.loaddefalutnone,
+        nodeType: this.nodeType
+      };
+      return Promise.resolve(
+        eneryConsuntion(params, year, month, day).then(res => {
+          console.log("load");
+          console.log(res);
+          if (res.data.head.code == 0) {
+            this.statistics = res.data.data.statistics;
+            if (this.loaddatatime == "日") {
+              console.log("日");
+              this.loadchartData.rows = res.data.data.load.logs;
+              this.loadchartData.columns = [
+                "time",
+                "activePower",
+                "installedCapacity"
+              ];
+              this.loadsetting.labelMap = {
+                activePower: "有功功率",
+                installedCapacity: "装机容量"
+              };
+              this.voltageyAxis.name = "负荷/" + res.data.data.load.units[0];
+            } else {
+              //console.log("月");
+              console.log(this.loadchartData.rows);
+              this.loadchartData.rows = res.data.data.load.logs;
+              this.loadchartData.columns = [
+                "time",
+                "averageLoad",
+                "installedCapacity",
+                "maxLoad",
+                "minLoad"
+              ];
+              this.loadsetting.labelMap = {
+                averageLoad: "平均负荷",
+                installedCapacity: "装机容量",
+                maxLoad: "最大负荷",
+                minLoad: "最小负荷"
+              };
+              this.voltageyAxis.name = "负荷/" + res.data.data.load.units[0];
+            }
+          }
+        })
+      );
+    },
+
     changetime() {},
     loadaddEventDate(addType = "add") {
       //移过来的! 可以抽空优化
@@ -245,15 +373,18 @@ export default {
           }
           break;
       }
-      // if (this.datatime == "日") {
-      //   //日的时候调一个接口./其他调另外的接口
-      //   this.gettimedate();
-      // } else {
-      //   this.getyeardata();
-      // }
+      this.getloadlist();
+
     },
 
-    loadnodeclick() {},
+    loadnodeclick(node, data) {
+      console.log("当前点击");
+      console.log(node);
+      this.nodeType = node.nodeType;
+      this.loaddefalutnone = node.nodeId;
+      this.currenName = node.nodeName;
+      this.getloadlist();
+    },
     previous() {
       //日期往前
       this.loadaddEventDate("subtract");
@@ -269,38 +400,95 @@ export default {
         case "日":
           this.loadtypedate = "date";
           // this.gettimedate();
+          this.xAxisOption.axisLabel = this.dayxAis.axisLabel;
+          this.getloadlist();
           break;
         case "月":
           this.loadtypedate = "month";
           console.log("进月来");
-          // this.yearextend.xAxis.axisLabel = this.monthxAis.axisLabel;
-          // this.getyeardata();
-
+          this.loadcolors = ["#1B77FC", "#56D07E", "#FB5A6E", "#FBC24F"];
+          this.xAxisOption.axisLabel = this.monthxAis.axisLabel;
+          this.getloadlist();
           break;
         case "年":
           this.loadtypedate = "year";
-          // this.yearextend.xAxis.axisLabel = this.yearxAis.axisLabel;
-          // this.getyeardata();
+
+          this.xAxisOption.axisLabel = this.yearxAis.axisLabel;
+          this.getloadlist();
           break;
         default:
-          // this.loadtimevalue = "";
-          // this.yearextend.xAxis.axisLabel = this.allxAis.axisLabel;
-
-          // this.getyeardata();
           break;
       }
     }
   },
   mounted() {
-    this.loadgettreelist();
+    this.loadgettreelist().then(val => {
+      this.getloadlist();
+    });
+
+    // this.loadgettreelist();
+
+    // setTimeout(() => {
+
+    // }, 500);
   }
 };
 </script>
 
 <style lang="scss" scoped>
+* {
+  margin: 0px;
+  padding: 0px;
+}
+.load_boxval {
+  // display: inline-block;
+  width: 282px;
+  height: 54px;
+  border-right: 1px solid #b6bbc6;
+  border-bottom: 1px solid #b6bbc6;
+  // padding: 0px;
+  // margin: 0px;
+  float: left;
+}
+.loadvalue {
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  color: #b6bbc6;
+  // text-align: center;
+  padding-left: 20px;
+}
+
+.last_bottom_load_boxval {
+  float: left;
+  width: 282px;
+  height: 55px;
+}
+
+.botom_load_boxval {
+  width: 282px;
+  height: 55px;
+  float: left;
+  border-right: 1px solid #b6bbc6;
+}
+.load_title {
+  color: #181343;
+  font-size: 14px;
+  font-family: Microsoft YaHei;
+  font-weight: 400;
+  padding-left: 20px;
+}
+
+.last_load_boxval {
+  width: 282px;
+  height: 54px;
+  float: left;
+  border-bottom: 1px solid #b6bbc6;
+}
+
 .load_box {
-  width: 1132px;
-  height: 162px;
+  width: 1130px;
+  height: 164px;
   border: 1px solid #b6bbc6;
 }
 
@@ -335,5 +523,12 @@ export default {
 }
 .timebox {
   padding-right: 100px;
+}
+.current_name_title {
+  position: absolute;
+  /* left: 20px; */
+  margin-left: 20px;
+  margin-top: 20px;
+  font-size: 14px;
 }
 </style>

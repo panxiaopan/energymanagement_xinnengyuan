@@ -1,0 +1,361 @@
+<template>
+<el-row style="height:100%">
+      
+    <el-col :span="24" class="top_enry">
+        <!-- <div>
+             <span>地址:</span>
+              <el-radio-group v-model="radio">
+                <el-radio :label="3">默认地址</el-radio>
+                <el-radio :label="6">其他</el-radio>
+              </el-radio-group>
+        </div> -->
+      <el-tabs v-model="activecurrent" @tab-click="handleClick" size="big" class="toptab">
+        <el-tab-pane label="基本信息" name="first"></el-tab-pane>
+        <el-tab-pane label="设备管理" name="second"></el-tab-pane>
+        <el-tab-pane label="计量点配置" name="third"></el-tab-pane>
+      </el-tabs>
+
+
+
+
+    </el-col>
+    <el-row class="Devicemain" style="margin-top:20px;height:calc(100% - 20px ) ">
+      <div class="mainbox">
+        <div style="width:100%;padding:40px 0px 0px 20px;">
+          <el-form
+            :model="enery_ruleForm"
+            :enery_rules="enery_rules"
+            ref="enery_ruleForm"
+            label-width="120px"
+            class="demo-dynamic addstaonform"
+            :inline="true"
+          >
+            <el-form-item label="名称" prop="stationName" style="display:block;">
+              <el-input v-model="enery_ruleForm.stationName" style="width:900px"></el-input>
+            </el-form-item>
+
+            <el-form-item label="经纬度" prop="geographic">
+              <el-input v-model="enery_ruleForm.geographic"  placeholder="请选择经纬度"      style="width:900px;"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" style="float:right" @click="enery_seletMap">点击选择经纬度</el-button>
+            </el-form-item>
+
+            <el-form-item label="所在地区" required>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.sellectprovice"
+                  placeholder="请选择省"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_provice"
+                >
+                  <el-option 
+                     v-for="(item,index) in  enery_ruleForm.provinceadress"
+                      :key='index'
+                      :label="item.name" 
+                      :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.selectcity"
+                  placeholder="请选择市"
+                  style="width: 175px;margin-right:30px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_selectcity"
+                >
+                  <el-option 
+                     v-for="(item,index)  in   enery_ruleForm.selectcityDate "
+                     :key='index'
+                     :label="item.name" 
+                     :value="item.id"
+                     ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.selectarea "
+                  placeholder="请选择区"
+                  style="width: 175px;margin-right:50px"
+                  :disabled="enery_ruleForm.geographic == ''  "
+                  @change="change_selectareaData"
+                >
+                  <el-option 
+                      v-for="(item,index)  in enery_ruleForm.selectareaData  "
+                      :key='index'
+                      :label="item.name" 
+                      :value="item.id"
+                      
+                      ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="6">
+                <el-select
+                  v-model="enery_ruleForm.areaId"
+                  placeholder="请选择街道"
+                  style="width: 175px;margin-right:50px"
+                   :disabled="enery_ruleForm.geographic == ''  "
+                >
+                  <el-option 
+                  v-for="(item,index) in enery_ruleForm.areaIddata "
+                  :key="index"
+                  :label="item.name"
+                   :value="item.id"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+
+            <el-form-item label="详细地址" prop="desc" style="display:block;">
+              <el-input v-model="enery_ruleForm.desc" style="width:900px"></el-input>
+            </el-form-item>
+
+            <el-form-item label="上传图片"  style="display:block">
+              <el-upload
+                class="upload-demo"
+                action="https://jsonplaceholder.typicode.com/posts/"
+                :file-list="fileList"
+                list-type="picture"
+                :limit="1"
+              >
+                <el-button style="width:100px;height:88px" icon="el-icon-plus"></el-button>
+              </el-upload>
+            </el-form-item>
+
+            <el-form-item class="saveenerg">
+              <el-button type="primary" @click="submitForm('enery_ruleForm')">保存</el-button>
+              <el-button @click="resetForm('enery_ruleForm')">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        <el-col :span="24">
+          <el-dialog title="点击地图任意位置选择经纬度" :visible.sync="enery_map_dialogVisible" width="60%">
+            <div style="width:100%;height:600px;">
+              <baidu-map
+                :center="enery_mapcenter"
+                :zoom="11"
+                :scroll-wheel-zoom="true"
+                style="height:100%;width:100%"
+                @click="enery_clickpoint"
+              >
+                <bm-control :offset="{width: '10px', height: '10px'}" style="margin:20px">
+                  <el-input v-model="enery_keyword" @keyup.enter.native="enery_findepoint" placeholder="输入城市名称"></el-input>
+                </bm-control>
+
+                <bm-marker :position="enery_clickposition">
+                  <bm-info-window :show="enery_showclick">{{enery_addressmes}}</bm-info-window>
+                </bm-marker>
+              </baidu-map>
+            </div>
+            <span slot="footer" class="dialog-footer">
+              <el-button  size='small'    @click="enery_map_dialogVisible = false">取 消</el-button>
+              <el-button  size='small'    type="primary" @click="enery_addressure">确 定</el-button>
+            </span>
+          </el-dialog>
+        </el-col>
+      </div>
+    </el-row>
+
+</el-row>
+</template>
+
+<script>
+import { SearchField } from "vue-baidu-map";
+import { provincecity ,townCodestree,addstations,} from "@/api/api";
+  export default {
+          data(){
+              return{
+                activecurrent:'first',
+
+                fileList:[],
+                enery_showclick: false, //显示框,
+                enery_clickposition: {},
+                enery_mapcenter: "深圳",
+                enery_addressmes: "", //点击时候显示上面的地址
+                enery_keyword: "",
+                enery_map_dialogVisible: false,
+                parentId:100,
+                enery_ruleForm: {
+                  stationName: "",
+                  sellectprovice:"",
+                  provinceadress: [],//选择省
+                  geographic:'',//经纬度地址
+                  desc: "",
+                  selectcityDate:[],//市的遍历数据
+                  selectcity:"",//市
+                  selectarea:"",
+                  selectareaData:[],//区
+                  areaId:"",//区的id
+                  areaIddata:[],//街道的位置
+                },  
+                enery_towncode:"",
+                enery_rules: {
+                  stationName: [
+                    { required: true, message: "请输入能源站名称", trigger: "blur" },
+                  ],
+                  sellectprovice: [
+                    {  required: true, message: "请选择活动区域", trigger: "change" }
+                  ],
+                  areaId:[{required: true, message: "请选择街道地址", trigger: "change" }],
+                  geographic:[{required: true, message: "请选择经纬度", trigger: "change" }], 
+                  desc: [{ required: true, message: "请填写详细地址", trigger: "blur" }]
+                },
+               enery_Longitude:"",
+
+              }
+          },
+   methods:{
+     getProvinces(){//全部省份的时候,
+                provincecity(this.parentId).then(res=>{
+                        console.log('省----')
+                        console.log(res)
+                        if(res.data.head.code==0){
+                            this.enery_ruleForm.provinceadress=res.data.data
+                        }
+                })
+              },
+    enery_getlocation(lat, lng) {
+      let _this = this;
+      $.ajax({
+        //经纬度转换显示位置,
+        type: "get",
+        url: `http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=${lat},${lng}&output=json&pois=1&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        dataType: "jsonp",
+        success: function(res) {
+          console.log("经纬度转换-----");
+          console.log(res);
+          _this.enery_towncode=res.result.addressComponent.adcode
+          _this.enery_addressmes = res.result.formatted_address;
+          _this.enery_showclick = true;
+
+          _this.enery_Longitude=res.result.location.lng+','+ res.result.location.lat
+          
+          console.log(_this.enery_Longitude)
+        }
+      });
+    },
+    enery_findepoint(e) {
+      console.log("enter");
+      console.log(this.enery_keyword);
+      this.enery_mapcenter = this.enery_keyword;
+      let _this = this;
+      $.ajax({
+        type: "get",
+        dataType: "jsonp",
+        url: `http://api.map.baidu.com/geocoder/v2/?mcode=sha1:包名&address=${this.enery_keyword}&output=json&ak=UiGHNfWON4wXTdWrou8Ada28mNnEPFcB&callback=initialize`,
+        success: function(res) {
+          console.log("深圳");
+          console.log(res);
+          _this.enery_clickposition = {
+            lng: res.result.location.lng,
+            lat: res.result.location.lat
+          };
+          _this.enery_getlocation(res.result.location.lat, res.result.location.lng);
+          // _this.enery_addressmes=res
+          _this.enery_showclick = true;
+        }
+      });
+    },
+      change_provice(){//切换省的时候
+          provincecity(this.enery_ruleForm.sellectprovice).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                                console.log('改变了省')
+                                console.log(res)
+                               this.enery_ruleForm.selectcityDate=res.data.data
+                               this.enery_ruleForm.selectcity=res.data.data[0].id
+                            }             
+                    })
+     },
+     change_selectcity(){//改变市的时候
+                provincecity(this.enery_ruleForm.selectcity).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                                console.log('改变了省')
+                                console.log(res)
+                               this.enery_ruleForm.selectareaData=res.data.data
+                               this.enery_ruleForm.selectarea =res.data.data[0].id
+                            }             
+                    })
+     },
+     change_selectareaData(){//改变区的时候
+                   provincecity(this.enery_ruleForm.selectarea).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                               this.enery_ruleForm.areaIddata=res.data.data
+                               this.enery_ruleForm.areaId =res.data.data[0].id
+                            }             
+                    })
+     },
+   enery_seletMap() {
+         this.enery_map_dialogVisible = true;
+    },
+    enery_addressure() {
+         this.enery_ruleForm.desc = this.enery_addressmes;
+         this.enery_ruleForm.geographic=this.enery_Longitude
+         this.enery_map_dialogVisible = false;
+      let lonlang=this.enery_Longitude.split(',')
+     var parms={
+             longitude:lonlang[0],   //经纬度发给后台
+             latitude:lonlang[1]
+     }
+      this.getcounty(parms)
+    },
+     getcounty(parms){//根据坐标点,,去找位置
+        townCodestree(parms).then(res=>{
+              console.log('前面三级城市') 
+              console.log(res)  
+              if(res.data.head.code==0){
+                    provincecity(res.data.data.province.code).then(res=>{//用省请求市
+                            if(res.data.head.code==0){
+                               this.enery_ruleForm.selectcityDate=res.data.data
+                            }             
+                    })
+                   provincecity(res.data.data.city.code).then(res=>{//用市请求区
+                          if(res.data.head.code==0){
+                            this.enery_ruleForm.selectareaData= res.data.data    //每个区的id
+                          } 
+                   })
+                    provincecity(res.data.data.county.code).then(res=>{
+                           if(res.data.head.code==0){
+                               this.enery_ruleForm.areaIddata=res.data.data
+                           }
+                    })
+                    this.enery_ruleForm.sellectprovice=res.data.data.province.code//省
+                    this.enery_ruleForm.selectcity=res.data.data.city.code      //市的id
+                    this.enery_ruleForm.selectarea=res.data.data.county.code //区
+                    this.enery_ruleForm.areaId=res.data.data.town.code//街道
+              }  
+      })        
+     },
+    handleClick(){},
+
+
+    enery_clickpoint(e) {
+      console.log("当前点击点");
+      console.log(e.point.lat);
+      let _this = this;
+      this.enery_showclick = false;
+      _this.enery_getlocation(e.point.lat, e.point.lng);
+
+      this.enery_clickposition = {
+        lng: e.point.lng,
+        lat: e.point.lat
+      };
+    },
+  submitForm(){
+        
+
+
+      }
+     },
+     mounted () {
+              
+              
+          
+        }
+  }
+</script>
+
+<style lang="scss" scoped>
+
+</style>

@@ -14,13 +14,8 @@
      var ss = date.getSeconds()
      ss = ss > 9 ? ss : ('0' + ss)
 
-
      return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + "00" + ":" + "00" + ":" + "00";
    }
-
-
-
-
 
    //当天时间段
    export const timeFormanow = (value) => {
@@ -36,8 +31,6 @@
      m = m > 9 ? m : ('0' + m)
      var ss = date.getSeconds()
      ss = ss > 9 ? ss : ('0' + ss)
-
-
      return date.getFullYear() + "-" + MM + "-" + d + " " + h + ":" + m + ":" + ss;
    }
 
@@ -76,6 +69,16 @@
      m = m > 9 ? m : ('0' + m)
      var ss = date.getSeconds()
      ss = ss > 9 ? ss : ('0' + ss)
+     return y + '-' + MM
+   }
+
+   //获取当前月的上一个月
+   export const timePrveFormatmonth = (value) => {
+     let date = new Date(value) - 3600 * 1000 * 24 * 90 
+    let netdata =new Date(date)
+     var y = netdata.getFullYear();
+     var MM = netdata.getMonth() + 1 ;
+     MM = MM < 10 ? ('0' + MM) : MM
      return y + '-' + MM
    }
    //获取年
