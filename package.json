@@ -81,7 +81,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-spec-reporter": "0.0.31",
     "karma-webpack": "^2.0.2",
-    "kind-of": "^6.0.2",
+    "kind-of": "^6.0.3",
     "less": "^3.9.0",
     "less-loader": "^5.0.0",
     "lodash.clonedeep": "^4.5.0",
